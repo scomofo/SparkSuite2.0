@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/today",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 424,
+      "bodyTextHash": "33a653c29b7c1977c7464d7697cbd651b0131ab38cd48917b68ccd5119e5a872",
+      "bodyTextPrefix": "6-STRING · SPARKSUITE Today In the first real session, you play ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/adhd-today.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 424,
+      "bodyTextHash": "33a653c29b7c1977c7464d7697cbd651b0131ab38cd48917b68ccd5119e5a872",
+      "bodyTextPrefix": "6-STRING · SPARKSUITE Today In the first real session, you play ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/adhd-today-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/adhd-today.json"
+}

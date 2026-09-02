@@ -1,0 +1,38 @@
+{
+  "url": "http://127.0.0.1:8081/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 276,
+      "bodyTextHash": "51212b209bd4f982af33576c251b86b0930e9c51c9d431f26c50d7f05e059875",
+      "bodyTextPrefix": "PRACTICE CONSOLE SparkSuite One loop a day. Pick the instrument ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/game-built.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 276,
+      "bodyTextHash": "51212b209bd4f982af33576c251b86b0930e9c51c9d431f26c50d7f05e059875",
+      "bodyTextPrefix": "PRACTICE CONSOLE SparkSuite One loop a day. Pick the instrument ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/game-built-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/game-built.json",
+  "divergesFromBaseline": false,
+  "baselineReasons": []
+}

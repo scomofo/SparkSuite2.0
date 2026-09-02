@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/techniques",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 425,
+      "bodyTextHash": "34692d7cfdd3d25d5490e567840f88209fb88b2c249e02346e6623dfa2114ce9",
+      "bodyTextPrefix": "GUITAR LAB · 6-STRING Right hand The chord is a shape. The groov",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/tech-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 425,
+      "bodyTextHash": "34692d7cfdd3d25d5490e567840f88209fb88b2c249e02346e6623dfa2114ce9",
+      "bodyTextPrefix": "GUITAR LAB · 6-STRING Right hand The chord is a shape. The groov",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/tech-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/tech-preview.json"
+}

@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/today",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 529,
+      "bodyTextHash": "e728fe44c76e4a2dff44dfa70f459450d446ec44f0bf617b33594cb8f7fa5d61",
+      "bodyTextPrefix": "6-STRING · PULSE Today In the first real session, you play a two",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/udl-today.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 529,
+      "bodyTextHash": "e728fe44c76e4a2dff44dfa70f459450d446ec44f0bf617b33594cb8f7fa5d61",
+      "bodyTextPrefix": "6-STRING · PULSE Today In the first real session, you play a two",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/udl-today-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/udl-today.json"
+}

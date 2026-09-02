@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/techniques?tab=alt&chord=Em",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 455,
+      "bodyTextHash": "b397d9aaf850b669f02b2521cefdf5ff5a1a2dcb8635d43b0067e7235fd37c4b",
+      "bodyTextPrefix": "FOUR MINUTES. THEN STOP. 4:00 GUITAR LAB · 6-STRING Right hand T",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/adhd-lab.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 455,
+      "bodyTextHash": "b397d9aaf850b669f02b2521cefdf5ff5a1a2dcb8635d43b0067e7235fd37c4b",
+      "bodyTextPrefix": "FOUR MINUTES. THEN STOP. 4:00 GUITAR LAB · 6-STRING Right hand T",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/adhd-lab-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/adhd-lab.json"
+}

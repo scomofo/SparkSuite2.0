@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/results",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 54,
+      "bodyTextHash": "2d3c9faf82ba5b00f2d7382e3d64a03174d260aa369014a6824ea2b22e6720c2",
+      "bodyTextPrefix": "No session yet. Back to today SUITE TODAY THEORY TUNER",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/udl-results-smoke.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 54,
+      "bodyTextHash": "2d3c9faf82ba5b00f2d7382e3d64a03174d260aa369014a6824ea2b22e6720c2",
+      "bodyTextPrefix": "No session yet. Back to today SUITE TODAY THEORY TUNER",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/udl-results-smoke-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/udl-results-smoke.json"
+}

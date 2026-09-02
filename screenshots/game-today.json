@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/today",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 472,
+      "bodyTextHash": "3c0b4b07249ad227b0338b6379f694d763b1965506f1b92cb4e2b720b60c9069",
+      "bodyTextPrefix": "6-STRING · PULSE Today In the first real session, you play a two",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/game-today.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 472,
+      "bodyTextHash": "3c0b4b07249ad227b0338b6379f694d763b1965506f1b92cb4e2b720b60c9069",
+      "bodyTextPrefix": "6-STRING · PULSE Today In the first real session, you play a two",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/game-today-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/game-today.json"
+}

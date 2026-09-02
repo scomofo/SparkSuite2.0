@@ -1,0 +1,106 @@
+@import "tailwindcss";
+@import "@fontsource-variable/syne";
+@import "@fontsource-variable/plus-jakarta-sans";
+
+@theme {
+  --color-bg: #12100e;
+  --color-surface: #1e1b17;
+  --color-raised: #252119;
+  --color-fg: #ede6da;
+  --color-muted: #9a8e7e;
+  --color-dim: #7a7060;
+  --color-border: #2e2820;
+  --color-accent: #ff7b3a;
+  --color-accent-fg: #360f00;
+  --color-ember: #ffaa6a;
+  --color-good: #6fbf73;
+  --color-warn: #c89040;
+  --color-bad: #c45040;
+  --font-display: "Syne Variable", Syne, ui-sans-serif, sans-serif;
+  --font-sans: "Plus Jakarta Sans Variable", "Plus Jakarta Sans", ui-sans-serif, sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  html,
+  body,
+  #app {
+    min-height: 100%;
+    background: var(--color-bg);
+    color: var(--color-fg);
+    font-family: var(--font-sans);
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  * {
+    border-color: var(--color-border);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.count-pop {
+  animation: count-pop var(--motion-fast) var(--ease-out);
+}
+
+@keyframes count-pop {
+  from {
+    transform: scale(0.86);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.combo-pop {
+  animation: combo-pop var(--motion-fast) var(--ease-out);
+}
+
+@keyframes combo-pop {
+  from {
+    transform: scale(1.18);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .count-pop,
+  .combo-pop {
+    animation: none;
+  }
+}

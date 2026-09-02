@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/theory?tab=changes&root=C&q=maj&key=G&mode=major",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 1032,
+      "bodyTextHash": "07f64e7c77a86a8d89c992d56005149aa3010a939eaea0fd321a0fdd68aa8aa7",
+      "bodyTextPrefix": "CHORD LAB Theory The third is colour. The fifth is the frame. Ev",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/theory-changes-smoke.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 1032,
+      "bodyTextHash": "07f64e7c77a86a8d89c992d56005149aa3010a939eaea0fd321a0fdd68aa8aa7",
+      "bodyTextPrefix": "CHORD LAB Theory The third is colour. The fifth is the frame. Ev",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/theory-changes-smoke-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/theory-changes-smoke.json"
+}

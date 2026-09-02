@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/theory?tab=build&root=C&q=maj&key=C&mode=major",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "Loading http://127.0.0.1:8080/theory?tab=build&root=C&q=maj&key=C&mode=major",
+      "hasCanvas": false,
+      "bodyTextLen": 599,
+      "bodyTextHash": "08ca2b7f41d3a8a47b0425dabf536a0076be66db9a1d39b1de4c68932482ef74",
+      "bodyTextPrefix": "Chord lab Theory The third is colour. The fifth is the frame. Ev",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/theory-build.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 654,
+      "bodyTextHash": "374604655a128423d5fc43f661f41eecbf9be85dc307ad3124e215d9c57c5176",
+      "bodyTextPrefix": "CHORD LAB Theory The third is colour. The fifth is the frame. Ev",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/theory-build-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/theory-build.json"
+}

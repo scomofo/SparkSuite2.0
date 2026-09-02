@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/today",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 510,
+      "bodyTextHash": "88078f72542e9455454d608a1e5f58700920cc739fcd39caebfc777372e6db9d",
+      "bodyTextPrefix": "6-STRING · PULSE Today In the first real session, you play Night",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/nafme-today.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 510,
+      "bodyTextHash": "88078f72542e9455454d608a1e5f58700920cc739fcd39caebfc777372e6db9d",
+      "bodyTextPrefix": "6-STRING · PULSE Today In the first real session, you play Night",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/nafme-today-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/nafme-today.json"
+}

@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/theory?tab=caged&root=G&q=maj&key=C&mode=major",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 742,
+      "bodyTextHash": "29a1f29e46e4e8e731d38fce17ae4290ed2e319321f431edd0ff484193ac312a",
+      "bodyTextPrefix": "CHORD LAB Theory The third is colour. The fifth is the frame. Ev",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/theory-caged-smoke.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 742,
+      "bodyTextHash": "29a1f29e46e4e8e731d38fce17ae4290ed2e319321f431edd0ff484193ac312a",
+      "bodyTextPrefix": "CHORD LAB Theory The third is colour. The fifth is the frame. Ev",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/theory-caged-smoke-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/theory-caged-smoke.json"
+}

@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/techniques",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 563,
+      "bodyTextHash": "7c31dda3b70300d3b2bacb1960d6cd195cb9b2036fa57408a62dd2339536d605",
+      "bodyTextPrefix": "BASS LAB · EADG Techniques One note at a time. The rest of the b",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/bass-tech-smoke.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "SparkSuite",
+      "hasCanvas": false,
+      "bodyTextLen": 563,
+      "bodyTextHash": "7c31dda3b70300d3b2bacb1960d6cd195cb9b2036fa57408a62dd2339536d605",
+      "bodyTextPrefix": "BASS LAB · EADG Techniques One note at a time. The rest of the b",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/bass-tech-smoke-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/bass-tech-smoke.json"
+}
