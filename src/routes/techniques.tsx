@@ -133,6 +133,7 @@ function Lab({ search, patch }: { search: Search; patch: (n: Partial<Search>) =>
     timers.current.forEach((id) => window.clearTimeout(id));
     timers.current = [];
     const ac = unlockAudio();
+    if (!ac) return;
     const beat = 60 / 88;
     const origin = ac.currentTime;
     line.forEach((ev) => {

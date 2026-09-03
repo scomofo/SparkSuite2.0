@@ -1,6 +1,6 @@
 import { generateDailyPlan } from "./daily-plan.ts";
 import type { InstrumentId } from "./instruments.ts";
-import { defaultProgress, loadSuite, saveSuite } from "./storage.ts";
+import { defaultProgress, saveActiveProgress } from "./storage.ts";
 import type { DailyPlan, ProgressState } from "./types.ts";
 
 /** Thin composition root. Engines stay pure; this is the only app-facing barrel. */
@@ -19,22 +19,16 @@ export function createSpark(initial: ProgressState = defaultProgress(), instrume
     },
     setProgress(next: ProgressState) {
       progress = next;
-      const suite = loadSuite();
-      suite.active = active;
-      suite.apps[active] = next;
-      saveSuite(suite);
+      const suite = saveActiveProgress(active, next);
       plan = generateDailyPlan(progress, undefined, active);
-      return progress;
+      return { progress, plan, suite };
     },
     setInstrument(next: InstrumentId, nextProgress: ProgressState) {
       active = next;
       progress = nextProgress;
-      const suite = loadSuite();
-      suite.active = next;
-      suite.apps[next] = nextProgress;
-      saveSuite(suite);
+      const suite = saveActiveProgress(next, nextProgress);
       plan = generateDailyPlan(progress, undefined, active);
-      return { progress, plan, instrument: active };
+      return { progress, plan, instrument: active, suite };
     },
   };
 }

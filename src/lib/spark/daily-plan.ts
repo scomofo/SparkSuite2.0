@@ -78,7 +78,7 @@ function weakestSkill(progress: ProgressState, instrument: InstrumentId) {
   return started.sort((a, b) => (progress.mastery[a.id] ?? 0) - (progress.mastery[b.id] ?? 0))[0];
 }
 
-function firstSessionPlan(progress: ProgressState, date: string, feel: PlanFeel, instrument: InstrumentId): DailyPlan {
+function firstSessionPlan(_progress: ProgressState, date: string, feel: PlanFeel, instrument: InstrumentId): DailyPlan {
   const inst = instrumentById(instrument);
   const ids = firstLessonIds(instrument);
   const items = ids.map((id, i) => {

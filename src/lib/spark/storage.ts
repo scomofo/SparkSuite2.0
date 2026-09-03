@@ -165,11 +165,27 @@ export function loadProgress(): ProgressState {
   return progressFor(suite, suite.active);
 }
 
-export function saveProgress(state: ProgressState) {
+export function saveProgress(state: ProgressState, instrument?: InstrumentId): SuiteState {
   const suite = loadSuite();
-  suite.apps[suite.active] = state;
+  const slot = instrument ?? suite.active;
+  suite.apps[slot] = state;
   suite.version = SAVE_VERSION;
   saveSuite(suite);
+  return suite;
+}
+
+/**
+ * Single I/O write path for the composition root + store.
+ * Sets `suite.active` AND the progress slot in one load-modify-save,
+ * returning the saved suite so callers don't re-read from localStorage.
+ */
+export function saveActiveProgress(active: InstrumentId, state: ProgressState): SuiteState {
+  const suite = loadSuite();
+  suite.active = active;
+  suite.apps[active] = state;
+  suite.version = SAVE_VERSION;
+  saveSuite(suite);
+  return suite;
 }
 
 export function applyStreak(state: ProgressState, today = localDayKey()): ProgressState {

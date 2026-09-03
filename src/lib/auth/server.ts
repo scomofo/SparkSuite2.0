@@ -115,8 +115,12 @@ const baseURL = explicitBaseURL ?? {
 
 // Origins Better Auth accepts on credentialed POSTs (sign-up/sign-in, etc.).
 // Missing entries here surface as FORBIDDEN "Invalid origin".
+// Deployed (explicitBaseURL set): trust ONLY the canonical origin. Loopback is
+// intentionally excluded — an attacker can't spoof `Origin: localhost`, and
+// widening deployed trust to loopback only enlarges the credentialed-POST
+// surface (review 2026-09). Local/preview builds keep the full allowlist below.
 const trustedOrigins: string[] = explicitBaseURL
-  ? [explicitBaseURL, ...LOCAL_DEV_ORIGINS]
+  ? [explicitBaseURL]
   : [
       // Host wildcards (matched against Origin's host)
       ...previewAllowedHosts,

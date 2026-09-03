@@ -253,11 +253,13 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
     unlockAudio();
     if (inst.theoryNeck === "piano" || inst.surface === "keys" || inst.surface === "voice") {
       const ac = unlockAudio();
+      if (!ac) return;
       chordMidis(rootPc, search.q).forEach((m, i) => pianoTone(midiToFreq(m), ac.currentTime + i * 0.16, 0.28));
       return;
     }
     if (fourShape) {
       const ac = unlockAudio();
+      if (!ac) return;
       fourShape.frets.forEach((f, i) => {
         if (f == null) return;
         pluck(stringFreq(inst, i, f), ac.currentTime + i * 0.16, 0.42);
@@ -266,6 +268,7 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
     }
     if (!voicing) return;
     const ac = unlockAudio();
+    if (!ac) return;
     voicingFreqs(voicing).forEach((f, i) => pluck(f, ac.currentTime + i * 0.16, 0.42));
   };
 
@@ -507,6 +510,7 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
 
   const playLoop = () => {
     const ac = unlockAudio();
+    if (!ac) return;
     const beat = 60 / 88;
     parsed.forEach((ch, i) => {
       hearQuality(ch.rootPc, ch.qualityId, ac.currentTime + i * beat * 2);

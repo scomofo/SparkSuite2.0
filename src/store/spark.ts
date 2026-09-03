@@ -78,7 +78,7 @@ export const useSpark = create<SparkStore>((set, get) => ({
       plan: next.plan,
       session: null,
       lastResult: null,
-      ...fromSuite(loadSuite()),
+      ...fromSuite(next.suite),
     });
   },
   beginDay: () => {
@@ -108,13 +108,13 @@ export const useSpark = create<SparkStore>((set, get) => ({
     const { session, progress, instrument } = get();
     if (!session) return null;
     const { progress: next, result } = closeSession(progress, session, instrument);
-    spark.setProgress(next);
+    const { plan, suite } = spark.setProgress(next);
     set({
       progress: next,
       session: null,
       lastResult: result,
-      plan: spark.getPlan(),
-      ...fromSuite(loadSuite()),
+      plan,
+      ...fromSuite(suite),
     });
     return result;
   },
@@ -129,8 +129,8 @@ export const useSpark = create<SparkStore>((set, get) => ({
   noteCheckin: (id) => {
     const { progress } = get();
     const next = { ...progress, lastCheckin: id };
-    spark.setProgress(next);
-    set({ progress: next, plan: spark.getPlan() });
+    const { plan } = spark.setProgress(next);
+    set({ progress: next, plan });
   },
 }));
 

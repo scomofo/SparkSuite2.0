@@ -10,6 +10,11 @@
     "moduleResolution": "bundler",
     "jsx": "react-jsx",
     "strict": true,
+    // NOTE (review 2026-09): `noUncheckedIndexedAccess` was tried but reverted —
+    // it flags ~70 pre-existing DSP/UI index sites (tuner YIN loops, fretboard,
+    // theory tables). Re-enable per-module with explicit guards, not globally.
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "isolatedModules": true,
     "skipLibCheck": true,
     // `src/lib/db.ts` imports scripts/migration-plan.mjs; checkJs types the

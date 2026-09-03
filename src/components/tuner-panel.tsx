@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { pluck, pianoTone, drumHit, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, midiToFreq } from "@/lib/spark/instruments";
-import { nearestString, startMicAnalyser, yinPitch } from "@/lib/spark/tuner";
+import { nearestString, startMicAnalyser, yinPitchFast } from "@/lib/spark/tuner";
 import { Button } from "@/components/ui/button";
 import { DrumPads } from "@/components/drum-pads";
 import { useSpark } from "@/store/spark";
@@ -29,7 +29,13 @@ export function TunerPanel() {
   const stopRef = useRef<(() => void) | null>(null);
   const raf = useRef(0);
 
-  useEffect(() => () => stopRef.current?.(), []);
+  useEffect(() => {
+    const id = raf;
+    return () => {
+      stopRef.current?.();
+      cancelAnimationFrame(id.current);
+    };
+  }, []);
 
   async function listen() {
     // Stop any previous mic before opening a new one — otherwise tracks leak.
@@ -48,17 +54,23 @@ export function TunerPanel() {
       setLive(false);
     };
     const buf = new Float32Array(mic.analyser.fftSize);
-    const loop = () => {
-      mic.analyser.getFloatTimeDomainData(buf);
-      const hz = yinPitch(buf, mic.ctx.sampleRate);
-      if (hz > 40 && hz < 1200) {
-        const n = nearestString(hz, refs.freqs, refs.names);
-        setName(n.name);
-        setCents(Math.max(-50, Math.min(50, n.cents)));
+    let last = 0;
+    const loop = (ts: number) => {
+      if (ts - last >= 80) {
+        last = ts;
+        mic.analyser.getFloatTimeDomainData(buf);
+        const hz = yinPitchFast(buf, mic.ctx.sampleRate);
+        if (hz > 40 && hz < 1200) {
+          const n = nearestString(hz, refs.freqs, refs.names);
+          if (n.index >= 0 && Number.isFinite(n.cents)) {
+            setName(n.name);
+            setCents(Math.max(-50, Math.min(50, n.cents)));
+          }
+        }
       }
       raf.current = requestAnimationFrame(loop);
     };
-    loop();
+    raf.current = requestAnimationFrame(loop);
   }
 
   const inTune = Math.abs(cents) < 8;
@@ -124,7 +136,13 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
   const stopRef = useRef<(() => void) | null>(null);
   const raf = useRef(0);
 
-  useEffect(() => () => stopRef.current?.(), []);
+  useEffect(() => {
+    const id = raf;
+    return () => {
+      stopRef.current?.();
+      cancelAnimationFrame(id.current);
+    };
+  }, []);
 
   async function listen() {
     stopRef.current?.();
@@ -139,15 +157,19 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
       setCents(null);
     };
     const buf = new Float32Array(mic.analyser.fftSize);
-    const loop = () => {
-      mic.analyser.getFloatTimeDomainData(buf);
-      const hz = yinPitch(buf, mic.ctx.sampleRate);
-      if (hz > 80 && hz < 900) {
-        setCents(Math.max(-50, Math.min(50, 1200 * Math.log2(hz / targetFreq))));
+    let last = 0;
+    const loop = (ts: number) => {
+      if (ts - last >= 80) {
+        last = ts;
+        mic.analyser.getFloatTimeDomainData(buf);
+        const hz = yinPitchFast(buf, mic.ctx.sampleRate);
+        if (hz > 80 && hz < 900 && Number.isFinite(targetFreq) && targetFreq > 0) {
+          setCents(Math.max(-50, Math.min(50, 1200 * Math.log2(hz / targetFreq))));
+        }
       }
       raf.current = requestAnimationFrame(loop);
     };
-    loop();
+    raf.current = requestAnimationFrame(loop);
   }
 
   const inTune = cents != null && Math.abs(cents) < 20;

@@ -3,3 +3,9 @@ node_modules/
 .github_repo
 .env
 .env.*
+dist/
+.output/
+.nitro/
+.vercel/
+*.log
+.DS_Store

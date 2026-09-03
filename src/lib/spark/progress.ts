@@ -44,11 +44,11 @@ export function finalizeSession(state: ProgressState, result: SessionResult, ins
     lastCheckin: state.lastPlayedDay === result.date ? state.lastCheckin : null,
   };
   next = { ...next, marks: evaluateMarks(next, result, peakCombo) };
-  saveProgress(next);
+  saveProgress(next, instrument);
   return next;
 }
 
-export function trackMastery(state: ProgressState, trackId: string, lessonIds: string[]) {
+export function trackMastery(state: ProgressState, _trackId: string, lessonIds: string[]) {
   const ids = lessonIds.filter(Boolean);
   if (!ids.length) return 0;
   const sum = ids.reduce((s, id) => s + (state.mastery[id] ?? 0), 0);
