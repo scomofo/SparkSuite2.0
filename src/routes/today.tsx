@@ -26,7 +26,6 @@ function TodayPage() {
   const plan = useSpark((s) => s.plan);
   const progress = useSpark((s) => s.progress);
   const beginDay = useSpark((s) => s.beginDay);
-  const markAudioReady = useSpark((s) => s.markAudioReady);
   const inst = instrumentById(instrument);
   const today = localDayKey();
   const done = Boolean(progress.dailyComplete[today]);
@@ -108,7 +107,6 @@ function TodayPage() {
             className="w-full"
             onClick={() => {
               unlockAudio();
-              markAudioReady();
               beginDay();
               void navigate({ to: "/practice" });
             }}

@@ -1,4 +1,4 @@
-import { OPEN_FREQ, STRING_NAMES } from "./guitar";
+import { OPEN_FREQ, STRING_NAMES } from "./guitar.ts";
 
 /** YIN pitch detection. Returns Hz or -1. */
 export function yinPitch(buf: Float32Array, sampleRate: number, threshold = 0.12): number {
@@ -33,7 +33,10 @@ export function yinPitch(buf: Float32Array, sampleRate: number, threshold = 0.12
   const s0 = cmnd[x0];
   const s1 = cmnd[tau];
   const s2 = cmnd[x2];
-  const better = tau + (s2 - s0) / (2 * (2 * s1 - s2 - s0));
+  const denom = 2 * (2 * s1 - s2 - s0);
+  if (!Number.isFinite(denom) || denom === 0) return sampleRate / tau;
+  const better = tau + (s2 - s0) / denom;
+  if (!Number.isFinite(better) || better <= 0) return -1;
   return sampleRate / better;
 }
 

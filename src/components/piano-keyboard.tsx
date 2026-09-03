@@ -51,6 +51,9 @@ export function PianoKeyboard({
                 e.preventDefault();
                 onPlay(midi);
               }}
+              onClick={(e) => {
+                if (e.detail === 0) onPlay(midi);
+              }}
               className={cn(
                 "relative h-28 flex-1 border-r border-border last:border-r-0 first:rounded-l-md last:rounded-r-md",
                 on ? "bg-accent text-accent-fg" : exp ? "bg-ember/40 text-fg" : inChord ? "bg-raised text-ember" : "bg-fg text-bg",
@@ -81,6 +84,9 @@ export function PianoKeyboard({
                 onPointerDown={(e) => {
                   e.preventDefault();
                   onPlay(black.midi);
+                }}
+                onClick={(e) => {
+                  if (e.detail === 0) onPlay(black.midi);
                 }}
                 className={cn(
                   "pointer-events-auto absolute top-0 z-10 h-16 w-[70%] -translate-x-1/2 rounded-b-sm border border-border",

@@ -121,7 +121,7 @@ export function SessionPlayer() {
     nowRef.current = 0;
     for (const id of modelTimers.current) window.clearTimeout(id);
     modelTimers.current = [];
-  }, [item?.chords, item?.id]);
+  }, [item?.chords]);
 
   useEffect(() => {
     resetItem();
@@ -205,8 +205,6 @@ export function SessionPlayer() {
       const t = (performance.now() - startRef.current) / 1000;
       const pending = notesRef.current.filter((_, i) => !consumed.current.has(i));
       const res = consumeHit(pending, t, item.windowMs ?? 230);
-      const surface = item.surface ?? inst.surface;
-      const needsMatch = (surface === "keys" || surface === "pads" || surface === "voice") && kind === "pluck";
 
       if (kind === "pluck" && stringIndex !== undefined) {
         if (instrument === "drums") drumHit(stringIndex);
@@ -220,7 +218,9 @@ export function SessionPlayer() {
         onJudge("miss");
         return;
       }
-      if (needsMatch && res.note.string !== undefined && stringIndex !== res.note.string) {
+      // Pluck/pad/key notes carry an expected string/pad/midi. Timing alone
+      // is not enough — a wrong string, key, or pad is a miss.
+      if (res.note.string !== undefined && stringIndex !== res.note.string) {
         onJudge("miss");
         return;
       }
@@ -410,6 +410,19 @@ export function SessionPlayer() {
     (item.type === "warmup" || item.type === "skill") && item.process !== "respond" && item.process !== "create";
   const surface = item.surface ?? inst.surface;
   const useHighway = surface === "strings" && !isWarm;
+  // Pluck timelines expect a specific string/pad/key. A generic strum would
+  // always miss, so hide the big button and force the specific control.
+  const expectsSpecific = surface === "pads" || isWarm;
+  const actionLabel =
+    surface === "pads"
+      ? "Hit"
+      : surface === "keys"
+        ? "Play"
+        : surface === "voice"
+          ? "Match"
+          : instrument === "bass"
+            ? "Pluck"
+            : "Strum";
   const chordPcs = liveChord && PIANO_VOICINGS[liveChord] ? PIANO_VOICINGS[liveChord].map((m) => m % 12) : [];
   const lastItem = session.index + 1 >= session.plan.items.length;
 
@@ -588,17 +601,26 @@ export function SessionPlayer() {
             <p className="text-center font-display text-sm tabular text-dim">beat {beatN}</p>
             <p className="text-center text-sm text-muted">{item.interpret ?? coachCue(item)}</p>
             <p className="text-center text-sm text-dim">{patternInWords(item.pattern)}</p>
-            <Button
-              size="xl"
-              variant="strum"
-              className="w-full touch-none"
-              onPointerDown={(e) => {
-                e.preventDefault();
-                attempt("strum");
-              }}
-            >
-              {surface === "pads" ? "Hit" : surface === "keys" ? "Play" : surface === "voice" ? "Match" : instrument === "bass" ? "Pluck" : "Strum"}
-            </Button>
+            {expectsSpecific ? (
+              <p className="text-center text-sm text-muted">Tap the highlighted pad, key, or string — pitch and timing both count.</p>
+            ) : (
+              <Button
+                size="xl"
+                variant="strum"
+                className="w-full touch-none"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  attempt("strum");
+                }}
+                onClick={(e) => {
+                  // Keyboard activation (Enter/Space detail === 0). Pointer
+                  // input is already handled via onPointerDown above.
+                  if (e.detail === 0) attempt("strum");
+                }}
+              >
+                {actionLabel}
+              </Button>
+            )}
             <p
               className={cn(
                 "text-center font-display text-sm uppercase tracking-[0.2em]",

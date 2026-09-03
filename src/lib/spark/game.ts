@@ -1,5 +1,5 @@
-import { localDayKey } from "@/lib/utils";
-import type { ProgressState, SessionResult } from "./types";
+import { localDayKey } from "../utils.ts";
+import type { ProgressState, SessionResult } from "./types.ts";
 
 /** Adult ADHD gamification: felt progress, no extra homework, no shame loop. */
 export const WEEK_GOAL = 3;

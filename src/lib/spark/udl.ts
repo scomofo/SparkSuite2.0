@@ -1,5 +1,5 @@
-import { feelFor } from "./psychology";
-import type { DailyPlan, DayCheckin, ItemRole, PlanItem, ProgressState } from "./types";
+import { feelFor } from "./psychology.ts";
+import type { DailyPlan, DayCheckin, ItemRole, PlanItem, ProgressState } from "./types.ts";
 
 export type { DayCheckin };
 
@@ -72,9 +72,15 @@ export function coachCue(item: PlanItem) {
 
 export function howYouPlay(item: PlanItem) {
   const surface = item.surface;
-  if (surface === "pads") return "Tap the pad, or Hit. Or 1–4.";
-  if (surface === "keys") return "Tap a key, Play, or 1–7.";
-  if (surface === "voice") return "Sing toward C, or tap Match.";
+  const isPluckItem =
+    surface === "pads" ||
+    ((item.type === "warmup" || item.type === "skill") &&
+      item.process !== "respond" &&
+      item.process !== "create");
+  if (surface === "pads") return "Tap the flashing pad, or 1–4. Right pad + right time.";
+  if (surface === "keys") return isPluckItem ? "Tap the highlighted key, or 1–7. Right key + right time." : "Tap a key, Play, or 1–7.";
+  if (surface === "voice") return isPluckItem ? "Sing toward the highlighted key, or tap it. Pitch + timing." : "Sing toward C, or tap Match.";
+  if (isPluckItem) return "Pluck the highlighted string. Right string + right time, or 1–6.";
   return "Strum, or space.";
 }
 

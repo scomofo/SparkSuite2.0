@@ -1,4 +1,4 @@
-import type { InstrumentId } from "./instruments";
+import type { InstrumentId } from "./instruments.ts";
 
 export type LabSearch = { tab: string; chord: string };
 

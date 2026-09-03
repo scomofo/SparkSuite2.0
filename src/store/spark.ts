@@ -33,14 +33,11 @@ type SparkStore = {
   plan: DailyPlan;
   session: LiveSession | null;
   lastResult: SessionResult | null;
-  audioReady: boolean;
-  hydrated: boolean;
   apps: SuiteState["apps"];
   suiteXp: number;
   bestStreak: number;
   hydrate: () => void;
   selectInstrument: (id: InstrumentId) => void;
-  markAudioReady: () => void;
   beginDay: () => void;
   hit: () => void;
   miss: () => void;
@@ -49,7 +46,6 @@ type SparkStore = {
   finishDay: () => SessionResult | null;
   abortSession: () => void;
   noteCheckin: (id: DayCheckin) => void;
-  resetLocal: () => void;
 };
 
 export const useSpark = create<SparkStore>((set, get) => ({
@@ -58,8 +54,6 @@ export const useSpark = create<SparkStore>((set, get) => ({
   plan: spark.getPlan(),
   session: null,
   lastResult: null,
-  audioReady: false,
-  hydrated: false,
   apps: { guitar: defaultProgress() },
   suiteXp: 0,
   bestStreak: 0,
@@ -71,7 +65,6 @@ export const useSpark = create<SparkStore>((set, get) => ({
       instrument: suite.active,
       progress,
       plan: spark.getPlan(),
-      hydrated: true,
       ...fromSuite(suite),
     });
   },
@@ -88,7 +81,6 @@ export const useSpark = create<SparkStore>((set, get) => ({
       ...fromSuite(loadSuite()),
     });
   },
-  markAudioReady: () => set({ audioReady: true }),
   beginDay: () => {
     const { progress, instrument } = get();
     const plan = generateDailyPlan(progress, undefined, instrument);
@@ -127,20 +119,11 @@ export const useSpark = create<SparkStore>((set, get) => ({
     return result;
   },
   abortSession: () => {
-    const { session, progress, instrument } = get();
+    const { session } = get();
     if (!session) return;
-    if (session.results.length > 0 || session.itemHits + session.itemMisses > 0) {
-      const { progress: next, result } = closeSession(progress, session, instrument);
-      spark.setProgress(next);
-      set({
-        progress: next,
-        session: null,
-        lastResult: result,
-        plan: spark.getPlan(),
-        ...fromSuite(loadSuite()),
-      });
-      return;
-    }
+    // Leaving mid-session discards partial progress. Previously this
+    // finalized partial hits as a full day (streak + dailyComplete),
+    // letting a single hit farm a completed day.
     set({ session: null });
   },
   noteCheckin: (id) => {
@@ -148,18 +131,6 @@ export const useSpark = create<SparkStore>((set, get) => ({
     const next = { ...progress, lastCheckin: id };
     spark.setProgress(next);
     set({ progress: next, plan: spark.getPlan() });
-  },
-  resetLocal: () => {
-    const fresh = defaultProgress();
-    spark.setProgress(fresh);
-    set({
-      progress: fresh,
-      plan: spark.getPlan(),
-      session: null,
-      lastResult: null,
-      hydrated: true,
-      ...fromSuite(loadSuite()),
-    });
   },
 }));
 

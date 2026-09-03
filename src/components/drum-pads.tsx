@@ -29,6 +29,11 @@ export function DrumPads({
             e.preventDefault();
             onHit(p.i);
           }}
+          onClick={(e) => {
+            // Keyboard Enter/Space fires click with detail 0. Pointer input
+            // already fired via onPointerDown — ignore it here to avoid doubles.
+            if (e.detail === 0) onHit(p.i);
+          }}
           className={cn(
             "flex h-24 items-center justify-center rounded-lg border font-display text-lg font-semibold transition-colors duration-(--motion-quick)",
             active === p.i

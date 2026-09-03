@@ -1,4 +1,4 @@
-import type { ChordShape, Lesson } from "./types";
+import type { ChordShape, Lesson } from "./types.ts";
 
 export const TUNING = ["E2", "A2", "D3", "G3", "B3", "E4"] as const;
 export const STRING_NAMES = ["E", "A", "D", "G", "B", "e"] as const;

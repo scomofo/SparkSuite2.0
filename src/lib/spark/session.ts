@@ -1,9 +1,9 @@
-import { localDayKey } from "@/lib/utils";
-import { generateDailyPlan } from "./daily-plan";
-import type { InstrumentId } from "./instruments";
-import { summarizeItem } from "./practice";
-import { finalizeSession } from "./progress";
-import type { DailyPlan, ItemResult, PlanItem, ProgressState, SessionResult } from "./types";
+import { localDayKey } from "../utils.ts";
+import { generateDailyPlan } from "./daily-plan.ts";
+import type { InstrumentId } from "./instruments.ts";
+import { summarizeItem } from "./practice.ts";
+import { finalizeSession } from "./progress.ts";
+import type { DailyPlan, ItemResult, PlanItem, ProgressState, SessionResult } from "./types.ts";
 
 export type LiveSession = {
   plan: DailyPlan;
@@ -91,7 +91,7 @@ export function closeSession(
     date: localDayKey(),
     accuracy: acc,
     stars: Math.round(s.results.reduce((n, r) => n + r.stars, 0) / Math.max(1, s.results.length)),
-    xp: s.results.reduce((n, r) => n + r.xp, 0) + (s.results.length === s.plan.items.length ? 80 : 0),
+    xp: s.results.reduce((n, r) => n + r.xp, 0) + (s.results.length > 0 && s.results.length === s.plan.items.length ? 80 : 0),
     items: s.results,
     peakCombo: s.peakCombo,
     prevLevel,

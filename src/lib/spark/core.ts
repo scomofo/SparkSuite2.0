@@ -1,7 +1,7 @@
-import { generateDailyPlan } from "./daily-plan";
-import type { InstrumentId } from "./instruments";
-import { defaultProgress, loadSuite, saveSuite } from "./storage";
-import type { DailyPlan, ProgressState } from "./types";
+import { generateDailyPlan } from "./daily-plan.ts";
+import type { InstrumentId } from "./instruments.ts";
+import { defaultProgress, loadSuite, saveSuite } from "./storage.ts";
+import type { DailyPlan, ProgressState } from "./types.ts";
 
 /** Thin composition root. Engines stay pure; this is the only app-facing barrel. */
 export function createSpark(initial: ProgressState = defaultProgress(), instrument: InstrumentId = "guitar") {
