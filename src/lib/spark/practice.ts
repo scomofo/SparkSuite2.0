@@ -1,4 +1,4 @@
-import { JUDGE_WINDOWS, type HitJudge, type ItemResult, type PlanItem } from "./types";
+import { JUDGE_WINDOWS, type HitJudge, type ItemResult, type PlanItem } from "./types.ts";
 
 export type NoteEvent = {
   t: number;

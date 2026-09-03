@@ -32,7 +32,7 @@ import {
   QUALITIES,
   qualityById,
   scalePcs,
-  useFlats,
+  prefersFlats,
   voicingFreqs,
   type Mode,
   type TheoryTab,
@@ -216,7 +216,7 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
   const instrument = useSpark((s) => s.instrument);
   const inst = instrumentById(instrument);
   const rootPc = pcOf(search.root);
-  const flats = useFlats(rootPc, "major");
+  const flats = prefersFlats(rootPc, "major");
   const quality = qualityById(search.q);
   const pcs = chordPcs(rootPc, search.q);
   const voicings = useMemo(() => (inst.id === "guitar" ? listVoicings(rootPc, search.q) : []), [inst.id, rootPc, search.q]);
@@ -384,7 +384,7 @@ function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>)
   const instrument = useSpark((s) => s.instrument);
   const inst = instrumentById(instrument);
   const keyPc = pcOf(search.key);
-  const flats = useFlats(keyPc, search.mode);
+  const flats = prefersFlats(keyPc, search.mode);
   const [sevenths, setSevenths] = useState(false);
   const [sel, setSel] = useState(0);
   const chords = diatonicChords(keyPc, search.mode, sevenths);
@@ -588,7 +588,7 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
 
 function CagedTab({ search, patch }: { search: Search; patch: (n: Partial<Search>) => void }) {
   const rootPc = pcOf(search.root);
-  const flats = useFlats(rootPc, "major");
+  const flats = prefersFlats(rootPc, "major");
   const q = search.q === "min" || search.q === "m7" ? "min" : "maj";
   const shapes = [...cagedShapes(rootPc, q)].sort((a, b) => a.offset - b.offset);
   const [sel, setSel] = useState(0);

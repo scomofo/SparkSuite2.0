@@ -1,5 +1,5 @@
-import { fretToFreq, STRING_NAMES } from "./guitar";
-import type { ChordShape } from "./types";
+import { fretToFreq, STRING_NAMES } from "./guitar.ts";
+import type { ChordShape } from "./types.ts";
 
 export const PC_SHARP = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 export const PC_FLAT = ["C", "Db", "D", "Eb", "E", "F", "Gb", "G", "Ab", "A", "Bb", "B"] as const;
@@ -345,7 +345,7 @@ export function pcOf(name: string) {
   return NAME_TO_PC[name] ?? 0;
 }
 
-export function useFlats(tonicPc: number, mode: Mode) {
+export function prefersFlats(tonicPc: number, mode: Mode) {
   const majorPc = mode === "minor" ? (tonicPc + 3) % 12 : tonicPc;
   return majorPc === 5 || majorPc === 10 || majorPc === 3 || majorPc === 8;
 }
@@ -392,7 +392,7 @@ export function diatonicChords(tonicPc: number, mode: Mode, sevenths = false) {
       roman,
       quality,
       rootPc,
-      label: chordLabel(rootPc, quality, useFlats(tonicPc, mode)),
+      label: chordLabel(rootPc, quality, prefersFlats(tonicPc, mode)),
     };
   });
 }
@@ -424,7 +424,7 @@ export function parseNumeral(raw: string, keyPc: number, mode: Mode) {
   else if (suf === "7") qualityId = upper ? "7" : rom.toUpperCase() === "VII" ? "m7b5" : "m7";
   else if (!upper) qualityId = "min";
 
-  const flats = useFlats(keyPc, mode);
+  const flats = prefersFlats(keyPc, mode);
   return {
     rootPc,
     qualityId,

@@ -1,4 +1,4 @@
-import type { ExerciseType, Lesson, NafmeProcess, PlanItem } from "./types";
+import type { ExerciseType, Lesson, NafmeProcess, PlanItem } from "./types.ts";
 
 /**
  * WHAT the artistic process asks — never owns the 10-minute loop.
@@ -95,7 +95,8 @@ export function isProcessLesson(lesson: Lesson) {
 }
 
 export function chordsFromCreatePick(pick: string, fallback: string[]) {
-  if (pick.includes("–")) return pick.split("–").map((s) => s.trim()).filter(Boolean);
+  const normalized = pick.replace(/—/g, "–").replace(/-/g, "–");
+  if (normalized.includes("–")) return normalized.split("–").map((s) => s.trim()).filter(Boolean);
   if (/^[A-G]/.test(pick) && !pick.includes(" ")) return [pick];
   return fallback;
 }

@@ -1,5 +1,5 @@
-import type { Lesson, PlanItem } from "./types";
-import { LESSONS as GUITAR_LESSONS, TRACKS as GUITAR_TRACKS, FIRST_PROMISE as GUITAR_PROMISE } from "./guitar";
+import type { Lesson, PlanItem } from "./types.ts";
+import { LESSONS as GUITAR_LESSONS, TRACKS as GUITAR_TRACKS, FIRST_PROMISE as GUITAR_PROMISE } from "./guitar.ts";
 
 export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals";
 

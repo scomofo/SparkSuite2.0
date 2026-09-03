@@ -1,5 +1,5 @@
-import { localDayKey } from "@/lib/utils";
-import { FIRST_PROMISE, LESSONS, lessonById, nextLesson } from "./guitar";
+import { localDayKey } from "../utils.ts";
+import { FIRST_PROMISE, LESSONS, lessonById, nextLesson } from "./guitar.ts";
 import {
   firstLessonIds,
   instrumentById,
@@ -9,10 +9,10 @@ import {
   promiseFor,
   withSurface,
   type InstrumentId,
-} from "./instruments";
-import { feelFor, scaledBpm, type PlanFeel } from "./psychology";
-import { analysisFor, criteriaFor, nextUnlockedProcess, processPromise } from "./nafme";
-import type { DailyPlan, PlanItem, ProgressState } from "./types";
+} from "./instruments.ts";
+import { feelFor, scaledBpm, type PlanFeel } from "./psychology.ts";
+import { analysisFor, criteriaFor, nextUnlockedProcess, processPromise } from "./nafme.ts";
+import type { DailyPlan, PlanItem, ProgressState } from "./types.ts";
 
 function warmupItem(progress: ProgressState, bpm: number, firstDay: boolean, windowMs: number): PlanItem {
   const needsTune = !firstDay && (progress.mastery["lesson_guitar_tuning_01"] ?? 0) < 0.7;

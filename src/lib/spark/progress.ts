@@ -1,10 +1,10 @@
-import { FOUNDATION_LESSONS } from "./guitar";
-import { evaluateMarks, levelForXp } from "./game";
-import { foundationsFor, type InstrumentId } from "./instruments";
-import { applyStreak, saveProgress } from "./storage";
-import type { ItemResult, ProgressState, SessionResult } from "./types";
+import { FOUNDATION_LESSONS } from "./guitar.ts";
+import { evaluateMarks, levelForXp } from "./game.ts";
+import { foundationsFor, type InstrumentId } from "./instruments.ts";
+import { applyStreak, saveProgress } from "./storage.ts";
+import type { ItemResult, ProgressState, SessionResult } from "./types.ts";
 
-export { levelForXp, XP_PER_LEVEL } from "./game";
+export { levelForXp, XP_PER_LEVEL } from "./game.ts";
 
 export function grantFoundations(state: ProgressState, instrument: InstrumentId = "guitar"): ProgressState {
   const ids = instrument === "guitar" ? FOUNDATION_LESSONS : foundationsFor(instrument);
@@ -25,6 +25,9 @@ export function applyItemMastery(state: ProgressState, result: ItemResult): Prog
 }
 
 export function finalizeSession(state: ProgressState, result: SessionResult, instrument: InstrumentId = "guitar"): ProgressState {
+  // Skipping everything is not a day. Don't grant foundations, streak,
+  // history, or dailyComplete for empty results — prevents streak farming.
+  if (result.items.length === 0) return state;
   let next = grantFoundations(applyStreak(state, result.date), instrument);
   for (const item of result.items) next = applyItemMastery(next, item);
   const xp = next.xp + result.xp;

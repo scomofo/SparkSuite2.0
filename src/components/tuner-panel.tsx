@@ -32,6 +32,8 @@ export function TunerPanel() {
   useEffect(() => () => stopRef.current?.(), []);
 
   async function listen() {
+    // Stop any previous mic before opening a new one — otherwise tracks leak.
+    stopRef.current?.();
     unlockAudio();
     const mic = await startMicAnalyser();
     if (!mic) {
@@ -125,6 +127,7 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
   useEffect(() => () => stopRef.current?.(), []);
 
   async function listen() {
+    stopRef.current?.();
     unlockAudio();
     const mic = await startMicAnalyser();
     if (!mic) return;

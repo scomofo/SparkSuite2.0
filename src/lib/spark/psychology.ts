@@ -1,5 +1,5 @@
-import { localDayKey } from "@/lib/utils";
-import type { DailyPlan, ProgressState, SessionResult } from "./types";
+import { localDayKey } from "../utils.ts";
+import type { DailyPlan, ProgressState, SessionResult } from "./types.ts";
 
 export type PlanFeel = {
   bpmScale: number;

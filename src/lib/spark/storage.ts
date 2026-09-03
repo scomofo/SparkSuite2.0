@@ -1,8 +1,8 @@
-import { localDayKey } from "@/lib/utils";
-import { isInstrumentId, type InstrumentId } from "./instruments";
-import { nextStreak } from "./psychology";
-import { isCheckin } from "./udl";
-import { SAVE_VERSION, type ProgressState } from "./types";
+import { localDayKey } from "../utils.ts";
+import { isInstrumentId, type InstrumentId } from "./instruments.ts";
+import { nextStreak } from "./psychology.ts";
+import { isCheckin } from "./udl.ts";
+import { SAVE_VERSION, type ProgressState } from "./types.ts";
 
 const KEY = "sparksuite.v2";
 const LEGACY = "sparksuite.v1";
@@ -39,19 +39,59 @@ function canUseStorage() {
   return typeof localStorage !== "undefined";
 }
 
+function toFiniteNumber(value: unknown, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+function sanitizeMastery(value: unknown): Record<string, number> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return {};
+  const out: Record<string, number> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (typeof v === "number" && Number.isFinite(v)) out[k] = Math.max(0, Math.min(1, v));
+  }
+  return out;
+}
+
 function migrateProgress(raw: Partial<ProgressState> | null | undefined): ProgressState {
   const base = defaultProgress();
   if (!raw || typeof raw !== "object") return base;
+  const history = Array.isArray(raw.history)
+    ? raw.history
+        .filter(
+          (h): h is { date: string; accuracy: number; xp: number } =>
+            !!h && typeof h === "object" && typeof (h as { date?: unknown }).date === "string",
+        )
+        .map((h) => ({
+          date: h.date,
+          accuracy: typeof h.accuracy === "number" && Number.isFinite(h.accuracy) ? Math.max(0, Math.min(1, h.accuracy)) : 0,
+          xp: typeof h.xp === "number" && Number.isFinite(h.xp) ? Math.max(0, h.xp) : 0,
+        }))
+    : [];
+  const dailyComplete: Record<string, boolean> =
+    raw.dailyComplete && typeof raw.dailyComplete === "object" && !Array.isArray(raw.dailyComplete)
+      ? Object.fromEntries(
+          Object.entries(raw.dailyComplete as Record<string, unknown>)
+            .filter(([k, v]) => typeof k === "string" && v === true)
+            .map(([k]) => [k, true]),
+        )
+      : {};
   return {
     ...base,
-    ...raw,
-    version: SAVE_VERSION,
-    mastery: raw.mastery ?? {},
-    history: raw.history ?? [],
-    dailyComplete: raw.dailyComplete ?? {},
-    bestCombo: typeof raw.bestCombo === "number" ? raw.bestCombo : 0,
+    xp: toFiniteNumber(raw.xp, 0) < 0 ? 0 : toFiniteNumber(raw.xp, 0),
+    level: Math.max(1, Math.floor(toFiniteNumber(raw.level, 1)) || 1),
+    streak: Math.max(0, Math.floor(toFiniteNumber(raw.streak, 0)) || 0),
+    lastPlayedDay: typeof raw.lastPlayedDay === "string" ? raw.lastPlayedDay : null,
+    mastery: sanitizeMastery(raw.mastery),
+    lastAccuracy:
+      typeof raw.lastAccuracy === "number" && Number.isFinite(raw.lastAccuracy)
+        ? Math.max(0, Math.min(1, raw.lastAccuracy))
+        : 0,
+    history,
+    dailyComplete,
+    bestCombo: Math.max(0, Math.floor(toFiniteNumber(raw.bestCombo, 0)) || 0),
     marks: Array.isArray(raw.marks) ? raw.marks.filter((id): id is string => typeof id === "string") : [],
     lastCheckin: isCheckin(raw.lastCheckin) ? raw.lastCheckin : null,
+    version: SAVE_VERSION,
   };
 }
 
