@@ -119,6 +119,7 @@ export function usePlayhead() {
   const play = (hits: LineHit[], bpm: number, extraKick: boolean) => {
     clear();
     const ac = unlockAudio();
+    if (!ac) return;
     const beat = 60 / bpm;
     const origin = ac.currentTime;
     const kicked = new Set<number>();

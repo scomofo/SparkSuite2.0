@@ -36,6 +36,25 @@ function requestHost(event: GrokPwaEvent): string {
   );
 }
 
+/**
+ * Minimal hardening headers (review 2026-09).
+ * - No `script-src`/`style-src`: TanStack Start + popup completion HTML rely on
+ *   inline scripts; a strict CSP would blank the app.
+ * - `frame-ancestors` allows self + Grok hosts (preview iframe + branding
+ *   injector `https://grok.com/grok-app-builder/extensions.js` per AGENTS.md)
+ *   while blocking third-party clickjacking. Do NOT add `X-Frame-Options` —
+ *   it would override this allowlist and break the live preview.
+ */
+function applySecurityHeaders(headers: Headers): void {
+  headers.set("x-content-type-options", "nosniff");
+  headers.set("referrer-policy", "strict-origin-when-cross-origin");
+  headers.set("permissions-policy", "microphone=(self), camera=(), geolocation=()");
+  headers.set(
+    "content-security-policy",
+    "frame-ancestors 'self' https://grok.com https://*.grok.com https://*.grok-sandbox.com;",
+  );
+}
+
 function injectHeadStreaming(response: Response, host: string): Response {
   const injector = createHeadInjector({
     host,
@@ -53,6 +72,7 @@ function injectHeadStreaming(response: Response, host: string): Response {
   );
   const headers = new Headers(response.headers);
   headers.delete("content-length");
+  applySecurityHeaders(headers);
   return new Response(transformed, {
     status: response.status,
     statusText: response.statusText,
@@ -71,12 +91,12 @@ export default async function grokPwaMiddleware(
   const urlWithQuery = path + event.url.search;
 
   if (path === "/__grok/manifest.webmanifest" || path === "/__grok/manifest.json") {
-    return new Response(renderWebManifest(requestHost(event)), {
-      headers: {
-        "content-type": "application/manifest+json; charset=utf-8",
-        "cache-control": "no-cache",
-      },
+    const headers = new Headers({
+      "content-type": "application/manifest+json; charset=utf-8",
+      "cache-control": "no-cache",
     });
+    applySecurityHeaders(headers);
+    return new Response(renderWebManifest(requestHost(event)), { headers });
   }
 
   if (
@@ -88,12 +108,12 @@ export default async function grokPwaMiddleware(
       host: requestHost(event),
       url: urlWithQuery,
     });
-    return new Response(html, {
-      headers: {
-        "content-type": "text/html; charset=utf-8",
-        "cache-control": "no-cache",
-      },
+    const headers = new Headers({
+      "content-type": "text/html; charset=utf-8",
+      "cache-control": "no-cache",
     });
+    applySecurityHeaders(headers);
+    return new Response(html, { headers });
   }
 
   if (!isDocumentPath(path)) return next();

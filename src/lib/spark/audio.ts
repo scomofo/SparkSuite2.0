@@ -20,22 +20,34 @@ function bindVisibility() {
 }
 
 export function unlockAudio() {
-  if (!ctx) {
-    const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    ctx = new AC({ latencyHint: "interactive" });
-    master = ctx.createGain();
-    sfx = ctx.createGain();
-    music = ctx.createGain();
-    sfx.gain.value = 0.9;
-    music.gain.value = 0.7;
-    master.gain.value = muted ? 0 : 0.85;
-    sfx.connect(master);
-    music.connect(master);
-    master.connect(ctx.destination);
+  try {
+    if (!ctx) {
+      const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      ctx = new AC({ latencyHint: "interactive" });
+      master = ctx.createGain();
+      sfx = ctx.createGain();
+      music = ctx.createGain();
+      sfx.gain.value = 0.9;
+      music.gain.value = 0.7;
+      master.gain.value = muted ? 0 : 0.85;
+      sfx.connect(master);
+      music.connect(master);
+      master.connect(ctx.destination);
+    }
+    if (ctx.state === "suspended") void ctx.resume().catch(() => {});
+    bindVisibility();
+    return ctx;
+  } catch {
+    return null;
   }
-  if (ctx.state === "suspended") void ctx.resume();
-  bindVisibility();
-  return ctx;
+}
+
+function safeCtx(): AudioContext | null {
+  try {
+    return unlockAudio();
+  } catch {
+    return null;
+  }
 }
 
 export function setMuted(next: boolean) {
@@ -47,18 +59,34 @@ export function isMuted() {
   return muted;
 }
 
+const noiseCache = new Map<number, AudioBuffer>();
+
 function noiseBuffer(length: number) {
   if (!ctx) return null;
-  const buf = ctx.createBuffer(1, length, ctx.sampleRate);
+  const key = Math.max(24, Math.floor(length));
+  const hit = noiseCache.get(key);
+  if (hit && hit.sampleRate === ctx.sampleRate) return hit;
+  // Cap cache: rapid strums reuse a handful of lengths; evict oldest.
+  if (noiseCache.size >= 8) {
+    const oldest = noiseCache.keys().next().value;
+    if (oldest !== undefined) noiseCache.delete(oldest);
+  }
+  const buf = ctx.createBuffer(1, key, ctx.sampleRate);
   const data = buf.getChannelData(0);
-  for (let i = 0; i < length; i++) data[i] = Math.random() * 2 - 1;
+  for (let i = 0; i < key; i++) data[i] = Math.random() * 2 - 1;
+  noiseCache.set(key, buf);
   return buf;
+}
+
+function validFreq(freq: number): boolean {
+  return typeof freq === "number" && Number.isFinite(freq) && freq > 0;
 }
 
 /** Karplus–Strong-ish pluck at `freq` Hz. */
 export function pluck(freq: number, when?: number, gain = 0.45) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  if (!validFreq(freq)) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const period = Math.max(20, Math.round(ac.sampleRate / freq));
   const burst = noiseBuffer(period);
@@ -86,21 +114,24 @@ export function pluck(freq: number, when?: number, gain = 0.45) {
 }
 
 export function strum(freqs: number[], when?: number) {
-  const ac = unlockAudio();
+  const ac = safeCtx();
+  if (!ac) return;
   const t = when ?? ac.currentTime;
   freqs.forEach((f, i) => pluck(f, t + i * 0.012, 0.32));
 }
 
 export function strumUp(freqs: number[], when?: number) {
-  const ac = unlockAudio();
+  const ac = safeCtx();
+  if (!ac) return;
   const t = when ?? ac.currentTime;
   [...freqs].reverse().forEach((f, i) => pluck(f, t + i * 0.01, 0.26));
 }
 
 /** Soft piano-like tone (sine + quiet odd harmonic). */
 export function pianoTone(freq: number, when?: number, gain = 0.28) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  if (!validFreq(freq)) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const g = ac.createGain();
   g.gain.setValueAtTime(gain, t);
@@ -120,15 +151,17 @@ export function pianoTone(freq: number, when?: number, gain = 0.28) {
 }
 
 export function pianoChord(freqs: number[], when?: number) {
-  const ac = unlockAudio();
+  const ac = safeCtx();
+  if (!ac) return;
   const t = when ?? ac.currentTime;
   freqs.forEach((f, i) => pianoTone(f, t + i * 0.008, 0.2));
 }
 
 /** Longer piano tone for vocal holds. */
 export function pianoHold(freq: number, seconds = 4, when?: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  if (!validFreq(freq)) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const g = ac.createGain();
   g.gain.setValueAtTime(0.001, t);
@@ -146,8 +179,9 @@ export function pianoHold(freq: number, seconds = 4, when?: number) {
 
 /** Round bass note — sine floor, quiet octave, short click. */
 export function bassTone(freq: number, when?: number, gain = 0.46) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  if (!validFreq(freq)) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const g = ac.createGain();
   g.gain.setValueAtTime(gain, t);
@@ -195,8 +229,9 @@ export function bassTone(freq: number, when?: number, gain = 0.46) {
 
 /** Hammer-on / pull-off — same pitch engine, no pick click, soft swell. */
 export function bassLegato(freq: number, when?: number, gain = 0.4) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  if (!validFreq(freq)) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const g = ac.createGain();
   g.gain.setValueAtTime(0.001, t);
@@ -228,8 +263,8 @@ export function bassLegato(freq: number, when?: number, gain = 0.4) {
 
 /** Muted thud — no pitch. The space between notes. */
 export function ghostNote(when?: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const burst = noiseBuffer(Math.floor(ac.sampleRate * 0.05));
   if (!burst) return;
@@ -249,8 +284,8 @@ export function ghostNote(when?: number) {
 }
 
 export function kick(when?: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const o = ac.createOscillator();
   const g = ac.createGain();
@@ -266,8 +301,8 @@ export function kick(when?: number) {
 }
 
 export function snare(when?: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const burst = noiseBuffer(Math.floor(ac.sampleRate * 0.12));
   if (!burst) return;
@@ -287,8 +322,8 @@ export function snare(when?: number) {
 }
 
 export function hat(when?: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const burst = noiseBuffer(Math.floor(ac.sampleRate * 0.04));
   if (!burst) return;
@@ -308,8 +343,8 @@ export function hat(when?: number) {
 }
 
 export function tom(when?: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const o = ac.createOscillator();
   const g = ac.createGain();
@@ -332,8 +367,8 @@ export function drumHit(pad: number, when?: number) {
 }
 
 export function click(accent: boolean, when?: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const o = ac.createOscillator();
   const g = ac.createGain();
@@ -348,8 +383,8 @@ export function click(accent: boolean, when?: number) {
 }
 
 export function hitSfx(kind: "perfect" | "good" | "ok" | "miss") {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
   const t = ac.currentTime;
   if (kind === "miss") {
     const o = ac.createOscillator();
@@ -379,8 +414,9 @@ export function hitSfx(kind: "perfect" | "good" | "ok" | "miss") {
 }
 
 export function comboSting(combo: number) {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
+  const sfxNode = sfx;
   const t = ac.currentTime;
   const root = combo >= 12 ? 523.25 : combo >= 8 ? 392 : 329.63;
   const steps = combo >= 12 ? [0, 4, 7, 12] : combo >= 8 ? [0, 7, 12] : [0, 7];
@@ -394,15 +430,16 @@ export function comboSting(combo: number) {
     g.gain.exponentialRampToValueAtTime(0.07, at + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, at + 0.18);
     o.connect(g);
-    g.connect(sfx!);
+    g.connect(sfxNode);
     o.start(at);
     o.stop(at + 0.2);
   });
 }
 
 export function markSting() {
-  const ac = unlockAudio();
-  if (!sfx) return;
+  const ac = safeCtx();
+  if (!ac || !sfx) return;
+  const sfxNode = sfx;
   const t = ac.currentTime;
   ;[392, 523.25, 659.25].forEach((freq, i) => {
     const o = ac.createOscillator();
@@ -413,7 +450,7 @@ export function markSting() {
     g.gain.setValueAtTime(0.06, at);
     g.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
     o.connect(g);
-    g.connect(sfx!);
+    g.connect(sfxNode);
     o.start(at);
     o.stop(at + 0.24);
   });

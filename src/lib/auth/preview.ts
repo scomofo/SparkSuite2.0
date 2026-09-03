@@ -15,6 +15,15 @@
  * only the secret's `base64url(SHA-256)` hash). This is a dedicated, low-privilege
  * client (preview-only, `*.grok-sandbox.com`) — rotate it by regenerating the
  * broker env var and this constant together.
+ *
+ * SECURITY NOTE (review 2026-09): this secret is committed for sandbox preview
+ * only and is low-privilege (preview callbacks only). Production MUST inject a
+ * per-app `GROK_AUTH_CLIENT_SECRET` (see `server.ts` — env wins over this
+ * fallback). Do not reuse this value for deployed OAuth clients. To rotate:
+ * 1) regenerate the broker `GROK_PREVIEW_CLIENT_SECRET`,
+ * 2) update this constant in the same change,
+ * 3) redeploy. Never put the production secret in git — use `.env` (gitignored)
+ * or the deployer-injected env.
  */
 export const PREVIEW_CLIENT_ID = "grok_preview";
 export const PREVIEW_CLIENT_SECRET =

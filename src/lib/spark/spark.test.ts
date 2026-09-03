@@ -9,10 +9,27 @@ import {
 } from "./practice.ts";
 import { chordsFromCreatePick } from "./nafme.ts";
 import { prefersFlats } from "./theory.ts";
-import { defaultProgress } from "./storage.ts";
+import { defaultProgress, loadSuite, saveProgress } from "./storage.ts";
 import { finalizeSession } from "./progress.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
+import { nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import type { DailyPlan } from "./types.ts";
+
+function withMemoryStorage() {
+  const store = new Map<string, string>();
+  const g = globalThis as unknown as Record<string, unknown>;
+  const prev = g.localStorage;
+  g.localStorage = {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => store.clear(),
+  };
+  return () => {
+    if (prev === undefined) delete g.localStorage;
+    else g.localStorage = prev;
+  };
+}
 
 describe("practice scoring thresholds", () => {
   it("stars step at 0.4 / 0.7 / 0.9", () => {
@@ -98,5 +115,66 @@ describe("empty sessions do not complete the day", () => {
     const { progress, result } = closeSession(defaultProgress(), s, "guitar");
     assert.equal(result.items.length, 0);
     assert.deepEqual(progress.dailyComplete, {});
+  });
+});
+
+describe("multi-instrument slot save (review P1)", () => {
+  it("saveProgress(state, instrument) honors the explicit slot, not suite.active", () => {
+    const restore = withMemoryStorage();
+    try {
+      const guitar = { ...defaultProgress(), xp: 10 };
+      const piano = { ...defaultProgress(), xp: 99 };
+      saveProgress(guitar, "guitar");
+      const suite = saveProgress(piano, "piano");
+      assert.equal(suite.apps.guitar?.xp, 10);
+      assert.equal(suite.apps.piano?.xp, 99);
+      assert.equal(loadSuite().apps.piano?.xp, 99);
+    } finally {
+      restore();
+    }
+  });
+
+  it("finalizeSession persists to the passed instrument slot", () => {
+    const restore = withMemoryStorage();
+    try {
+      saveProgress(defaultProgress(), "guitar");
+      const next = finalizeSession(
+        defaultProgress(),
+        {
+          date: "2026-02-02",
+          accuracy: 1,
+          stars: 3,
+          xp: 50,
+          items: [
+            { itemId: "i", lessonId: "l", hits: 4, misses: 0, accuracy: 1, stars: 3, xp: 50 },
+          ],
+        },
+        "piano",
+      );
+      assert.equal(next.xp, 50);
+      assert.equal(loadSuite().apps.piano?.xp, 50);
+    } finally {
+      restore();
+    }
+  });
+});
+
+describe("tuner guards (review P4)", () => {
+  it("yinPitch rejects short/silent/invalid input", () => {
+    assert.equal(yinPitch(new Float32Array(16), 44100), -1);
+    assert.equal(yinPitch(new Float32Array(2048), 44100), -1);
+    assert.equal(yinPitch(new Float32Array(2048).fill(0.0000001), 44100), -1);
+    assert.equal(yinPitch(new Float32Array(2048).fill(0.5), Number.NaN), -1);
+  });
+
+  it("nearestString rejects non-finite freq", () => {
+    const r = nearestString(0);
+    assert.equal(r.index, -1);
+    assert.equal(r.name, "-");
+  });
+
+  it("yinPitchFast handles short buffers via the full path", () => {
+    const r = yinPitchFast(new Float32Array(128).fill(0.5), 44100);
+    assert.equal(typeof r, "number");
   });
 });
