@@ -16,7 +16,7 @@ import type { PlanItem } from "./types.ts";
 import { defaultProgress, loadSuite, saveProgress } from "./storage.ts";
 import { finalizeSession } from "./progress.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
-import { nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
+import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -248,3 +248,39 @@ describe("tuner guards (review P4)", () => {
   });
 });
 
+describe("bass tuner range", () => {
+  function tone(hz: number, sr: number, n: number) {
+    const buf = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      buf[i] = 0.5 * Math.sin((2 * Math.PI * hz * i) / sr) + 0.2 * Math.sin((2 * Math.PI * 2 * hz * i) / sr);
+    }
+    return buf;
+  }
+  const cents = (a: number, b: number) => Math.abs(1200 * Math.log2(a / b));
+
+  it("a 2048-sample window cannot resolve low E at 48 kHz (the bug)", () => {
+    assert.equal(yinPitchFast(tone(41.2, 48000, 2048), 48000), -1);
+  });
+
+  it("sizes the analyser so the lowest reference is in range", () => {
+    assert.equal(analyserSizeFor(82.41), 2048);
+    assert.equal(analyserSizeFor(41.2), 4096);
+    assert.equal(analyserSizeFor(20), 8192);
+  });
+
+  it("the sized window hears every bass string within 5 cents", () => {
+    const size = analyserSizeFor(41.2);
+    for (const sr of [44100, 48000]) {
+      for (const hz of [41.2, 55, 73.42, 98]) {
+        const got = yinPitchFast(tone(hz, sr, size), sr, 0.12, size >= 8192 ? 4 : 2);
+        assert.ok(got > 0, `${hz} Hz at ${sr}: no pitch`);
+        assert.ok(cents(got, hz) < 5, `${hz} Hz at ${sr}: got ${got.toFixed(2)}`);
+      }
+    }
+  });
+
+  it("guitar keeps the cheap path and still hears low E", () => {
+    const got = yinPitchFast(tone(82.41, 48000, 2048), 48000);
+    assert.ok(cents(got, 82.41) < 5);
+  });
+});

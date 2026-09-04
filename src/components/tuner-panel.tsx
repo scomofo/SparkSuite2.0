@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { pluck, pianoTone, drumHit, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, midiToFreq } from "@/lib/spark/instruments";
-import { nearestString, startMicAnalyser, yinPitchFast } from "@/lib/spark/tuner";
+import { analyserSizeFor, nearestString, startMicAnalyser, yinPitchFast } from "@/lib/spark/tuner";
 import { Button } from "@/components/ui/button";
 import { DrumPads } from "@/components/drum-pads";
 import { useSpark } from "@/store/spark";
@@ -22,6 +22,12 @@ export function TunerPanel() {
   const instrument = useSpark((s) => s.instrument);
   const inst = instrumentById(instrument);
   const refs = refsFor(instrument);
+  // Bass low E is 41.2 Hz; a 2048-sample window cannot resolve it (floor ≈ 47 Hz
+  // at 48 kHz). Size the window from the lowest reference; a very long window
+  // decimates harder so the per-tick cost stays bounded.
+  const lowestRef = Math.min(...refs.freqs);
+  const fftSize = analyserSizeFor(lowestRef);
+  const decimate = fftSize >= 8192 ? 4 : 2;
   const [cents, setCents] = useState(0);
   const [name, setName] = useState("-");
   const [live, setLive] = useState(false);
@@ -41,7 +47,7 @@ export function TunerPanel() {
     // Stop any previous mic before opening a new one — otherwise tracks leak.
     stopRef.current?.();
     unlockAudio();
-    const mic = await startMicAnalyser();
+    const mic = await startMicAnalyser(fftSize);
     if (!mic) {
       setError("Microphone blocked. Use the reference pitches below.");
       return;
@@ -59,8 +65,8 @@ export function TunerPanel() {
       if (ts - last >= 80) {
         last = ts;
         mic.analyser.getFloatTimeDomainData(buf);
-        const hz = yinPitchFast(buf, mic.ctx.sampleRate);
-        if (hz > 40 && hz < 1200) {
+        const hz = yinPitchFast(buf, mic.ctx.sampleRate, 0.12, decimate);
+        if (hz > lowestRef * 0.7 && hz < 1200) {
           const n = nearestString(hz, refs.freqs, refs.names);
           if (n.index >= 0 && Number.isFinite(n.cents)) {
             setName(n.name);

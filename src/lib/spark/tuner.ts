@@ -69,19 +69,36 @@ export function nearestString(
 
 /**
  * Downsampled YIN for per-frame tuner ticks (review 2026-09).
- * Halves the buffer (2x fewer taus AND 2x fewer samples ≈ 4x cheaper) then
- * rescales. Call sites should ALSO throttle to ~10-15Hz, not every rAF.
+ * Box-averages `decimate` samples into one (fewer taus AND fewer samples ≈
+ * decimate² cheaper) then rescales. Call sites should ALSO throttle to
+ * ~10-15Hz, not every rAF.
+ *
+ * The lowest detectable pitch is 2 × sampleRate / buf.length regardless of
+ * `decimate`, so a low instrument needs a longer buffer, not less decimation:
+ * 2048 samples floor at ~47 Hz on a 48 kHz mic (above bass low E, 41.2 Hz);
+ * 8192 samples floor at ~12 Hz. Pair 8192 with decimate 4 for the same cost.
  */
-export function yinPitchFast(buf: Float32Array, sampleRate: number, threshold = 0.12): number {
-  if (buf.length <= 256) return yinPitch(buf, sampleRate, threshold);
-  const halfLen = Math.floor(buf.length / 2);
-  const down = new Float32Array(halfLen);
-  for (let i = 0; i < halfLen; i++) down[i] = (buf[i * 2] + buf[i * 2 + 1]) * 0.5;
-  const hz = yinPitch(down, sampleRate / 2, threshold);
-  return hz;
+export function yinPitchFast(buf: Float32Array, sampleRate: number, threshold = 0.12, decimate = 2): number {
+  const step = Math.max(1, Math.floor(decimate));
+  if (step === 1 || buf.length <= 128 * step) return yinPitch(buf, sampleRate, threshold);
+  const len = Math.floor(buf.length / step);
+  const down = new Float32Array(len);
+  for (let i = 0; i < len; i++) {
+    let sum = 0;
+    for (let k = 0; k < step; k++) sum += buf[i * step + k];
+    down[i] = sum / step;
+  }
+  return yinPitch(down, sampleRate / step, threshold);
 }
 
-export async function startMicAnalyser(): Promise<{
+/** Analyser length that puts `lowestHz` comfortably inside the YIN range. */
+export function analyserSizeFor(lowestHz: number, sampleRate = 48000) {
+  let size = 2048;
+  while (size < 32768 && (2 * sampleRate) / size > lowestHz * 0.8) size *= 2;
+  return size;
+}
+
+export async function startMicAnalyser(fftSize = 2048): Promise<{
   analyser: AnalyserNode;
   ctx: AudioContext;
   stream: MediaStream;
@@ -96,7 +113,7 @@ export async function startMicAnalyser(): Promise<{
     if (ctx.state === "suspended") await ctx.resume();
     const src = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
-    analyser.fftSize = 2048;
+    analyser.fftSize = fftSize;
     src.connect(analyser);
     return {
       analyser,
