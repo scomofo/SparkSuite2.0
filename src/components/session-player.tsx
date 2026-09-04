@@ -10,7 +10,7 @@ import {
   UKE_CHORDS,
   type InstrumentId,
 } from "@/lib/spark/instruments";
-import { buildTimeline, consumeHit, countInBeats, summarizeItem, type NoteEvent } from "@/lib/spark/practice";
+import { buildTimeline, consumeHit, countInBeats, isPluckDrill, summarizeItem, type NoteEvent } from "@/lib/spark/practice";
 import { AUTO_ADVANCE_MS, itemCloseCopy } from "@/lib/spark/psychology";
 import { coachCue, howYouPlay, patternInWords, successLine } from "@/lib/spark/udl";
 import { chordsFromCreatePick, refineLine, whyThisPiece } from "@/lib/spark/nafme";
@@ -406,8 +406,7 @@ export function SessionPlayer() {
 
   if (!session || !item) return null;
 
-  const isWarm =
-    (item.type === "warmup" || item.type === "skill") && item.process !== "respond" && item.process !== "create";
+  const isWarm = isPluckDrill(item);
   const surface = item.surface ?? inst.surface;
   const useHighway = surface === "strings" && !isWarm;
   // Pluck timelines expect a specific string/pad/key. A generic strum would

@@ -1,7 +1,9 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
+  buildTimeline,
   consumeHit,
+  isPluckDrill,
   judgeHit,
   starsFor,
   summarizeItem,
@@ -9,6 +11,8 @@ import {
 } from "./practice.ts";
 import { chordsFromCreatePick } from "./nafme.ts";
 import { prefersFlats } from "./theory.ts";
+import { instrumentById, lessonsFor, withSurface, type InstrumentId } from "./instruments.ts";
+import type { PlanItem } from "./types.ts";
 import { defaultProgress, loadSuite, saveProgress } from "./storage.ts";
 import { finalizeSession } from "./progress.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
@@ -85,6 +89,71 @@ describe("theory spelling", () => {
   it("prefers flats for flat keys, sharps for C", () => {
     assert.equal(prefersFlats(5, "major"), true);
     assert.equal(prefersFlats(0, "major"), false);
+  });
+});
+
+describe("listen and make passes are playable with the generic control", () => {
+  const ids: InstrumentId[] = ["guitar", "piano", "ukulele", "bass", "drums", "vocals"];
+  const items = ids.flatMap((id) =>
+    lessonsFor(id)
+      .filter((l) => l.process === "respond" || l.process === "create")
+      .map((l) =>
+        withSurface(
+          {
+            id: l.id,
+            type: l.type,
+            title: l.title,
+            subtitle: "",
+            durationSec: 1,
+            lessonId: l.id,
+            chords: l.chords,
+            pattern: l.pattern,
+            bars: l.bars,
+            bpm: l.bpm,
+            process: l.process,
+          } satisfies PlanItem,
+          instrumentById(id),
+        ),
+      ),
+  );
+
+  it("covers every instrument", () => {
+    assert.ok(items.length >= 10);
+  });
+
+  it("a respond/create item is never a pluck drill", () => {
+    for (const item of items) assert.equal(isPluckDrill(item), false, item.lessonId);
+  });
+
+  it("their timelines never demand a specific string, so a plain strum on the beat is a hit", () => {
+    for (const item of items) {
+      if (item.surface === "pads") continue;
+      const notes = buildTimeline(item);
+      assert.ok(notes.length > 0, item.lessonId);
+      for (const n of notes) assert.equal(n.string, undefined, `${item.lessonId} expects string ${n.string}`);
+      const res = consumeHit(notes, notes[0].t, 230);
+      assert.equal(res.hit, true, item.lessonId);
+    }
+  });
+
+  it("warmup drills still expect a specific string", () => {
+    const warm = withSurface(
+      {
+        id: "w",
+        type: "warmup",
+        title: "",
+        subtitle: "",
+        durationSec: 1,
+        lessonId: "lesson_guitar_open_strings_01",
+        chords: [],
+        pattern: "D",
+        bars: 2,
+        bpm: 70,
+      } satisfies PlanItem,
+      instrumentById("guitar"),
+    );
+    assert.equal(isPluckDrill(warm), true);
+    assert.ok(buildTimeline(warm).every((n) => n.string !== undefined));
   });
 });
 
@@ -178,3 +247,4 @@ describe("tuner guards (review P4)", () => {
     assert.equal(typeof r, "number");
   });
 });
+
