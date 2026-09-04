@@ -10,7 +10,7 @@ import { UkeLab } from "@/components/labs/uke-lab";
 import { VoiceLab } from "@/components/labs/voice-lab";
 import { Chip, TabRow } from "@/components/labs/shared";
 import { Button } from "@/components/ui/button";
-import { bassLegato, bassTone, click, ghostNote, kick, unlockAudio } from "@/lib/spark/audio";
+import { bassLegato, bassTone, click, ghostNote, kick, scheduleRun, unlockAudio, type AudioRun } from "@/lib/spark/audio";
 import {
   BASS_CHORDS,
   BASS_ROOTS,
@@ -106,20 +106,24 @@ function Lab({ search, patch }: { search: Search; patch: (n: Partial<Search>) =>
   const [finger, setFinger] = useState<Finger | null>(null);
   const [lockKick, setLockKick] = useState(true);
   const timers = useRef<number[]>([]);
+  const run = useRef<AudioRun | null>(null);
 
-  useEffect(() => {
-    return () => {
-      timers.current.forEach((id) => window.clearTimeout(id));
-      timers.current = [];
-    };
-  }, []);
-
-  useEffect(() => {
+  /** Stop the line: visual timers AND every note already scheduled on the audio clock. */
+  const stopLine = () => {
+    timers.current.forEach((id) => window.clearTimeout(id));
+    timers.current = [];
+    run.current?.stop();
+    run.current = null;
     setActive(null);
     setBeatN(null);
     setCursorBeat(null);
     setFinger(null);
-  }, [search.tab, search.chord]);
+  };
+
+  useEffect(() => stopLine, []);
+
+  // A new tab or chord means a new line; the old one must not keep driving the neck.
+  useEffect(stopLine, [search.tab, search.chord]);
 
   const playPos = (pos: BassPos, ghost = pos.role === "gh") => {
     unlockAudio();
@@ -129,38 +133,50 @@ function Lab({ search, patch }: { search: Search; patch: (n: Partial<Search>) =>
     setActive(pos);
   };
 
-  const playLine = () => {
-    timers.current.forEach((id) => window.clearTimeout(id));
-    timers.current = [];
+  const playLine = async () => {
+    stopLine();
     const ac = unlockAudio();
     if (!ac) return;
+    if (ac.state !== "running") {
+      await Promise.race([ac.resume().catch(() => undefined), new Promise((r) => setTimeout(r, 300))]);
+    }
     const beat = 60 / 88;
     const origin = ac.currentTime;
+    const lastBeat = line[line.length - 1]?.beat ?? 8;
+    run.current = scheduleRun(() => {
+      line.forEach((ev) => soundEvent(ev, origin + ev.beat * beat));
+      if (lockKick) {
+        for (let b = 0; b <= Math.floor(lastBeat); b++) {
+          const when = origin + b * beat;
+          click(b % 4 === 0, when);
+          if (b % 2 === 0) kick(when);
+        }
+      }
+    });
+    const at = (beatIndex: number, fn: () => void) => {
+      const delay = Math.max(0, (origin + beatIndex * beat - ac.currentTime) * 1000);
+      timers.current.push(window.setTimeout(fn, delay));
+    };
+    for (let b = 0; b <= Math.floor(lastBeat); b++) at(b, () => setBeatN((b % 4) + 1));
     line.forEach((ev) => {
-      const when = origin + ev.beat * beat;
-      soundEvent(ev, when);
-      if (lockKick && ev.beat % 2 === 0 && ev.beat === Math.floor(ev.beat)) kick(when);
-      if (ev.beat === Math.floor(ev.beat)) click(ev.beat % 4 === 0, when);
-      const delay = Math.max(0, (when - ac.currentTime) * 1000);
-      const id = window.setTimeout(() => {
+      at(ev.beat, () => {
         setActive(ev.pos);
-        setBeatN((Math.floor(ev.beat) % 4) + 1);
         setCursorBeat(ev.beat);
         setFinger(ev.finger ?? null);
-      }, delay);
-      timers.current.push(id);
+      });
     });
-    const lastBeat = line[line.length - 1]?.beat ?? 8;
-    const end = window.setTimeout(
-      () => {
-        setActive(null);
-        setBeatN(null);
-        setCursorBeat(null);
-        setFinger(null);
-      },
-      (lastBeat + 1) * beat * 1000 + 200,
+    timers.current.push(
+      window.setTimeout(
+        () => {
+          setActive(null);
+          setBeatN(null);
+          setCursorBeat(null);
+          setFinger(null);
+          run.current = null;
+        },
+        (lastBeat + 1) * beat * 1000 + 200,
+      ),
     );
-    timers.current.push(end);
   };
 
   const extraMarks = marksFor(search.tab, root, marks);
@@ -191,7 +207,7 @@ function Lab({ search, patch }: { search: Search; patch: (n: Partial<Search>) =>
           {beatN ? <p className="font-display text-sm tabular text-dim">beat {beatN}</p> : null}
         </div>
         <div className="mt-5 flex gap-2">
-          <Button onClick={playLine} className="flex-1">
+          <Button onClick={() => void playLine()} className="flex-1">
             <Play className="size-4" />
             Play the line
           </Button>

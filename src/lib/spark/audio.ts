@@ -6,6 +6,49 @@ let sfx: GainNode | null = null;
 let music: GainNode | null = null;
 let muted = false;
 let visibilityBound = false;
+/** Where new voices connect. Normally the sfx bus; a `scheduleRun` gain while one is open. */
+let dest: GainNode | null = null;
+
+function out(): AudioNode {
+  // Every caller checks `sfx` before scheduling, so this is never null there.
+  return dest ?? (sfx as GainNode);
+}
+
+export type AudioRun = {
+  /** Silence everything scheduled in this run, including notes still in the future. */
+  stop: () => void;
+};
+
+/**
+ * Run `fn` (which schedules voices, possibly far into the future) through one
+ * private gain node, and return a handle that can silence all of it at once.
+ * Web Audio sources cannot be un-started, so a lab that pre-schedules a whole
+ * line needs this to stop on a second tap, a tab switch or unmount.
+ */
+export function scheduleRun(fn: () => void): AudioRun | null {
+  const ac = safeCtx();
+  if (!ac || !sfx) return null;
+  const bus = ac.createGain();
+  bus.connect(sfx);
+  const prev = dest;
+  dest = bus;
+  try {
+    fn();
+  } finally {
+    dest = prev;
+  }
+  let stopped = false;
+  return {
+    stop() {
+      if (stopped) return;
+      stopped = true;
+      const t = ac.currentTime;
+      bus.gain.cancelScheduledValues(t);
+      bus.gain.setTargetAtTime(0, t, 0.012);
+      window.setTimeout(() => bus.disconnect(), 150);
+    },
+  };
+}
 
 export function getCtx() {
   return ctx;
@@ -108,7 +151,7 @@ export function pluck(freq: number, when?: number, gain = 0.45) {
   fb.connect(lp);
   lp.connect(comb);
   lp.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   src.start(t);
   src.stop(t + 0.04);
 }
@@ -136,7 +179,7 @@ export function pianoTone(freq: number, when?: number, gain = 0.28) {
   const g = ac.createGain();
   g.gain.setValueAtTime(gain, t);
   g.gain.exponentialRampToValueAtTime(0.0008, t + 1.4);
-  g.connect(sfx);
+  g.connect(out());
   ([1, 2, 3] as const).forEach((h, i) => {
     const o = ac.createOscillator();
     o.type = i === 0 ? "sine" : "triangle";
@@ -168,7 +211,7 @@ export function pianoHold(freq: number, seconds = 4, when?: number) {
   g.gain.exponentialRampToValueAtTime(0.22, t + 0.08);
   g.gain.setValueAtTime(0.22, t + Math.max(0.2, seconds - 0.4));
   g.gain.exponentialRampToValueAtTime(0.0008, t + seconds);
-  g.connect(sfx);
+  g.connect(out());
   const o = ac.createOscillator();
   o.type = "sine";
   o.frequency.value = freq;
@@ -190,7 +233,7 @@ export function bassTone(freq: number, when?: number, gain = 0.46) {
   lp.type = "lowpass";
   lp.frequency.value = Math.min(720, freq * 8);
   g.connect(lp);
-  lp.connect(sfx);
+  lp.connect(out());
 
   const fund = ac.createOscillator();
   fund.type = "sine";
@@ -221,7 +264,7 @@ export function bassTone(freq: number, when?: number, gain = 0.46) {
     clickLp.frequency.value = 380;
     src.connect(clickLp);
     clickLp.connect(cg);
-    cg.connect(sfx);
+    cg.connect(out());
     src.start(t);
     src.stop(t + 0.04);
   }
@@ -241,7 +284,7 @@ export function bassLegato(freq: number, when?: number, gain = 0.4) {
   lp.type = "lowpass";
   lp.frequency.value = Math.min(720, freq * 8);
   g.connect(lp);
-  lp.connect(sfx);
+  lp.connect(out());
 
   const fund = ac.createOscillator();
   fund.type = "sine";
@@ -278,7 +321,7 @@ export function ghostNote(when?: number) {
   g.gain.exponentialRampToValueAtTime(0.0008, t + 0.08);
   src.connect(lp);
   lp.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   src.start(t);
   src.stop(t + 0.09);
 }
@@ -295,7 +338,7 @@ export function kick(when?: number) {
   g.gain.setValueAtTime(0.7, t);
   g.gain.exponentialRampToValueAtTime(0.0008, t + 0.28);
   o.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   o.start(t);
   o.stop(t + 0.3);
 }
@@ -316,7 +359,7 @@ export function snare(when?: number) {
   g.gain.exponentialRampToValueAtTime(0.0008, t + 0.16);
   src.connect(bp);
   bp.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   src.start(t);
   src.stop(t + 0.18);
 }
@@ -337,7 +380,7 @@ export function hat(when?: number) {
   g.gain.exponentialRampToValueAtTime(0.0008, t + 0.05);
   src.connect(hp);
   hp.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   src.start(t);
   src.stop(t + 0.06);
 }
@@ -354,7 +397,7 @@ export function tom(when?: number) {
   g.gain.setValueAtTime(0.4, t);
   g.gain.exponentialRampToValueAtTime(0.0008, t + 0.22);
   o.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   o.start(t);
   o.stop(t + 0.24);
 }
@@ -377,7 +420,7 @@ export function click(accent: boolean, when?: number) {
   g.gain.setValueAtTime(accent ? 0.12 : 0.06, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.06);
   o.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   o.start(t);
   o.stop(t + 0.07);
 }
@@ -395,7 +438,7 @@ export function hitSfx(kind: "perfect" | "good" | "ok" | "miss") {
     g.gain.setValueAtTime(0.08, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.14);
     o.connect(g);
-    g.connect(sfx);
+    g.connect(out());
     o.start(t);
     o.stop(t + 0.15);
     return;
@@ -408,7 +451,7 @@ export function hitSfx(kind: "perfect" | "good" | "ok" | "miss") {
   g.gain.setValueAtTime(0.07, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
   o.connect(g);
-  g.connect(sfx);
+  g.connect(out());
   o.start(t);
   o.stop(t + 0.1);
 }
@@ -416,7 +459,6 @@ export function hitSfx(kind: "perfect" | "good" | "ok" | "miss") {
 export function comboSting(combo: number) {
   const ac = safeCtx();
   if (!ac || !sfx) return;
-  const sfxNode = sfx;
   const t = ac.currentTime;
   const root = combo >= 12 ? 523.25 : combo >= 8 ? 392 : 329.63;
   const steps = combo >= 12 ? [0, 4, 7, 12] : combo >= 8 ? [0, 7, 12] : [0, 7];
@@ -430,7 +472,7 @@ export function comboSting(combo: number) {
     g.gain.exponentialRampToValueAtTime(0.07, at + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, at + 0.18);
     o.connect(g);
-    g.connect(sfxNode);
+    g.connect(out());
     o.start(at);
     o.stop(at + 0.2);
   });
@@ -439,7 +481,6 @@ export function comboSting(combo: number) {
 export function markSting() {
   const ac = safeCtx();
   if (!ac || !sfx) return;
-  const sfxNode = sfx;
   const t = ac.currentTime;
   ;[392, 523.25, 659.25].forEach((freq, i) => {
     const o = ac.createOscillator();
@@ -450,7 +491,7 @@ export function markSting() {
     g.gain.setValueAtTime(0.06, at);
     g.gain.exponentialRampToValueAtTime(0.0001, at + 0.22);
     o.connect(g);
-    g.connect(sfxNode);
+    g.connect(out());
     o.start(at);
     o.stop(at + 0.24);
   });

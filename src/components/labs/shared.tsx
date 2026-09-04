@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { click, kick, unlockAudio } from "@/lib/spark/audio";
+import { click, kick, scheduleRun, unlockAudio, type AudioRun } from "@/lib/spark/audio";
 import { cn } from "@/lib/utils";
 
 export type BeatCell = {
@@ -100,57 +100,73 @@ export function usePlayhead() {
   const [mark, setMark] = useState<number | null>(null);
   const [lockKick, setLockKick] = useState(true);
   const timers = useRef<number[]>([]);
+  const run = useRef<AudioRun | null>(null);
 
   useEffect(() => {
     return () => {
       timers.current.forEach((id) => window.clearTimeout(id));
       timers.current = [];
+      run.current?.stop();
+      run.current = null;
     };
   }, []);
 
+  /** Stop the line: visual timers AND every note already scheduled on the audio clock. */
   const clear = () => {
     timers.current.forEach((id) => window.clearTimeout(id));
     timers.current = [];
+    run.current?.stop();
+    run.current = null;
     setBeatN(null);
     setCursorBeat(null);
     setMark(null);
   };
 
-  const play = (hits: LineHit[], bpm: number, extraKick: boolean) => {
+  const play = async (hits: LineHit[], bpm: number, extraKick: boolean) => {
     clear();
     const ac = unlockAudio();
     if (!ac) return;
+    // A suspended context freezes `currentTime`; the visual timers would then
+    // run ahead of the sound. Give resume a moment before taking the origin.
+    if (ac.state !== "running") {
+      await Promise.race([ac.resume().catch(() => undefined), new Promise((r) => setTimeout(r, 300))]);
+    }
     const beat = 60 / bpm;
     const origin = ac.currentTime;
-    const kicked = new Set<number>();
-    const clicked = new Set<number>();
-    hits.forEach((ev) => {
-      const when = origin + ev.beat * beat;
-      ev.sound(when);
-      const isInt = ev.beat === Math.floor(ev.beat);
-      if (extraKick && lockKick && isInt && ev.beat % 2 === 0 && !kicked.has(ev.beat)) {
-        kicked.add(ev.beat);
-        kick(when);
-      }
-      if (lockKick && isInt && !clicked.has(ev.beat)) {
-        clicked.add(ev.beat);
-        click(ev.beat % 4 === 0, when);
-      }
-      const delay = Math.max(0, (when - ac.currentTime) * 1000);
-      const id = window.setTimeout(() => {
-        setCursorBeat(ev.beat);
-        setBeatN((Math.floor(ev.beat) % 4) + 1);
-        setMark(ev.mark ?? null);
-      }, delay);
-      timers.current.push(id);
-    });
     const last = hits[hits.length - 1]?.beat ?? 8;
+    run.current = scheduleRun(() => {
+      hits.forEach((ev) => ev.sound(origin + ev.beat * beat));
+      // The metronome is the clock, not an echo of the hits: every integer beat
+      // clicks, even beats where the line rests.
+      if (lockKick) {
+        for (let b = 0; b <= Math.floor(last); b++) {
+          const when = origin + b * beat;
+          click(b % 4 === 0, when);
+          if (extraKick && b % 2 === 0) kick(when);
+        }
+      }
+    });
+    const at = (beatIndex: number, fn: () => void) => {
+      const delay = Math.max(0, (origin + beatIndex * beat - ac.currentTime) * 1000);
+      timers.current.push(window.setTimeout(fn, delay));
+    };
+    for (let b = 0; b <= Math.floor(last); b++) at(b, () => setBeatN((b % 4) + 1));
+    hits.forEach((ev) => {
+      at(ev.beat, () => {
+        setCursorBeat(ev.beat);
+        setMark(ev.mark ?? null);
+      });
+    });
     timers.current.push(
-      window.setTimeout(() => {
-        setBeatN(null);
-        setCursorBeat(null);
-        setMark(null);
-      }, (last + 1) * beat * 1000 + 200),
+      window.setTimeout(
+        () => {
+          setBeatN(null);
+          setCursorBeat(null);
+          setMark(null);
+          run.current = null;
+        },
+        (last + 1) * beat * 1000 + 200,
+      ),
     );
   };
 
@@ -174,7 +190,7 @@ export function PlayBar({
     <div className="mt-5">
       {beatN ? <p className="mb-3 font-display text-sm tabular text-dim">beat {beatN}</p> : null}
       <div className="flex gap-2">
-        <Button onClick={onPlay} className="flex-1">
+        <Button onClick={() => void onPlay()} className="flex-1">
           <Play className="size-4" />
           Play the line
         </Button>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ListMusic, Play, Repeat } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -7,7 +7,7 @@ import { CircleFifths, Legend } from "@/components/circle-fifths";
 import { ChromaticStrip, TheoryFretboard } from "@/components/theory-fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { Button } from "@/components/ui/button";
-import { pianoChord, pianoTone, pluck, strum, unlockAudio } from "@/lib/spark/audio";
+import { pianoChord, pianoTone, pluck, scheduleRun, strum, unlockAudio, type AudioRun } from "@/lib/spark/audio";
 import { instrumentById, midiToFreq, stringFreq } from "@/lib/spark/instruments";
 import {
   cagedShapes,
@@ -504,8 +504,20 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
   const flats = flatsForKey(search.key, search.mode);
   const list = PROGRESSIONS.filter((p) => p.mode === "any" || p.mode === search.mode);
   const [active, setActive] = useState("axis");
+  const [playing, setPlaying] = useState(false);
+  const runRef = useRef<AudioRun | null>(null);
+  const endTimer = useRef(0);
   const prog = list.find((p) => p.id === active) ?? list[0];
   const parsed = prog ? prog.numerals.map((n) => parseNumeral(n, keyPc, search.mode, flats)) : [];
+
+  const stopLoop = () => {
+    runRef.current?.stop();
+    runRef.current = null;
+    window.clearTimeout(endTimer.current);
+    setPlaying(false);
+  };
+
+  useEffect(() => stopLoop, []);
 
   useEffect(() => {
     const ids = PROGRESSIONS.filter((p) => p.mode === "any" || p.mode === search.mode).map((p) => p.id);
@@ -513,12 +525,22 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
   }, [search.mode]);
 
   const playLoop = () => {
+    if (runRef.current) {
+      stopLoop();
+      return;
+    }
     const ac = unlockAudio();
     if (!ac) return;
     const beat = 60 / 88;
-    parsed.forEach((ch, i) => {
-      hearQuality(ch.rootPc, ch.qualityId, ac.currentTime + i * beat * 2);
+    const run = scheduleRun(() => {
+      parsed.forEach((ch, i) => {
+        hearQuality(ch.rootPc, ch.qualityId, ac.currentTime + i * beat * 2);
+      });
     });
+    if (!run) return;
+    runRef.current = run;
+    setPlaying(true);
+    endTimer.current = window.setTimeout(stopLoop, parsed.length * beat * 2 * 1000 + 400);
   };
 
   return (
@@ -578,9 +600,9 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
               </li>
             ))}
           </ol>
-          <Button className="mt-4 w-full" onClick={playLoop}>
+          <Button className="mt-4 w-full" onClick={playLoop} aria-pressed={playing}>
             <Repeat className="size-4" />
-            Play the changes
+            {playing ? "Stop" : "Play the changes"}
           </Button>
           <p className="mt-3 text-pretty text-sm text-muted">{prog.blurb}</p>
         </section>
