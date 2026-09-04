@@ -10,7 +10,15 @@ import {
   type NoteEvent,
 } from "./practice.ts";
 import { chordsFromCreatePick } from "./nafme.ts";
-import { prefersFlats } from "./theory.ts";
+import {
+  chordLabel,
+  flatsForKey,
+  listVoicings,
+  parseNumeral,
+  prefersFlats,
+  QUALITIES,
+  SHAPE_TEMPLATES,
+} from "./theory.ts";
 import { instrumentById, lessonsFor, withSurface, type InstrumentId } from "./instruments.ts";
 import type { PlanItem } from "./types.ts";
 import { defaultProgress, loadSuite, saveProgress } from "./storage.ts";
@@ -89,6 +97,44 @@ describe("theory spelling", () => {
   it("prefers flats for flat keys, sharps for C", () => {
     assert.equal(prefersFlats(5, "major"), true);
     assert.equal(prefersFlats(0, "major"), false);
+  });
+
+  it("a key named with an accidental keeps that spelling", () => {
+    assert.equal(flatsForKey("Eb", "minor"), true);
+    assert.equal(flatsForKey("Bb", "minor"), true);
+    assert.equal(flatsForKey("C#", "major"), false);
+    assert.equal(flatsForKey("F#", "minor"), false);
+    assert.equal(flatsForKey("D", "minor"), true);
+    assert.equal(flatsForKey("A", "minor"), false);
+  });
+
+  it("Eb minor is spelled in flats, not A# minor", () => {
+    const i = parseNumeral("i", 3, "minor", flatsForKey("Eb", "minor"));
+    assert.equal(i.label, "Ebm");
+  });
+
+  it("voicing cards follow the root's spelling", () => {
+    const [eb] = listVoicings(3, "maj", true);
+    assert.ok(eb.name.startsWith("Eb"));
+    assert.ok(eb.notes.every((n) => !n.includes("#")));
+    assert.equal(chordLabel(3, "maj", true), "Eb");
+  });
+
+  it("every shape template spells the quality it is labelled with", () => {
+    const openPcs = [4, 9, 2, 7, 11, 4];
+    for (const t of SHAPE_TEMPLATES) {
+      const q = QUALITIES.find((x) => x.id === t.quality);
+      assert.ok(q, `unknown quality ${t.quality}`);
+      const want = q.ivs.map((iv) => iv % 12);
+      const ivs = new Set<number>();
+      t.frets.forEach((f, i) => {
+        if (f != null) ivs.add((openPcs[i] + f - t.openRootPc + 12) % 12);
+      });
+      const label = `${t.caged}-shape ${t.quality}`;
+      for (const iv of ivs) assert.ok(want.includes(iv), `${label} sounds interval ${iv} outside ${q.formula.join(" ")}`);
+      assert.ok(ivs.has(0), `${label} has no root`);
+      assert.ok(ivs.has(want[1]), `${label} has no ${q.formula[1]}`);
+    }
   });
 });
 
