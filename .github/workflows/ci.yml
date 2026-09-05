@@ -1,0 +1,59 @@
+name: Quality checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - run: npm run typecheck
+      - name: Install browser for UI checks
+        if: matrix.node == 24
+        run: npx playwright install --with-deps chromium
+      - name: Check development and production in the browser
+        if: matrix.node == 24
+        run: |
+          sudo mkdir -p /workspace/screenshots
+          sudo chown "$USER" /workspace/screenshots
+          sh startup.sh
+          for attempt in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:8080/ -o /dev/null; then break; fi
+            sleep 1
+          done
+          curl -fsS http://127.0.0.1:8080/ -o /dev/null
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080/ /workspace/screenshots/dev.png
+          node scripts/studio-browser.mjs http://127.0.0.1:8080 dev
+          npm run preview:restart
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/built.png --baseline /workspace/screenshots/dev.json
+          node scripts/studio-browser.mjs http://127.0.0.1:8081 built
+      - name: Upload browser evidence
+        if: always() && matrix.node == 24
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-evidence
+          path: /workspace/screenshots
+          retention-days: 14

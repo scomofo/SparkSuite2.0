@@ -1,4 +1,4 @@
-import { localDayKey } from "../utils.ts";
+import { isDayKey, localDayKey } from "../utils.ts";
 import { isInstrumentId, type InstrumentId } from "./instruments.ts";
 import { nextStreak } from "./psychology.ts";
 import { isCheckin } from "./udl.ts";
@@ -36,7 +36,7 @@ export const defaultSuite = (): SuiteState => ({
 });
 
 function canUseStorage() {
-  return typeof localStorage !== "undefined";
+  try { return typeof localStorage !== "undefined"; } catch { return false; }
 }
 
 function toFiniteNumber(value: unknown, fallback: number): number {
@@ -59,7 +59,7 @@ function migrateProgress(raw: Partial<ProgressState> | null | undefined): Progre
     ? raw.history
         .filter(
           (h): h is { date: string; accuracy: number; xp: number } =>
-            !!h && typeof h === "object" && typeof (h as { date?: unknown }).date === "string",
+            !!h && typeof h === "object" && isDayKey((h as { date?: unknown }).date),
         )
         .map((h) => ({
           date: h.date,
@@ -71,7 +71,7 @@ function migrateProgress(raw: Partial<ProgressState> | null | undefined): Progre
     raw.dailyComplete && typeof raw.dailyComplete === "object" && !Array.isArray(raw.dailyComplete)
       ? Object.fromEntries(
           Object.entries(raw.dailyComplete as Record<string, unknown>)
-            .filter(([k, v]) => typeof k === "string" && v === true)
+            .filter(([k, v]) => isDayKey(k) && v === true)
             .map(([k]) => [k, true]),
         )
       : {};
@@ -80,7 +80,7 @@ function migrateProgress(raw: Partial<ProgressState> | null | undefined): Progre
     xp: toFiniteNumber(raw.xp, 0) < 0 ? 0 : toFiniteNumber(raw.xp, 0),
     level: Math.max(1, Math.floor(toFiniteNumber(raw.level, 1)) || 1),
     streak: Math.max(0, Math.floor(toFiniteNumber(raw.streak, 0)) || 0),
-    lastPlayedDay: typeof raw.lastPlayedDay === "string" ? raw.lastPlayedDay : null,
+    lastPlayedDay: isDayKey(raw.lastPlayedDay) ? raw.lastPlayedDay : null,
     mastery: sanitizeMastery(raw.mastery),
     lastAccuracy:
       typeof raw.lastAccuracy === "number" && Number.isFinite(raw.lastAccuracy)
@@ -140,7 +140,10 @@ export function saveSuite(state: SuiteState) {
   if (!canUseStorage()) return;
   try {
     const prev = localStorage.getItem(KEY);
-    if (prev) localStorage.setItem(BACKUP, prev);
+    // A full backup slot must not prevent the current save from succeeding.
+    if (prev) {
+      try { JSON.parse(prev); localStorage.setItem(BACKUP, prev); } catch { /* Keep the last usable backup. */ }
+    }
     localStorage.setItem(KEY, JSON.stringify(state));
   } catch {
     /* private mode / quota */
