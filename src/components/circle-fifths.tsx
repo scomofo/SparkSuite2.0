@@ -1,7 +1,13 @@
-import { FIFTHS, noteName, type Mode } from "@/lib/spark/theory";
+import { FIFTHS, flatsForKey, noteName, PICKER_ROOTS, pcOf, type Mode } from "@/lib/spark/theory";
 import { cn } from "@/lib/utils";
 
 const r = (n: number) => Math.round(n * 10) / 10;
+
+/** Spell a wedge the way the key page will spell it once picked. */
+function wedgeName(pc: number, mode: Mode) {
+  const picker = PICKER_ROOTS.find((n) => pcOf(n) === pc) ?? "C";
+  return noteName(pc, flatsForKey(picker, mode));
+}
 
 export function CircleFifths({
   tonicPc,
@@ -35,8 +41,8 @@ export function CircleFifths({
         const active = pc === tonicPc;
         const rel = (pc + 9) % 12;
         const relActive = mode === "minor" && rel === tonicPc;
-        const outerLabel = noteName(pc, [3, 8, 10, 5].includes(pc));
-        const innerLabel = `${noteName(rel, [0, 3, 5, 10].includes(rel))}m`;
+        const outerLabel = wedgeName(pc, "major");
+        const innerLabel = `${wedgeName(rel, "minor")}m`;
         return (
           <g key={pc}>
             <path
@@ -95,7 +101,7 @@ export function CircleFifths({
         fontWeight={600}
         fontFamily="var(--font-display)"
       >
-        {noteName(tonicPc, mode === "minor" ? [0, 3, 5, 10].includes(tonicPc) : [3, 8, 10, 5].includes(tonicPc))}
+        {wedgeName(tonicPc, mode)}
       </text>
       <text x={cx} y={cy + 12} textAnchor="middle" fill="var(--color-muted)" fontSize={10} fontFamily="var(--font-sans)">
         {mode}

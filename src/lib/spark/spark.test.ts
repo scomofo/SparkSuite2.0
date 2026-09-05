@@ -1,18 +1,30 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import {
+  buildTimeline,
   consumeHit,
+  isPluckDrill,
   judgeHit,
   starsFor,
   summarizeItem,
   type NoteEvent,
 } from "./practice.ts";
 import { chordsFromCreatePick } from "./nafme.ts";
-import { prefersFlats } from "./theory.ts";
+import {
+  chordLabel,
+  flatsForKey,
+  listVoicings,
+  parseNumeral,
+  prefersFlats,
+  QUALITIES,
+  SHAPE_TEMPLATES,
+} from "./theory.ts";
+import { instrumentById, lessonsFor, withSurface, type InstrumentId } from "./instruments.ts";
+import type { PlanItem } from "./types.ts";
 import { defaultProgress, loadSuite, saveProgress } from "./storage.ts";
 import { finalizeSession } from "./progress.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
-import { nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
+import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -85,6 +97,109 @@ describe("theory spelling", () => {
   it("prefers flats for flat keys, sharps for C", () => {
     assert.equal(prefersFlats(5, "major"), true);
     assert.equal(prefersFlats(0, "major"), false);
+  });
+
+  it("a key named with an accidental keeps that spelling", () => {
+    assert.equal(flatsForKey("Eb", "minor"), true);
+    assert.equal(flatsForKey("Bb", "minor"), true);
+    assert.equal(flatsForKey("C#", "major"), false);
+    assert.equal(flatsForKey("F#", "minor"), false);
+    assert.equal(flatsForKey("D", "minor"), true);
+    assert.equal(flatsForKey("A", "minor"), false);
+  });
+
+  it("Eb minor is spelled in flats, not A# minor", () => {
+    const i = parseNumeral("i", 3, "minor", flatsForKey("Eb", "minor"));
+    assert.equal(i.label, "Ebm");
+  });
+
+  it("voicing cards follow the root's spelling", () => {
+    const [eb] = listVoicings(3, "maj", true);
+    assert.ok(eb.name.startsWith("Eb"));
+    assert.ok(eb.notes.every((n) => !n.includes("#")));
+    assert.equal(chordLabel(3, "maj", true), "Eb");
+  });
+
+  it("every shape template spells the quality it is labelled with", () => {
+    const openPcs = [4, 9, 2, 7, 11, 4];
+    for (const t of SHAPE_TEMPLATES) {
+      const q = QUALITIES.find((x) => x.id === t.quality);
+      assert.ok(q, `unknown quality ${t.quality}`);
+      const want = q.ivs.map((iv) => iv % 12);
+      const ivs = new Set<number>();
+      t.frets.forEach((f, i) => {
+        if (f != null) ivs.add((openPcs[i] + f - t.openRootPc + 12) % 12);
+      });
+      const label = `${t.caged}-shape ${t.quality}`;
+      for (const iv of ivs) assert.ok(want.includes(iv), `${label} sounds interval ${iv} outside ${q.formula.join(" ")}`);
+      assert.ok(ivs.has(0), `${label} has no root`);
+      assert.ok(ivs.has(want[1]), `${label} has no ${q.formula[1]}`);
+    }
+  });
+});
+
+describe("listen and make passes are playable with the generic control", () => {
+  const ids: InstrumentId[] = ["guitar", "piano", "ukulele", "bass", "drums", "vocals"];
+  const items = ids.flatMap((id) =>
+    lessonsFor(id)
+      .filter((l) => l.process === "respond" || l.process === "create")
+      .map((l) =>
+        withSurface(
+          {
+            id: l.id,
+            type: l.type,
+            title: l.title,
+            subtitle: "",
+            durationSec: 1,
+            lessonId: l.id,
+            chords: l.chords,
+            pattern: l.pattern,
+            bars: l.bars,
+            bpm: l.bpm,
+            process: l.process,
+          } satisfies PlanItem,
+          instrumentById(id),
+        ),
+      ),
+  );
+
+  it("covers every instrument", () => {
+    assert.ok(items.length >= 10);
+  });
+
+  it("a respond/create item is never a pluck drill", () => {
+    for (const item of items) assert.equal(isPluckDrill(item), false, item.lessonId);
+  });
+
+  it("their timelines never demand a specific string, so a plain strum on the beat is a hit", () => {
+    for (const item of items) {
+      if (item.surface === "pads") continue;
+      const notes = buildTimeline(item);
+      assert.ok(notes.length > 0, item.lessonId);
+      for (const n of notes) assert.equal(n.string, undefined, `${item.lessonId} expects string ${n.string}`);
+      const res = consumeHit(notes, notes[0].t, 230);
+      assert.equal(res.hit, true, item.lessonId);
+    }
+  });
+
+  it("warmup drills still expect a specific string", () => {
+    const warm = withSurface(
+      {
+        id: "w",
+        type: "warmup",
+        title: "",
+        subtitle: "",
+        durationSec: 1,
+        lessonId: "lesson_guitar_open_strings_01",
+        chords: [],
+        pattern: "D",
+        bars: 2,
+        bpm: 70,
+      } satisfies PlanItem,
+      instrumentById("guitar"),
+    );
+    assert.equal(isPluckDrill(warm), true);
+    assert.ok(buildTimeline(warm).every((n) => n.string !== undefined));
   });
 });
 
@@ -176,5 +291,42 @@ describe("tuner guards (review P4)", () => {
   it("yinPitchFast handles short buffers via the full path", () => {
     const r = yinPitchFast(new Float32Array(128).fill(0.5), 44100);
     assert.equal(typeof r, "number");
+  });
+});
+
+describe("bass tuner range", () => {
+  function tone(hz: number, sr: number, n: number) {
+    const buf = new Float32Array(n);
+    for (let i = 0; i < n; i++) {
+      buf[i] = 0.5 * Math.sin((2 * Math.PI * hz * i) / sr) + 0.2 * Math.sin((2 * Math.PI * 2 * hz * i) / sr);
+    }
+    return buf;
+  }
+  const cents = (a: number, b: number) => Math.abs(1200 * Math.log2(a / b));
+
+  it("a 2048-sample window cannot resolve low E at 48 kHz (the bug)", () => {
+    assert.equal(yinPitchFast(tone(41.2, 48000, 2048), 48000), -1);
+  });
+
+  it("sizes the analyser so the lowest reference is in range", () => {
+    assert.equal(analyserSizeFor(82.41), 2048);
+    assert.equal(analyserSizeFor(41.2), 4096);
+    assert.equal(analyserSizeFor(20), 8192);
+  });
+
+  it("the sized window hears every bass string within 5 cents", () => {
+    const size = analyserSizeFor(41.2);
+    for (const sr of [44100, 48000]) {
+      for (const hz of [41.2, 55, 73.42, 98]) {
+        const got = yinPitchFast(tone(hz, sr, size), sr, 0.12, size >= 8192 ? 4 : 2);
+        assert.ok(got > 0, `${hz} Hz at ${sr}: no pitch`);
+        assert.ok(cents(got, hz) < 5, `${hz} Hz at ${sr}: got ${got.toFixed(2)}`);
+      }
+    }
+  });
+
+  it("guitar keeps the cheap path and still hears low E", () => {
+    const got = yinPitchFast(tone(82.41, 48000, 2048), 48000);
+    assert.ok(cents(got, 82.41) < 5);
   });
 });

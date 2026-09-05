@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { ListMusic, Play, Repeat } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -7,7 +7,7 @@ import { CircleFifths, Legend } from "@/components/circle-fifths";
 import { ChromaticStrip, TheoryFretboard } from "@/components/theory-fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { Button } from "@/components/ui/button";
-import { pianoChord, pianoTone, pluck, strum, unlockAudio } from "@/lib/spark/audio";
+import { pianoChord, pianoTone, pluck, scheduleRun, strum, unlockAudio, type AudioRun } from "@/lib/spark/audio";
 import { instrumentById, midiToFreq, stringFreq } from "@/lib/spark/instruments";
 import {
   cagedShapes,
@@ -32,7 +32,7 @@ import {
   QUALITIES,
   qualityById,
   scalePcs,
-  prefersFlats,
+  flatsForKey,
   voicingFreqs,
   type Mode,
   type TheoryTab,
@@ -216,10 +216,13 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
   const instrument = useSpark((s) => s.instrument);
   const inst = instrumentById(instrument);
   const rootPc = pcOf(search.root);
-  const flats = prefersFlats(rootPc, "major");
+  const flats = flatsForKey(search.root, "major");
   const quality = qualityById(search.q);
   const pcs = chordPcs(rootPc, search.q);
-  const voicings = useMemo(() => (inst.id === "guitar" ? listVoicings(rootPc, search.q) : []), [inst.id, rootPc, search.q]);
+  const voicings = useMemo(
+    () => (inst.id === "guitar" ? listVoicings(rootPc, search.q, flats) : []),
+    [flats, inst.id, rootPc, search.q],
+  );
   const [voicingIdx, setVoicingIdx] = useState(0);
   const [focusIv, setFocusIv] = useState<string | null>(null);
 
@@ -387,10 +390,10 @@ function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>)
   const instrument = useSpark((s) => s.instrument);
   const inst = instrumentById(instrument);
   const keyPc = pcOf(search.key);
-  const flats = prefersFlats(keyPc, search.mode);
+  const flats = flatsForKey(search.key, search.mode);
   const [sevenths, setSevenths] = useState(false);
   const [sel, setSel] = useState(0);
-  const chords = diatonicChords(keyPc, search.mode, sevenths);
+  const chords = diatonicChords(keyPc, search.mode, sevenths, flats);
   const scale = scalePcs(keyPc, search.mode);
   const chosen = chords[sel] ?? chords[0];
 
@@ -498,10 +501,23 @@ function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>)
 
 function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Search>) => void }) {
   const keyPc = pcOf(search.key);
+  const flats = flatsForKey(search.key, search.mode);
   const list = PROGRESSIONS.filter((p) => p.mode === "any" || p.mode === search.mode);
   const [active, setActive] = useState("axis");
+  const [playing, setPlaying] = useState(false);
+  const runRef = useRef<AudioRun | null>(null);
+  const endTimer = useRef(0);
   const prog = list.find((p) => p.id === active) ?? list[0];
-  const parsed = prog ? prog.numerals.map((n) => parseNumeral(n, keyPc, search.mode)) : [];
+  const parsed = prog ? prog.numerals.map((n) => parseNumeral(n, keyPc, search.mode, flats)) : [];
+
+  const stopLoop = () => {
+    runRef.current?.stop();
+    runRef.current = null;
+    window.clearTimeout(endTimer.current);
+    setPlaying(false);
+  };
+
+  useEffect(() => stopLoop, []);
 
   useEffect(() => {
     const ids = PROGRESSIONS.filter((p) => p.mode === "any" || p.mode === search.mode).map((p) => p.id);
@@ -509,12 +525,22 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
   }, [search.mode]);
 
   const playLoop = () => {
+    if (runRef.current) {
+      stopLoop();
+      return;
+    }
     const ac = unlockAudio();
     if (!ac) return;
     const beat = 60 / 88;
-    parsed.forEach((ch, i) => {
-      hearQuality(ch.rootPc, ch.qualityId, ac.currentTime + i * beat * 2);
+    const run = scheduleRun(() => {
+      parsed.forEach((ch, i) => {
+        hearQuality(ch.rootPc, ch.qualityId, ac.currentTime + i * beat * 2);
+      });
     });
+    if (!run) return;
+    runRef.current = run;
+    setPlaying(true);
+    endTimer.current = window.setTimeout(stopLoop, parsed.length * beat * 2 * 1000 + 400);
   };
 
   return (
@@ -574,9 +600,9 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
               </li>
             ))}
           </ol>
-          <Button className="mt-4 w-full" onClick={playLoop}>
+          <Button className="mt-4 w-full" onClick={playLoop} aria-pressed={playing}>
             <Repeat className="size-4" />
-            Play the changes
+            {playing ? "Stop" : "Play the changes"}
           </Button>
           <p className="mt-3 text-pretty text-sm text-muted">{prog.blurb}</p>
         </section>
@@ -592,9 +618,9 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
 
 function CagedTab({ search, patch }: { search: Search; patch: (n: Partial<Search>) => void }) {
   const rootPc = pcOf(search.root);
-  const flats = prefersFlats(rootPc, "major");
+  const flats = flatsForKey(search.root, "major");
   const q = search.q === "min" || search.q === "m7" ? "min" : "maj";
-  const shapes = [...cagedShapes(rootPc, q)].sort((a, b) => a.offset - b.offset);
+  const shapes = [...cagedShapes(rootPc, q, flats)].sort((a, b) => a.offset - b.offset);
   const [sel, setSel] = useState(0);
   const chosen = shapes[sel] ?? shapes[0];
 

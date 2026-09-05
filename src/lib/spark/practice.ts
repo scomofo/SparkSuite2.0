@@ -20,15 +20,22 @@ export function patternBeats(pattern: string): ("down" | "up" | "rest")[] {
   return out.length ? out : ["down"];
 }
 
+/**
+ * True when the item drills a specific string / pad / key on each beat, so the
+ * timeline carries an expected `string` and the UI shows the picker for it.
+ * Listen (respond) and Make (create) passes are played with the generic
+ * strum / play control, so they must never expect a specific string — the
+ * generic control cannot satisfy one and every tap would be a miss.
+ */
+export function isPluckDrill(item: Pick<PlanItem, "type" | "process">) {
+  return (item.type === "warmup" || item.type === "skill") && item.process !== "respond" && item.process !== "create";
+}
+
 /** Build an abstract exercise timeline in seconds from bar 0. */
 export function buildTimeline(item: PlanItem): NoteEvent[] {
   if (item.surface === "pads") return drumTimeline(item);
-  if (
-    (item.surface === "keys" || item.surface === "voice") &&
-    (item.type === "warmup" || item.type === "skill") &&
-    item.process !== "respond" &&
-    item.process !== "create"
-  ) {
+  const drill = isPluckDrill(item);
+  if ((item.surface === "keys" || item.surface === "voice") && drill) {
     return keyWarmup(item);
   }
 
@@ -42,7 +49,7 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
         ? Math.max(1, Math.floor(item.bars / item.chords.length) || 2)
         : 2;
 
-  if (item.type === "warmup" || item.type === "skill") {
+  if (drill) {
     const n = Math.max(1, item.stringCount ?? 6);
     for (let bar = 0; bar < item.bars; bar++) {
       for (let beat = 0; beat < 4; beat++) {

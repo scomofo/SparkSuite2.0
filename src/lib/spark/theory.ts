@@ -267,7 +267,7 @@ type ShapeTemplate = {
   openRootPc: number;
 };
 
-const T: ShapeTemplate[] = [
+export const SHAPE_TEMPLATES: ShapeTemplate[] = [
   { caged: "E", quality: "maj", openRootPc: 4, frets: [0, 2, 2, 1, 0, 0], fingers: [0, 2, 3, 1, 0, 0] },
   { caged: "E", quality: "min", openRootPc: 4, frets: [0, 2, 2, 0, 0, 0], fingers: [0, 2, 3, 0, 0, 0] },
   { caged: "E", quality: "7", openRootPc: 4, frets: [0, 2, 0, 1, 0, 0], fingers: [0, 2, 0, 1, 0, 0] },
@@ -279,7 +279,7 @@ const T: ShapeTemplate[] = [
   { caged: "E", quality: "add9", openRootPc: 4, frets: [0, 2, 2, 1, 0, 2], fingers: [0, 2, 3, 1, 0, 4] },
   { caged: "E", quality: "9", openRootPc: 4, frets: [0, 2, 0, 1, 0, 2], fingers: [0, 2, 0, 1, 0, 4] },
   { caged: "E", quality: "aug", openRootPc: 4, frets: [0, 3, 2, 1, 1, 0], fingers: [0, 4, 3, 1, 2, 0] },
-  { caged: "E", quality: "dim", openRootPc: 4, frets: [0, 1, 2, 0, 2, 0], fingers: [0, 1, 3, 0, 4, 0] },
+  { caged: "E", quality: "dim", openRootPc: 4, frets: [0, 1, 2, 0, null, null], fingers: [0, 1, 2, 0, null, null] },
   { caged: "E", quality: "m7b5", openRootPc: 4, frets: [0, 1, 2, 0, 3, 0], fingers: [0, 1, 2, 0, 4, 0] },
   { caged: "E", quality: "dim7", openRootPc: 4, frets: [0, 1, 2, 0, 2, 0], fingers: [0, 1, 3, 0, 4, 0] },
   { caged: "A", quality: "maj", openRootPc: 9, frets: [null, 0, 2, 2, 2, 0], fingers: [null, 0, 1, 2, 3, 0] },
@@ -303,7 +303,6 @@ const T: ShapeTemplate[] = [
   { caged: "D", quality: "sus2", openRootPc: 2, frets: [null, null, 0, 2, 3, 0], fingers: [null, null, 0, 1, 2, 0] },
   { caged: "D", quality: "sus4", openRootPc: 2, frets: [null, null, 0, 2, 3, 3], fingers: [null, null, 0, 1, 2, 3] },
   { caged: "D", quality: "6", openRootPc: 2, frets: [null, null, 0, 2, 0, 2], fingers: [null, null, 0, 1, 0, 2] },
-  { caged: "D", quality: "add9", openRootPc: 2, frets: [null, null, 0, 2, 3, 0], fingers: [null, null, 0, 1, 2, 0] },
   { caged: "C", quality: "maj", openRootPc: 0, frets: [null, 3, 2, 0, 1, 0], fingers: [null, 3, 2, 0, 1, 0] },
   { caged: "C", quality: "min", openRootPc: 0, frets: [null, 3, 1, 0, 1, null], fingers: [null, 4, 2, 0, 1, null] },
   { caged: "C", quality: "7", openRootPc: 0, frets: [null, 3, 2, 3, 1, 0], fingers: [null, 3, 2, 4, 1, 0] },
@@ -347,7 +346,18 @@ export function pcOf(name: string) {
 
 export function prefersFlats(tonicPc: number, mode: Mode) {
   const majorPc = mode === "minor" ? (tonicPc + 3) % 12 : tonicPc;
-  return majorPc === 5 || majorPc === 10 || majorPc === 3 || majorPc === 8;
+  return majorPc === 5 || majorPc === 10 || majorPc === 3 || majorPc === 8 || majorPc === 1;
+}
+
+/**
+ * Spelling for a key named by the picker or the URL. A name that already
+ * carries an accidental decides it ("Eb" minor is flats, "C#" major is
+ * sharps); naturals fall back to the key-signature rule.
+ */
+export function flatsForKey(name: string, mode: Mode) {
+  if (name.includes("b")) return true;
+  if (name.includes("#")) return false;
+  return prefersFlats(pcOf(name), mode);
 }
 
 export function noteName(pc: number, flats = false) {
@@ -381,7 +391,7 @@ export function degreesFor(mode: Mode) {
   return mode === "minor" ? MINOR_DEGREES : MAJOR_DEGREES;
 }
 
-export function diatonicChords(tonicPc: number, mode: Mode, sevenths = false) {
+export function diatonicChords(tonicPc: number, mode: Mode, sevenths = false, flats = prefersFlats(tonicPc, mode)) {
   const scale = scalePcs(tonicPc, mode);
   return degreesFor(mode).map((deg, i) => {
     const quality = sevenths ? deg.quality7 : deg.quality;
@@ -392,14 +402,14 @@ export function diatonicChords(tonicPc: number, mode: Mode, sevenths = false) {
       roman,
       quality,
       rootPc,
-      label: chordLabel(rootPc, quality, prefersFlats(tonicPc, mode)),
+      label: chordLabel(rootPc, quality, flats),
     };
   });
 }
 
 const ROMAN_RE = /^(b|#)?(VII|VI|IV|III|II|V|I|vii|vi|iv|iii|ii|v|i)(ø7|maj7|m7|dim7|dim|aug|7|°)?$/;
 
-export function parseNumeral(raw: string, keyPc: number, mode: Mode) {
+export function parseNumeral(raw: string, keyPc: number, mode: Mode, flats = prefersFlats(keyPc, mode)) {
   const m = raw.match(ROMAN_RE);
   if (!m) {
     return { rootPc: keyPc, qualityId: "maj", numeral: raw, label: raw };
@@ -424,7 +434,6 @@ export function parseNumeral(raw: string, keyPc: number, mode: Mode) {
   else if (suf === "7") qualityId = upper ? "7" : rom.toUpperCase() === "VII" ? "m7b5" : "m7";
   else if (!upper) qualityId = "min";
 
-  const flats = prefersFlats(keyPc, mode);
   return {
     rootPc,
     qualityId,
@@ -433,7 +442,7 @@ export function parseNumeral(raw: string, keyPc: number, mode: Mode) {
   };
 }
 
-function transposeTemplate(t: ShapeTemplate, targetPc: number): ChordShape | null {
+function transposeTemplate(t: ShapeTemplate, targetPc: number, flats = false): ChordShape | null {
   const offset = (targetPc - t.openRootPc + 12) % 12;
   const frets = t.frets.map((f) => (f == null ? null : f + offset));
   const played = frets.filter((f): f is number => f != null);
@@ -453,11 +462,11 @@ function transposeTemplate(t: ShapeTemplate, targetPc: number): ChordShape | nul
   const openPcs = [4, 9, 2, 7, 11, 4];
   frets.forEach((f, i) => {
     if (f == null) return;
-    notes.push(noteName((openPcs[i] + f) % 12, false));
+    notes.push(noteName((openPcs[i] + f) % 12, flats));
   });
   return {
     id: `${t.caged}-${offset}-${t.quality}`,
-    name: `${chordLabel(targetPc, t.quality)} · ${t.caged} shape`,
+    name: `${chordLabel(targetPc, t.quality, flats)} · ${t.caged} shape`,
     frets,
     fingers,
     notes,
@@ -465,19 +474,19 @@ function transposeTemplate(t: ShapeTemplate, targetPc: number): ChordShape | nul
 }
 
 function templatesForQuality(qualityId: string): ShapeTemplate[] {
-  const direct = T.filter((t) => t.quality === qualityId);
+  const direct = SHAPE_TEMPLATES.filter((t) => t.quality === qualityId);
   if (direct.length) return direct;
   const fb = TRIAD_FALLBACK[qualityId];
-  if (fb) return T.filter((t) => t.quality === fb);
-  return T.filter((t) => t.quality === "maj");
+  if (fb) return SHAPE_TEMPLATES.filter((t) => t.quality === fb);
+  return SHAPE_TEMPLATES.filter((t) => t.quality === "maj");
 }
 
-export function listVoicings(rootPc: number, qualityId: string): ChordShape[] {
+export function listVoicings(rootPc: number, qualityId: string, flats = false): ChordShape[] {
   const tpls = templatesForQuality(qualityId);
   const out: ChordShape[] = [];
   const seen = new Set<string>();
   for (const t of tpls) {
-    const shape = transposeTemplate(t, rootPc);
+    const shape = transposeTemplate(t, rootPc, flats);
     if (!shape) continue;
     const key = shape.frets.map((f) => (f == null ? "x" : f)).join("-");
     if (seen.has(key)) continue;
@@ -492,14 +501,14 @@ export function listVoicings(rootPc: number, qualityId: string): ChordShape[] {
   return out.slice(0, 5);
 }
 
-export function cagedShapes(rootPc: number, qualityId: string) {
+export function cagedShapes(rootPc: number, qualityId: string, flats = false) {
   const want = qualityId === "min" || qualityId === "m7" || qualityId === "m6" ? "min" : "maj";
   const order: ShapeTemplate["caged"][] = ["C", "A", "G", "E", "D"];
   return order
     .map((caged) => {
-      const t = T.find((x) => x.caged === caged && x.quality === want);
+      const t = SHAPE_TEMPLATES.find((x) => x.caged === caged && x.quality === want);
       if (!t) return null;
-      const shape = transposeTemplate(t, rootPc);
+      const shape = transposeTemplate(t, rootPc, flats);
       if (!shape) return null;
       const offset = (rootPc - t.openRootPc + 12) % 12;
       return { caged, offset, shape };
