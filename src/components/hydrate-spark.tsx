@@ -1,11 +1,14 @@
 import { useEffect } from "react";
 import { useSpark } from "@/store/spark";
+import { useLearning } from "@/store/learning";
 
 export function HydrateSpark() {
   const hydrate = useSpark((s) => s.hydrate);
   const refreshDay = useSpark((s) => s.refreshDay);
+  const hydrateLearning = useLearning((s) => s.hydrate);
   useEffect(() => {
     hydrate();
+    hydrateLearning();
     const refresh = () => {
       if (!document.hidden) refreshDay();
     };
@@ -17,6 +20,6 @@ export function HydrateSpark() {
       document.removeEventListener("visibilitychange", refresh);
       window.clearInterval(timer);
     };
-  }, [hydrate, refreshDay]);
+  }, [hydrate, hydrateLearning, refreshDay]);
   return null;
 }

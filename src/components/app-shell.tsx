@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import {
   AudioLines,
+  BookOpen,
   ChartNoAxesColumnIncreasing,
   Flame,
   Gauge,
@@ -31,6 +32,7 @@ export function AppShell({
   const items = [
     { to: "/" as const, label: "Studio", icon: LayoutGrid },
     { to: "/today" as const, label: "Today", icon: Home },
+    { to: "/learn" as const, label: "Learn", icon: BookOpen },
     third,
     { to: "/progress" as const, label: "Progress", icon: ChartNoAxesColumnIncreasing },
     { to: "/tuner" as const, label: "Tuner", icon: Gauge },
