@@ -9,8 +9,9 @@ const output = "/workspace/screenshots";
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const errors = [];
+let page;
 try {
-  const page = await browser.newPage({
+  page = await browser.newPage({
     viewport: { width: 1440, height: 1000 },
     timezoneId: "America/Edmonton",
     locale: "en-CA",
@@ -133,6 +134,28 @@ try {
     ),
   );
   console.log(`Studio ${label}: all browser checks passed`);
+} catch (error) {
+  if (page) {
+    await page
+      .screenshot({ path: `${output}/studio-${label}-failure.png`, fullPage: true })
+      .catch(() => {});
+    writeFileSync(
+      `${output}/studio-${label}-failure.json`,
+      JSON.stringify(
+        {
+          error: String(error),
+          errors,
+          body: await page
+            .locator("body")
+            .innerText()
+            .catch(() => ""),
+        },
+        null,
+        2,
+      ),
+    );
+  }
+  throw error;
 } finally {
   await browser.close();
 }

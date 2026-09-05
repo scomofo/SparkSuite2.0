@@ -51,9 +51,10 @@ function ProgressPage() {
               {inst.name} · Level {progress.level} · {rank.title}
             </p>
           </div>
-          <label className="flex flex-col gap-2 text-sm text-muted">
-            Instrument
+          <div className="flex flex-col gap-2 text-sm text-muted">
+            <label htmlFor="progress-instrument">Instrument</label>
             <select
+              id="progress-instrument"
               value={instrument}
               onChange={(e) => {
                 if (isInstrumentId(e.target.value)) selectInstrument(e.target.value);
@@ -66,7 +67,7 @@ function ProgressPage() {
                 </option>
               ))}
             </select>
-          </label>
+          </div>
         </header>
         <dl className="mt-8 grid grid-cols-3 gap-3">
           {[

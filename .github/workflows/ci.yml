@@ -45,11 +45,11 @@ jobs:
             sleep 1
           done
           curl -fsS http://127.0.0.1:8080/ -o /dev/null
-          node scripts/browser-smoke.mjs http://127.0.0.1:8080/ /workspace/screenshots/dev.png
           node scripts/studio-browser.mjs http://127.0.0.1:8080 dev
+          node scripts/browser-smoke.mjs http://127.0.0.1:8080/ /workspace/screenshots/dev.png
           npm run preview:restart
-          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/built.png --baseline /workspace/screenshots/dev.json
           node scripts/studio-browser.mjs http://127.0.0.1:8081 built
+          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/built.png --baseline /workspace/screenshots/dev.json
       - name: Upload browser evidence
         if: always() && matrix.node == 24
         uses: actions/upload-artifact@v4
