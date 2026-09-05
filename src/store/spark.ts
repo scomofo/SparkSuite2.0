@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { clearCheckpoint, loadCheckpoint, saveCheckpoint } from "@/lib/spark/checkpoint";
+import { localDayKey } from "@/lib/utils";
 import { createSpark } from "@/lib/spark/core";
 import { generateDailyPlan } from "@/lib/spark/daily-plan";
 import { type InstrumentId } from "@/lib/spark/instruments";
@@ -13,7 +15,13 @@ import {
   startSession,
   type LiveSession,
 } from "@/lib/spark/session";
-import { defaultProgress, loadSuite, progressFor, suiteTotals, type SuiteState } from "@/lib/spark/storage";
+import {
+  defaultProgress,
+  loadSuite,
+  progressFor,
+  suiteTotals,
+  type SuiteState,
+} from "@/lib/spark/storage";
 import type { DailyPlan, DayCheckin, ProgressState, SessionResult } from "@/lib/spark/types";
 
 const spark = createSpark(defaultProgress(), "guitar");
@@ -36,9 +44,13 @@ type SparkStore = {
   apps: SuiteState["apps"];
   suiteXp: number;
   bestStreak: number;
+  hydrated: boolean;
+  checkpointSaved: boolean;
   hydrate: () => void;
   selectInstrument: (id: InstrumentId) => void;
   beginDay: () => void;
+  pauseSession: () => void;
+  refreshDay: () => void;
   hit: () => void;
   miss: () => void;
   finishItem: () => void;
@@ -57,7 +69,10 @@ export const useSpark = create<SparkStore>((set, get) => ({
   apps: { guitar: defaultProgress() },
   suiteXp: 0,
   bestStreak: 0,
+  hydrated: false,
+  checkpointSaved: true,
   hydrate: () => {
+    if (get().hydrated) return;
     const suite = loadSuite();
     const progress = progressFor(suite, suite.active);
     spark.setInstrument(suite.active, progress);
@@ -65,10 +80,13 @@ export const useSpark = create<SparkStore>((set, get) => ({
       instrument: suite.active,
       progress,
       plan: spark.getPlan(),
+      session: loadCheckpoint(progress, suite.active),
+      hydrated: true,
       ...fromSuite(suite),
     });
   },
   selectInstrument: (id) => {
+    if (id === get().instrument) return;
     const suite = loadSuite();
     const progress = progressFor(suite, id);
     const next = spark.setInstrument(id, progress);
@@ -76,15 +94,39 @@ export const useSpark = create<SparkStore>((set, get) => ({
       instrument: id,
       progress: next.progress,
       plan: next.plan,
-      session: null,
+      session: loadCheckpoint(progress, id),
       lastResult: null,
+      checkpointSaved: true,
       ...fromSuite(next.suite),
     });
   },
   beginDay: () => {
-    const { progress, instrument } = get();
+    const { progress, instrument, session } = get();
     const plan = generateDailyPlan(progress, undefined, instrument);
-    set({ session: startSession(progress, plan), plan, lastResult: null });
+    const next =
+      session?.plan.date === plan.date
+        ? { ...session, itemHits: 0, itemMisses: 0, currentCombo: 0 }
+        : startSession(progress, plan);
+    set({
+      session: next,
+      plan: next.plan,
+      lastResult: null,
+      checkpointSaved: saveCheckpoint(next, progress, instrument),
+    });
+  },
+  pauseSession: () => {
+    const { session, progress, instrument } = get();
+    if (!session) return;
+    const next = { ...session, itemHits: 0, itemMisses: 0, currentCombo: 0 };
+    set({ session: next, checkpointSaved: saveCheckpoint(next, progress, instrument) });
+  },
+  refreshDay: () => {
+    const { plan, session } = get();
+    if (plan.date === localDayKey()) return;
+    // A mounted player owns its original plan until it is finished or left.
+    if (typeof window !== "undefined" && window.location.pathname === "/practice" && session)
+      return;
+    set({ plan: spark.refreshPlan(), session: null });
   },
   hit: () => {
     const s = get().session;
@@ -97,18 +139,21 @@ export const useSpark = create<SparkStore>((set, get) => ({
   finishItem: () => {
     const s = get().session;
     if (!s) return;
-    set({ session: completeItem(s) });
+    const next = completeItem(s);
+    set({ session: next, checkpointSaved: saveCheckpoint(next, get().progress, get().instrument) });
   },
   skipCurrent: () => {
     const s = get().session;
     if (!s) return;
-    set({ session: skipItem(s) });
+    const next = skipItem(s);
+    set({ session: next, checkpointSaved: saveCheckpoint(next, get().progress, get().instrument) });
   },
   finishDay: () => {
     const { session, progress, instrument } = get();
-    if (!session) return null;
+    if (!session || !isSessionDone(session)) return null;
     const { progress: next, result } = closeSession(progress, session, instrument);
     const { plan, suite } = spark.setProgress(next);
+    clearCheckpoint(instrument);
     set({
       progress: next,
       session: null,
@@ -124,13 +169,14 @@ export const useSpark = create<SparkStore>((set, get) => ({
     // Leaving mid-session discards partial progress. Previously this
     // finalized partial hits as a full day (streak + dailyComplete),
     // letting a single hit farm a completed day.
+    clearCheckpoint(get().instrument);
     set({ session: null });
   },
   noteCheckin: (id) => {
     const { progress } = get();
     const next = { ...progress, lastCheckin: id };
-    const { plan } = spark.setProgress(next);
-    set({ progress: next, plan });
+    const { plan, suite } = spark.setProgress(next);
+    set({ progress: next, plan, ...fromSuite(suite) });
   },
 }));
 

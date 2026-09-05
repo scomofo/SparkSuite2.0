@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Flame, Play } from "lucide-react";
+import { Check, Flame, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { MarkList, WeekPulseRow, XpBar } from "@/components/game-chrome";
 import { Button } from "@/components/ui/button";
@@ -23,11 +23,15 @@ export const Route = createFileRoute("/today")({ component: TodayPage });
 function TodayPage() {
   const navigate = useNavigate();
   const instrument = useSpark((s) => s.instrument);
-  const plan = useSpark((s) => s.plan);
+  const generatedPlan = useSpark((s) => s.plan);
+  const session = useSpark((s) => s.session);
+  const hydrated = useSpark((s) => s.hydrated);
   const progress = useSpark((s) => s.progress);
   const beginDay = useSpark((s) => s.beginDay);
   const inst = instrumentById(instrument);
   const today = localDayKey();
+  const resume = session?.plan.date === today ? session : null;
+  const plan = resume?.plan ?? generatedPlan;
   const done = Boolean(progress.dailyComplete[today]);
   const firstChord = plan.items.find((i) => i.chords[0])?.chords[0] ?? inst.firstChords[0];
   const tracks = tracksFor(instrument);
@@ -67,7 +71,7 @@ function TodayPage() {
         <div className="flex items-start justify-between gap-3">
           <div>
             <p className="text-[11px] uppercase tracking-[0.18em] text-dim">{plan.minutes} min plan</p>
-            <p className="mt-1 font-display text-xl font-semibold">{done ? "Done for today" : "Your loop"}</p>
+            <p className="mt-1 font-display text-xl font-semibold">{resume ? "Pick up your loop" : done ? "Done for today" : "Your loop"}</p>
           </div>
           <div className="flex items-center gap-1 text-ember">
             <Flame className="size-4" />
@@ -76,11 +80,12 @@ function TodayPage() {
           </div>
         </div>
         <WeekPulseRow pulse={week} className="mt-4" />
+        {resume ? <p role="status" className="mt-4 text-sm text-ember">{resume.results.length} of {plan.items.length} exercises finished. Your current exercise starts fresh when you resume.</p> : null}
         <ol className="mt-5 space-y-3">
           {plan.items.map((item, i) => (
             <li key={item.id} className="flex items-center gap-3">
               <span className="flex size-8 items-center justify-center rounded-sm bg-raised tabular text-sm text-muted">
-                {i + 1}
+                {resume?.results.some((r) => r.itemId === item.id) ? <Check className="size-4 text-good" aria-label="Finished" /> : i + 1}
               </span>
               <div className="min-w-0 flex-1">
                 <div className="flex items-baseline gap-2">
@@ -105,6 +110,7 @@ function TodayPage() {
           <Button
             size="xl"
             className="w-full"
+            disabled={!hydrated}
             onClick={() => {
               unlockAudio();
               beginDay();
@@ -112,7 +118,7 @@ function TodayPage() {
             }}
           >
             <Play className="size-4" />
-            {done ? "Play it again" : "Start today's loop"}
+            {resume ? "Resume your loop" : done ? "Play it again" : "Start today's loop"}
           </Button>
         </div>
       </section>

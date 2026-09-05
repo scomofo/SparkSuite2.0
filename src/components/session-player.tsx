@@ -75,7 +75,8 @@ export function SessionPlayer() {
   const finishItem = useSpark((s) => s.finishItem);
   const skipCurrent = useSpark((s) => s.skipCurrent);
   const finishDay = useSpark((s) => s.finishDay);
-  const abortSession = useSpark((s) => s.abortSession);
+  const pauseSession = useSpark((s) => s.pauseSession);
+  const checkpointSaved = useSpark((s) => s.checkpointSaved);
   const inst = instrumentById(instrument);
 
   const item = session ? currentItem(session) : null;
@@ -101,6 +102,19 @@ export function SessionPlayer() {
   const missesRef = useRef(0);
   const modelTimers = useRef<number[]>([]);
   const needsPickRef = useRef(false);
+
+  useEffect(() => () => {
+    pauseSession();
+    cancelAnimationFrame(raf.current);
+    for (const id of modelTimers.current) window.clearTimeout(id);
+  }, [pauseSession]);
+
+  useEffect(() => {
+    if (session && isSessionDone(session)) {
+      finishDay();
+      void navigate({ to: "/results" });
+    }
+  }, [session, finishDay, navigate]);
 
   const resetItem = useCallback(() => {
     setPhase("intro");
@@ -285,10 +299,12 @@ export function SessionPlayer() {
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat) return;
       if (e.code === "Escape") {
-        abortSession();
+        pauseSession();
         void navigate({ to: "/today" });
         return;
       }
+      // Let focused controls keep their native Enter/Space behavior.
+      if (e.target instanceof Element && e.target.closest("button, a, input, select, textarea, [role='button']")) return;
       if (phase === "intro" && (e.code === "Enter" || e.code === "Space")) {
         e.preventDefault();
         if (!modeling && !needsPickRef.current) beginPlay();
@@ -311,7 +327,7 @@ export function SessionPlayer() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [abortSession, attempt, beginPlay, inst.stringNames.length, inst.surface, item?.surface, modeling, navigate, phase]);
+  }, [pauseSession, attempt, beginPlay, inst.stringNames.length, inst.surface, item?.surface, modeling, navigate, phase]);
 
   const goNext = useCallback(() => {
     finishItem();
@@ -337,9 +353,9 @@ export function SessionPlayer() {
   }, [finishDay, navigate, resetItem, skipCurrent]);
 
   const leave = useCallback(() => {
-    abortSession();
+    pauseSession();
     void navigate({ to: "/today" });
-  }, [abortSession, navigate]);
+  }, [pauseSession, navigate]);
 
   const playModelEvent = useCallback(
     (note: NoteEvent) => {
@@ -383,13 +399,15 @@ export function SessionPlayer() {
       unlockAudio();
       const token = item.listenPrompt[side];
       if (instrument === "drums") {
+        for (const id of modelTimers.current) window.clearTimeout(id);
+        modelTimers.current = [];
         const beat = 60 / item.bpm;
         for (let b = 0; b < 4; b++) {
           const pad = token === "backbeat" ? (b % 2 === 0 ? 0 : 1) : b === 0 ? 0 : -1;
-          window.setTimeout(() => {
+          modelTimers.current.push(window.setTimeout(() => {
             click(b === 0);
             if (pad >= 0) drumHit(pad);
-          }, b * beat * 1000);
+          }, b * beat * 1000));
         }
         return;
       }
@@ -436,7 +454,7 @@ export function SessionPlayer() {
   return (
     <div className="flex min-h-dvh flex-col bg-bg">
       <header className="flex items-center gap-3 px-4 py-3">
-        <Button variant="ghost" size="icon" aria-label="Leave session" onClick={leave}>
+        <Button variant="ghost" size="icon" aria-label="Pause and leave session" onClick={leave}>
           <ChevronLeft className="size-5" />
         </Button>
         <div className="min-w-0 flex-1">
@@ -455,6 +473,7 @@ export function SessionPlayer() {
           </div>
         </div>
       </header>
+      {!checkpointSaved ? <p role="status" className="mx-auto max-w-lg px-5 pb-3 text-sm text-ember">This browser could not save your place. Keep this tab open to finish your loop.</p> : null}
 
       <div className="flex-1 px-4 pb-5">
         {phase === "intro" ? (
