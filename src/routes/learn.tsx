@@ -8,6 +8,7 @@ import { LEARNING_LEVELS, learningLesson } from "@/lib/spark/curriculum";
 import { INSTRUMENTS, instrumentById, type InstrumentId } from "@/lib/spark/instruments";
 import { learningSummary } from "@/lib/spark/learning";
 import { labSearchFor } from "@/lib/spark/labs";
+import { lessonExercise } from "@/lib/spark/lesson-practice";
 import { useLearning } from "@/store/learning";
 import { useSpark } from "@/store/spark";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,7 @@ function LearnPage() {
     setPaused(false);
   }
   const prerequisite = lesson?.prerequisite ? learningLesson(lesson.prerequisite) : undefined;
+  const exercise = lessonExercise(lesson?.id);
 
   return (
     <AppShell wide>
@@ -261,7 +263,38 @@ function LearnPage() {
                             </summary>
                             <p className="mt-2 text-sm leading-relaxed">{lesson.example}</p>
                           </details>
-                          <Button className="mt-6 w-full" size="lg" onClick={nextStep}>
+                          {exercise ? (
+                            <div className="mt-5 rounded-lg border border-ember/40 p-4">
+                              <p className="font-medium">{exercise.title}</p>
+                              <p className="mt-2 text-sm leading-relaxed text-muted">
+                                {exercise.goal}
+                              </p>
+                              <Button
+                                asChild
+                                className="mt-4 h-auto min-h-12 w-full whitespace-normal py-3"
+                              >
+                                <Link
+                                  to="/techniques"
+                                  search={{ ...labSearchFor(instrument), lesson: lesson.id }}
+                                >
+                                  {record.practice
+                                    ? "Resume guided exercise"
+                                    : "Open guided exercise"}
+                                  <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+                                </Link>
+                              </Button>
+                              <p className="mt-2 text-xs leading-relaxed text-muted">
+                                Matching notes and rhythm, a tempo you choose, and a return to this
+                                lesson.
+                              </p>
+                            </div>
+                          ) : null}
+                          <Button
+                            className="mt-6 w-full"
+                            variant={exercise ? "secondary" : "primary"}
+                            size="lg"
+                            onClick={nextStep}
+                          >
                             I tried it
                             <ArrowRight className="size-4" aria-hidden="true" />
                           </Button>

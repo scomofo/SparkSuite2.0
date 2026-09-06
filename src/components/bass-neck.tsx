@@ -100,6 +100,9 @@ function Row({
               e.preventDefault();
               onPlay(mark ?? { string: stringIndex, fret, name: bassNoteName(stringIndex, fret), role: "R" });
             }}
+            onClick={(e) => {
+              if (e.detail === 0) onPlay(mark ?? { string: stringIndex, fret, name: bassNoteName(stringIndex, fret), role: "R" });
+            }}
             className={cn(
               "relative flex h-11 items-center justify-center rounded-[3px] border border-border/80",
               fret === 0 ? "bg-surface" : "bg-raised/60",

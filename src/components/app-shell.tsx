@@ -20,9 +20,11 @@ import { cn } from "@/lib/utils";
 export function AppShell({
   children,
   wide = false,
+  focusTimer = true,
 }: {
   children: React.ReactNode;
   wide?: boolean;
+  focusTimer?: boolean;
 }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const instrument = useSpark((s) => s.instrument);
@@ -70,7 +72,7 @@ export function AppShell({
         tabIndex={-1}
         className={cn("mx-auto min-h-dvh pb-28 lg:pb-10", wide ? "max-w-6xl" : "max-w-lg")}
       >
-        {onFocusLab ? <LabFocus /> : null}
+        {onFocusLab && focusTimer ? <LabFocus /> : null}
         {children}
       </main>
       <nav

@@ -1,6 +1,14 @@
 import { isDayKey, localDayKey } from "../utils.ts";
 import { CURRICULUM, learningLesson, learningPath } from "./curriculum.ts";
 import { INSTRUMENTS, type InstrumentId } from "./instruments.ts";
+import {
+  lessonExercise,
+  parsePractice,
+  practiceTempo,
+  type LearningPractice,
+  type PracticeGuide,
+  type PracticeReflection,
+} from "./lesson-practice.ts";
 
 export const LEARNING_KEY = "sparksuite.learning.v1";
 export const REVIEW_DAYS = [1, 3, 7, 14] as const;
@@ -11,6 +19,7 @@ export type LearningRecord = {
   reviewOn?: string;
   lastReviewedOn?: string;
   reviews: number;
+  practice?: LearningPractice;
 };
 export type LearningState = {
   version: 1;
@@ -70,6 +79,9 @@ export function parseLearning(text: string): LearningState {
       if (record.step === 3 && (!record.completedOn || record.answer !== lesson.answer))
         record.step = 2;
       if (record.step < 2) delete record.answer;
+      const exercise = lessonExercise(lesson.id);
+      const practice = exercise ? parsePractice(saved.practice, exercise.bpm) : undefined;
+      if (practice) record.practice = practice;
       next.records[lesson.id] = record;
     }
     for (const instrument of INSTRUMENTS) {
@@ -111,13 +123,89 @@ export function beginLearning(data: LearningState, id: string): LearningState {
   // A completed lesson can be deliberately revisited without losing its milestone.
   const record =
     previous?.step === 3
-      ? { ...previous, step: 0 as const, answer: undefined }
+      ? {
+          ...previous,
+          step: 0 as const,
+          answer: undefined,
+          ...(previous.practice
+            ? {
+                practice: {
+                  bpm: previous.practice.bpm,
+                  guide: previous.practice.guide,
+                  phase: "ready" as const,
+                },
+              }
+            : {}),
+        }
       : (previous ?? newRecord());
   return {
     ...data,
     active: { ...data.active, [lesson.instrument]: id },
     records: { ...data.records, [id]: record },
   };
+}
+
+/** Opening a guided exercise never completes a lesson or awards a timing score. */
+export function beginLessonPractice(data: LearningState, id: string): LearningState {
+  const exercise = lessonExercise(id);
+  if (!exercise) return data;
+  const next = beginLearning(data, id);
+  const record = next.records[id];
+  return {
+    ...next,
+    records: {
+      ...next.records,
+      [id]: {
+        ...record,
+        step: record.step === 0 ? 1 : record.step,
+        practice: record.practice ?? { bpm: exercise.bpm, guide: "notes", phase: "ready" },
+      },
+    },
+  };
+}
+
+export type PracticeAction =
+  | { type: "tempo"; bpm: number }
+  | { type: "guide"; guide: PracticeGuide }
+  | { type: "attempt" }
+  | { type: "reflect"; reflection: PracticeReflection }
+  | { type: "retry" }
+  | { type: "return" };
+
+export function updateLessonPractice(
+  data: LearningState,
+  id: string,
+  action: PracticeAction,
+): LearningState {
+  const record = data.records[id];
+  if (!lessonExercise(id) || !record?.practice || record.step === 3) return data;
+  let practice = record.practice;
+  let step = record.step;
+  switch (action.type) {
+    case "tempo":
+      practice = { ...practice, bpm: practiceTempo(action.bpm, practice.bpm) };
+      break;
+    case "guide":
+      if (!["notes", "pulse", "silent"].includes(action.guide)) return data;
+      practice = { ...practice, guide: action.guide };
+      break;
+    case "attempt":
+      practice = { bpm: practice.bpm, guide: practice.guide, phase: "reflect" };
+      break;
+    case "reflect":
+      if (practice.phase !== "reflect" || !["again", "ready"].includes(action.reflection))
+        return data;
+      practice = { ...practice, reflection: action.reflection };
+      break;
+    case "retry":
+      practice = { bpm: practice.bpm, guide: practice.guide, phase: "ready" };
+      break;
+    case "return":
+      if (practice.phase !== "reflect" || !practice.reflection) return data;
+      if (step === 1) step = 2;
+      break;
+  }
+  return { ...data, records: { ...data.records, [id]: { ...record, step, practice } } };
 }
 
 export function advanceLearning(data: LearningState, id: string): LearningState {
