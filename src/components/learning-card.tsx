@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { BookOpen } from "lucide-react";
 import { learningSummary } from "@/lib/spark/learning";
+import { labSearchFor } from "@/lib/spark/labs";
 import { useLearning } from "@/store/learning";
 import { useSpark } from "@/store/spark";
 
@@ -11,6 +12,8 @@ export function LearningCard() {
   const { data, hydrated } = useLearning();
   if (!hydrated) return null;
   const summary = learningSummary(data, instrument, day);
+  const record = data.records[summary.recommended.id];
+  const resumePractice = summary.reason === "resume" && record?.step === 1 && record.practice;
   return (
     <section
       aria-label="Guided learning"
@@ -26,17 +29,27 @@ export function LearningCard() {
         {summary.completed} / {summary.lessons.length} learning milestones · Start with about 2
         minutes
       </p>
-      <Link
-        to="/learn"
-        className="mt-3 inline-flex min-h-11 items-center gap-2 font-medium text-ember"
-      >
-        {summary.reason === "resume"
-          ? "Resume learning"
-          : summary.reason === "review"
-            ? "Revisit one idea"
-            : "Open learning path"}
-        <span aria-hidden="true">→</span>
-      </Link>
+      {resumePractice ? (
+        <Link
+          to="/techniques"
+          search={{ ...labSearchFor(instrument), lesson: summary.recommended.id }}
+          className="mt-3 inline-flex min-h-11 items-center gap-2 font-medium text-ember"
+        >
+          Resume guided exercise <span aria-hidden="true">→</span>
+        </Link>
+      ) : (
+        <Link
+          to="/learn"
+          className="mt-3 inline-flex min-h-11 items-center gap-2 font-medium text-ember"
+        >
+          {summary.reason === "resume"
+            ? "Resume learning"
+            : summary.reason === "review"
+              ? "Revisit one idea"
+              : "Open learning path"}
+          <span aria-hidden="true">→</span>
+        </Link>
+      )}
     </section>
   );
 }

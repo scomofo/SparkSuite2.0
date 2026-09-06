@@ -201,15 +201,15 @@ export function pianoChord(freqs: number[], when?: number) {
 }
 
 /** Longer piano tone for vocal holds. */
-export function pianoHold(freq: number, seconds = 4, when?: number) {
+export function pianoHold(freq: number, seconds = 4, when?: number, gain = 0.22) {
   if (!validFreq(freq)) return;
   const ac = safeCtx();
   if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const g = ac.createGain();
   g.gain.setValueAtTime(0.001, t);
-  g.gain.exponentialRampToValueAtTime(0.22, t + 0.08);
-  g.gain.setValueAtTime(0.22, t + Math.max(0.2, seconds - 0.4));
+  g.gain.exponentialRampToValueAtTime(gain, t + 0.08);
+  g.gain.setValueAtTime(gain, t + Math.max(0.2, seconds - 0.4));
   g.gain.exponentialRampToValueAtTime(0.0008, t + seconds);
   g.connect(out());
   const o = ac.createOscillator();

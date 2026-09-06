@@ -10,6 +10,7 @@ import { UkeLab } from "@/components/labs/uke-lab";
 import { VoiceLab } from "@/components/labs/voice-lab";
 import { Chip, TabRow } from "@/components/labs/shared";
 import { Button } from "@/components/ui/button";
+import { LessonPractice } from "@/components/lesson-practice";
 import { bassLegato, bassTone, click, ghostNote, kick, scheduleRun, unlockAudio, type AudioRun } from "@/lib/spark/audio";
 import {
   BASS_CHORDS,
@@ -40,12 +41,15 @@ export const Route = createFileRoute("/techniques")({
   validateSearch: (raw: Record<string, unknown>): LabSearch => ({
     tab: typeof raw.tab === "string" ? raw.tab : "",
     chord: typeof raw.chord === "string" ? raw.chord : "",
+    ...(typeof raw.lesson === "string" ? { lesson: raw.lesson.slice(0, 100) } : {}),
   }),
   component: TechniquesPage,
 });
 
 function TechniquesPage() {
   const instrument = useSpark((s) => s.instrument);
+  const search = Route.useSearch();
+  if (search.lesson !== undefined) return <LessonPractice key={search.lesson} id={search.lesson} />;
   if (instrument === "drums") return <DrumsLab />;
   if (instrument === "piano") return <PianoLab />;
   if (instrument === "ukulele") return <UkeLab />;
