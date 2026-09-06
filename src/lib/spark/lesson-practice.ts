@@ -585,7 +585,7 @@ export function lessonExercise(id: string | undefined): LessonExercise | undefin
     : undefined;
 }
 
-export function practiceBar(exercise: LessonExercise, bar: number) {
+export function practiceBar(exercise: Pick<LessonExercise, "beats" | "cues">, bar: number) {
   const first = Math.max(0, Math.min(Math.ceil(exercise.beats / 4) - 1, bar)) * 4;
   return Array.from({ length: Math.min(4, exercise.beats - first) }, (_, index) => {
     const beat = first + index;

@@ -26,7 +26,7 @@ export function soundPracticeCue(cue: PracticeCue, when: number, bpm: number) {
 }
 
 /** One finite pass. Playback is never persisted and never records an attempt. */
-export function usePracticePlayback(exercise: LessonExercise) {
+export function usePracticePlayback(exercise: Pick<LessonExercise, "beats" | "cues">) {
   const [phase, setPhase] = useState<"idle" | "count" | "play" | "done">("idle");
   const [cursor, setCursor] = useState<number | null>(null);
   const [count, setCount] = useState(1);

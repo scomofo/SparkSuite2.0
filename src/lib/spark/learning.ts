@@ -1,6 +1,8 @@
 import { isDayKey, localDayKey } from "../utils.ts";
 import { CURRICULUM, learningLesson, learningPath } from "./curriculum.ts";
 import { INSTRUMENTS, type InstrumentId } from "./instruments.ts";
+import { parseProfile, startingLesson, type LearningProfile } from "./learning-profile.ts";
+import { parseMilestone, type MilestoneRecord } from "./milestones.ts";
 import {
   lessonExercise,
   parsePractice,
@@ -26,12 +28,20 @@ export type LearningState = {
   records: Record<string, LearningRecord>;
   active: Partial<Record<InstrumentId, string>>;
   pace: "step" | "lesson";
+  profiles: Partial<Record<InstrumentId, LearningProfile>>;
+  skippedSetup: Partial<Record<InstrumentId, boolean>>;
+  milestones: Partial<Record<InstrumentId, MilestoneRecord>>;
+  focus: Partial<Record<InstrumentId, "lesson" | "milestone">>;
 };
 export const emptyLearning = (): LearningState => ({
   version: 1,
   records: {},
   active: {},
   pace: "step",
+  profiles: {},
+  skippedSetup: {},
+  milestones: {},
+  focus: {},
 });
 const newRecord = (): LearningRecord => ({ step: 0, reviews: 0 });
 
@@ -85,6 +95,14 @@ export function parseLearning(text: string): LearningState {
       next.records[lesson.id] = record;
     }
     for (const instrument of INSTRUMENTS) {
+      const profile = parseProfile(raw.profiles?.[instrument.id]);
+      if (profile) next.profiles[instrument.id] = profile;
+      if (raw.skippedSetup?.[instrument.id] === true) next.skippedSetup[instrument.id] = true;
+      const milestone = parseMilestone(raw.milestones?.[instrument.id], instrument.id);
+      if (milestone) next.milestones[instrument.id] = milestone;
+      const focus = raw.focus?.[instrument.id];
+      if (focus === "lesson" || (focus === "milestone" && milestone))
+        next.focus[instrument.id] = focus;
       const id = raw.active?.[instrument.id];
       if (
         typeof id === "string" &&
@@ -141,6 +159,7 @@ export function beginLearning(data: LearningState, id: string): LearningState {
   return {
     ...data,
     active: { ...data.active, [lesson.instrument]: id },
+    focus: { ...data.focus, [lesson.instrument]: "lesson" },
     records: { ...data.records, [id]: record },
   };
 }
@@ -205,7 +224,11 @@ export function updateLessonPractice(
       if (step === 1) step = 2;
       break;
   }
-  return { ...data, records: { ...data.records, [id]: { ...record, step, practice } } };
+  return {
+    ...data,
+    focus: { ...data.focus, [learningLesson(id)!.instrument]: "lesson" },
+    records: { ...data.records, [id]: { ...record, step, practice } },
+  };
 }
 
 export function advanceLearning(data: LearningState, id: string): LearningState {
@@ -213,6 +236,7 @@ export function advanceLearning(data: LearningState, id: string): LearningState 
   if (!learningLesson(id) || !record || (record.step !== 0 && record.step !== 1)) return data;
   return {
     ...data,
+    focus: { ...data.focus, [learningLesson(id)!.instrument]: "lesson" },
     records: { ...data.records, [id]: { ...record, step: record.step === 0 ? 1 : 2 } },
   };
 }
@@ -228,7 +252,11 @@ export function answerLearning(data: LearningState, id: string, answer: number):
     answer >= lesson.options.length
   )
     return data;
-  return { ...data, records: { ...data.records, [id]: { ...record, answer } } };
+  return {
+    ...data,
+    focus: { ...data.focus, [lesson.instrument]: "lesson" },
+    records: { ...data.records, [id]: { ...record, answer } },
+  };
 }
 
 export function finishLearning(
@@ -269,7 +297,10 @@ export function learningSummary(
   const currentId = data.active[instrument];
   const candidate = currentId ? learningLesson(currentId) : undefined;
   const active = candidate && (data.records[candidate.id]?.step ?? 3) < 3 ? candidate : undefined;
-  const next = lessons.find((lesson) => !data.records[lesson.id]?.completedOn);
+  const start = startingLesson(instrument, data.profiles[instrument]);
+  const next = lessons
+    .slice(lessons.indexOf(start))
+    .find((lesson) => !data.records[lesson.id]?.completedOn);
   const due = lessons
     .filter((lesson) => {
       const record = data.records[lesson.id];
@@ -283,7 +314,21 @@ export function learningSummary(
     due,
     completed: lessons.filter((lesson) => data.records[lesson.id]?.completedOn).length,
     // Resume first, then offer one review. New material always remains available.
-    recommended: active ?? due[0] ?? next ?? lessons[0],
+    recommended: active ?? due[0] ?? next ?? start,
     reason: active ? "resume" : due.length ? "review" : next ? "new" : "explore",
   };
+}
+
+export function configureLearning(
+  data: LearningState,
+  instrument: InstrumentId,
+  input: LearningProfile,
+): LearningState {
+  const profile = parseProfile(input);
+  if (!profile || !INSTRUMENTS.some((item) => item.id === instrument)) return data;
+  return { ...data, profiles: { ...data.profiles, [instrument]: profile } };
+}
+export function learningPace(data: LearningState, instrument: InstrumentId) {
+  const profile = data.profiles[instrument];
+  return profile ? (profile.minutes === 2 ? "step" : "lesson") : data.pace;
 }

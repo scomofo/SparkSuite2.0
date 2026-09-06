@@ -21,6 +21,7 @@ page.on("console", (message) => {
 try {
   await page.clock.install({ time: new Date("2026-09-05T18:00:00Z") });
   await page.goto(url, { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "Skip setup", exact: true }).click();
   await page.getByRole("link", { name: "Open learning path", exact: true }).click();
   await page.getByRole("heading", { name: "Guitar learning", exact: true }).waitFor();
   await page.screenshot({ path: `${output}/learning-${label}-desktop.png`, fullPage: true });
