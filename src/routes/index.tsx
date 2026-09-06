@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowUpRight, Check, Flame, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
 import { InstrumentMark } from "@/components/instrument-mark";
+import { LearningCard } from "@/components/learning-card";
 import { Button } from "@/components/ui/button";
 import { dayLabel, recentSessions, suiteActivity } from "@/lib/spark/activity";
 import { rankFor, sparksFor, WEEK_GOAL, xpProgress } from "@/lib/spark/game";
@@ -60,7 +61,10 @@ function SuiteHome() {
             <span className="tabular">{totalXp.toLocaleString("en")} suite XP</span>
           </div>
         </header>
-        <div className="mt-8 grid gap-5 xl:grid-cols-3">
+        <div className="mt-6">
+          <LearningCard />
+        </div>
+        <div className="mt-5 grid gap-5 xl:grid-cols-3">
           <section
             aria-labelledby="continue-heading"
             className="overflow-hidden rounded-xl border border-border bg-surface xl:col-span-2"

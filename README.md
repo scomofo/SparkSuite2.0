@@ -21,6 +21,20 @@ npm run dev
 
 Progress and checkpoints stay in this browser. Checkpoints expire at the next local calendar day, when the curriculum/plan changes, or when the saved progress changes. Finishing clears the checkpoint; restoring one does not award XP or mark a day complete. Timing scores measure interaction with the on-screen exercises, not microphone-based instrumental assessment.
 
+## Guided learning
+
+**Learn** adds 48 original lessons: eight each for guitar, piano, ukulele, bass, drums, and vocals. Every path has two lessons at each stage: foundations, beginner, intermediate, and advanced. Lessons progress from first sounds and a steady pulse to instrument-specific harmony, rhythmic control, interpretation, and an independent arrangement or performance project. These are a practical learning path, not a certification or a complete substitute for instrumental instruction.
+
+Each lesson has an explanation, a concrete example, a three-part practice attempt, and an understanding check with feedback. Selected lessons include optional synthesized pitch references. All levels are available; prerequisites are suggestions for learners who need the earlier concepts.
+
+- **One step:** default to a small starting task, then offer a natural stopping point. A whole-lesson option keeps the three stages together. Time estimates are guides; nothing is timed or automatically advanced.
+- **Return:** save the exact lesson step and answer separately for each instrument. These checkpoints survive calendar-day changes. Studio and Today point back to the current learning step.
+- **Review:** offer one previously explored idea after 1, 3, 7, then 14 days. Early or repeated same-day reviews do not advance the schedule. New lessons stay available, and missed review dates remove nothing.
+- **Honest progress:** a milestone means the learner reported an attempt and answered the check. It does not measure instrumental proficiency, award timing XP, or complete a daily practice loop. Existing practice data remains unchanged in its own storage.
+- **Storage:** learning uses `sparksuite.learning.v1` in this browser. Corrupt entries are sanitized, unknown lessons are ignored, and failed saves are reported. It does not sync across devices.
+
+The short stages, visible next action, and recoverable place apply [W3C cognitive accessibility guidance](https://www.w3.org/TR/coga-usable/). They are design choices to support attention and memory; actual learner usability still needs feedback from adults with ADHD.
+
 ## Verification
 
 ```sh
@@ -31,4 +45,4 @@ npm run typecheck
 
 CI runs these checks on pull requests and main. Node 24 also checks desktop, 390px mobile, and 320px layouts, keyboard interaction, exercise recovery through reloads and instrument switching, and single session finalization against development and production builds. Screenshots and verdicts are attached as the `browser-evidence` workflow artifact.
 
-The browser checks require Playwright Chromium. `scripts/browser-smoke.mjs` and `scripts/studio-browser.mjs` save their evidence under `/workspace/screenshots` as required by the project's QA workflow.
+The browser checks require Playwright Chromium. `scripts/browser-smoke.mjs`, `scripts/studio-browser.mjs`, and `scripts/learning-browser.mjs` save their evidence under `/workspace/screenshots` as required by the project's QA workflow. The learning checks cover pacing, feedback, exact-step recovery, all six instruments, advanced access, review scheduling, and failed saves on both development and production builds.

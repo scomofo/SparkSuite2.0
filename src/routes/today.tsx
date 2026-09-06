@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { Check, Flame, Play } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { LearningCard } from "@/components/learning-card";
 import { MarkList, WeekPulseRow, XpBar } from "@/components/game-chrome";
 import { Button } from "@/components/ui/button";
 import { ChordDiagram } from "@/components/chord-diagram";
@@ -123,6 +124,7 @@ function TodayPage() {
         </div>
       </section>
 
+      <div className="mx-4 mt-4"><LearningCard /></div>
       {done ? (
         lab ? (
           <section className="mx-4 mt-4 rounded-xl border border-border bg-surface p-5">
