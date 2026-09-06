@@ -2,11 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, Clock, Coffee } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { MilestoneCard } from "@/components/milestone-card";
 import { LessonDemo } from "@/components/lesson-demo";
 import { Button } from "@/components/ui/button";
 import { LEARNING_LEVELS, learningLesson } from "@/lib/spark/curriculum";
 import { INSTRUMENTS, instrumentById, type InstrumentId } from "@/lib/spark/instruments";
-import { learningSummary } from "@/lib/spark/learning";
+import { learningPace, learningSummary } from "@/lib/spark/learning";
 import { labSearchFor } from "@/lib/spark/labs";
 import { lessonExercise } from "@/lib/spark/lesson-practice";
 import { useLearning } from "@/store/learning";
@@ -28,6 +29,7 @@ function LearnPage() {
   const heading = useRef<HTMLHeadingElement>(null);
   const inst = instrumentById(instrument);
   const summary = learningSummary(data, instrument, day);
+  const pace = learningPace(data, instrument);
   const candidate = selected ? learningLesson(selected) : undefined;
   const lesson = candidate?.instrument === instrument ? candidate : undefined;
   const record = lesson ? data.records[lesson.id] : undefined;
@@ -53,7 +55,7 @@ function LearnPage() {
   function nextStep() {
     if (!lesson) return;
     advance(lesson.id);
-    if (data.pace === "step") setPaused(true);
+    if (pace === "step") setPaused(true);
   }
   function showPath() {
     setSelected(null);
@@ -171,10 +173,12 @@ function LearnPage() {
                         </Button>
                       ) : (
                         <p className="mt-4 text-sm text-muted">
-                          You have explored the whole path. Revisit a project, try another
-                          instrument, or bring these ideas into a longer piece.
+                          {summary.completed === summary.lessons.length
+                            ? "You have explored the whole path. Revisit a project, try another instrument, or bring these ideas into a longer piece."
+                            : "You have explored the lessons from your starting point. Earlier lessons stay open if you want to revisit a foundation."}
                         </p>
                       )}
+                      <MilestoneCard instrument={instrument} />
                     </>
                   ) : paused ? (
                     <>
@@ -407,20 +411,20 @@ function LearnPage() {
                           ["step", "One step", "Start with about 2 minutes"],
                           ["lesson", "A whole lesson", "About 5–10 minutes, at your pace"],
                         ] as const
-                      ).map(([pace, title, detail]) => (
+                      ).map(([choice, title, detail]) => (
                         <label
-                          key={pace}
+                          key={choice}
                           className={cn(
                             "flex min-h-16 cursor-pointer items-center gap-3 rounded-lg border p-4",
-                            data.pace === pace ? "border-ember bg-raised" : "border-border",
+                            pace === choice ? "border-ember bg-raised" : "border-border",
                           )}
                         >
                           <input
                             type="radio"
                             name="learning-pace"
-                            value={pace}
-                            checked={data.pace === pace}
-                            onChange={() => setPace(pace)}
+                            value={choice}
+                            checked={pace === choice}
+                            onChange={() => setPace(choice, instrument)}
                             className="size-4 shrink-0 accent-accent"
                           />
                           <span>
@@ -461,6 +465,13 @@ function LearnPage() {
                   </p>
                 </section>
 
+                <Link
+                  to="/start"
+                  className="mt-3 inline-flex min-h-11 items-center text-sm text-muted underline underline-offset-4"
+                >
+                  Adjust my starting point or time
+                </Link>
+                <MilestoneCard instrument={instrument} />
                 <section aria-label="Curriculum roadmap" className="mt-8">
                   <div className="flex flex-wrap items-baseline justify-between gap-3">
                     <h2 className="font-display text-2xl font-semibold">Your learning path</h2>

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Music2 } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { SavedMusic } from "@/components/milestone-card";
 import { MarkList } from "@/components/game-chrome";
 import { Button } from "@/components/ui/button";
 import { dayLabel } from "@/lib/spark/activity";
@@ -69,6 +70,7 @@ function ProgressPage() {
             </select>
           </div>
         </header>
+        <SavedMusic />
         <dl className="mt-8 grid grid-cols-3 gap-3">
           {[
             { label: "Practice days", value: sparksFor(progress) },

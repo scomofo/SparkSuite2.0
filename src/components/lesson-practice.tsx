@@ -431,14 +431,14 @@ function GuidedPractice({
   );
 }
 
-function PracticeSounds({
+export function PracticeSounds({
   lesson,
   exercise,
   disabled,
   bpm,
 }: {
-  lesson: LearningLesson;
-  exercise: LessonExercise;
+  lesson: Pick<LearningLesson, "instrument">;
+  exercise: Pick<LessonExercise, "cues" | "positions">;
   disabled: boolean;
   bpm: number;
 }) {

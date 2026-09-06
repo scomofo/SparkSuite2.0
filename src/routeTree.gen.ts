@@ -11,10 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as LearnRouteImport } from './routes/learn'
+import { Route as MilestoneRouteImport } from './routes/milestone'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SkillsRouteImport } from './routes/skills'
+import { Route as StartRouteImport } from './routes/start'
 import { Route as TechniquesRouteImport } from './routes/techniques'
 import { Route as TheoryRouteImport } from './routes/theory'
 import { Route as TodayRouteImport } from './routes/today'
@@ -28,6 +30,11 @@ const IndexRoute = IndexRouteImport.update({
 const LearnRoute = LearnRouteImport.update({
   id: '/learn',
   path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MilestoneRoute = MilestoneRouteImport.update({
+  id: '/milestone',
+  path: '/milestone',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PracticeRoute = PracticeRouteImport.update({
@@ -48,6 +55,11 @@ const ResultsRoute = ResultsRouteImport.update({
 const SkillsRoute = SkillsRouteImport.update({
   id: '/skills',
   path: '/skills',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StartRoute = StartRouteImport.update({
+  id: '/start',
+  path: '/start',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TechniquesRoute = TechniquesRouteImport.update({
@@ -74,10 +86,12 @@ const TunerRoute = TunerRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/learn': typeof LearnRoute
+  '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
   '/results': typeof ResultsRoute
   '/skills': typeof SkillsRoute
+  '/start': typeof StartRoute
   '/techniques': typeof TechniquesRoute
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
@@ -86,10 +100,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/learn': typeof LearnRoute
+  '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
   '/results': typeof ResultsRoute
   '/skills': typeof SkillsRoute
+  '/start': typeof StartRoute
   '/techniques': typeof TechniquesRoute
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
@@ -99,10 +115,12 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/learn': typeof LearnRoute
+  '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
   '/results': typeof ResultsRoute
   '/skills': typeof SkillsRoute
+  '/start': typeof StartRoute
   '/techniques': typeof TechniquesRoute
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
@@ -113,10 +131,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/learn'
+    | '/milestone'
     | '/practice'
     | '/progress'
     | '/results'
     | '/skills'
+    | '/start'
     | '/techniques'
     | '/theory'
     | '/today'
@@ -125,10 +145,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/learn'
+    | '/milestone'
     | '/practice'
     | '/progress'
     | '/results'
     | '/skills'
+    | '/start'
     | '/techniques'
     | '/theory'
     | '/today'
@@ -137,10 +159,12 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/learn'
+    | '/milestone'
     | '/practice'
     | '/progress'
     | '/results'
     | '/skills'
+    | '/start'
     | '/techniques'
     | '/theory'
     | '/today'
@@ -150,10 +174,12 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   LearnRoute: typeof LearnRoute
+  MilestoneRoute: typeof MilestoneRoute
   PracticeRoute: typeof PracticeRoute
   ProgressRoute: typeof ProgressRoute
   ResultsRoute: typeof ResultsRoute
   SkillsRoute: typeof SkillsRoute
+  StartRoute: typeof StartRoute
   TechniquesRoute: typeof TechniquesRoute
   TheoryRoute: typeof TheoryRoute
   TodayRoute: typeof TodayRoute
@@ -174,6 +200,13 @@ declare module '@tanstack/react-router' {
       path: '/learn'
       fullPath: '/learn'
       preLoaderRoute: typeof LearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/milestone': {
+      id: '/milestone'
+      path: '/milestone'
+      fullPath: '/milestone'
+      preLoaderRoute: typeof MilestoneRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/practice': {
@@ -202,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/skills'
       fullPath: '/skills'
       preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/start': {
+      id: '/start'
+      path: '/start'
+      fullPath: '/start'
+      preLoaderRoute: typeof StartRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/techniques': {
@@ -238,10 +278,12 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   LearnRoute: LearnRoute,
+  MilestoneRoute: MilestoneRoute,
   PracticeRoute: PracticeRoute,
   ProgressRoute: ProgressRoute,
   ResultsRoute: ResultsRoute,
   SkillsRoute: SkillsRoute,
+  StartRoute: StartRoute,
   TechniquesRoute: TechniquesRoute,
   TheoryRoute: TheoryRoute,
   TodayRoute: TodayRoute,
