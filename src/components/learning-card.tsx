@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { nextLearningAction } from "@/lib/spark/next-learning-action";
 import { timePlan } from "@/lib/spark/learning-profile";
 import { labSearchFor } from "@/lib/spark/labs";
+import { lessonExercise } from "@/lib/spark/lesson-practice";
 import { useLearning } from "@/store/learning";
 import { useSpark } from "@/store/spark";
 
@@ -21,6 +22,7 @@ export function LearningCard() {
   const showSetup = !profile && !data.skippedSetup[instrument] && !hasWork;
   const record = next.kind === "lesson" ? data.records[next.lesson.id] : undefined;
   const resumePractice = next.reason === "resume" && record?.step === 1 && record.practice;
+  const activeExercise = next.kind === "lesson" ? lessonExercise(next.lesson.id) : undefined;
   return (
     <section
       aria-label="Guided learning"
@@ -64,7 +66,7 @@ export function LearningCard() {
           <p className="mt-3 text-xs text-muted">
             {profile
               ? timePlan(profile.minutes)
-              : `${next.summary.completed} / ${next.summary.lessons.length} learning milestones · Start with about 2 minutes`}
+              : `${next.summary.completed} / ${next.summary.lessons.length} lessons explored · Start with about 2 minutes`}
           </p>
           {next.kind === "milestone" ? (
             <Link
@@ -81,7 +83,8 @@ export function LearningCard() {
               search={{ ...labSearchFor(instrument), lesson: next.lesson.id }}
               className="mt-3 inline-flex min-h-11 items-center gap-2 font-medium text-ember"
             >
-              Resume guided exercise <span aria-hidden="true">→</span>
+              {activeExercise?.project ? "Resume guided project" : "Resume guided exercise"}{" "}
+              <span aria-hidden="true">→</span>
             </Link>
           ) : (
             <Link

@@ -910,6 +910,7 @@ export const UKE_CHORDS: Record<string, { frets: (number | null)[]; fingers: (nu
   G: { frets: [0, 2, 3, 2], fingers: [0, 1, 3, 2], notes: ["G", "D", "G", "B"] },
   Am: { frets: [2, 0, 0, 0], fingers: [2, 0, 0, 0], notes: ["A", "C", "E", "A"] },
   F: { frets: [2, 0, 1, 0], fingers: [2, 0, 1, 0], notes: ["A", "C", "F", "A"] },
+  D: { frets: [2, 2, 2, 0], fingers: [1, 2, 3, 0], notes: ["A", "D", "F♯", "A"] },
 };
 
 export const PIANO_VOICINGS: Record<string, number[]> = {

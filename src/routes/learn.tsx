@@ -151,7 +151,7 @@ function LearnPage() {
                       </h2>
                       <p className="mt-3 text-muted">You worked on: {lesson.outcome}</p>
                       <p className="mt-3 text-sm leading-relaxed text-muted">
-                        {summary.completed} of {summary.lessons.length} milestones explored. This
+                        {summary.completed} of {summary.lessons.length} lessons explored. This
                         records your practice attempt and understanding check; keep developing the
                         skill at your own pace.
                       </p>
@@ -282,8 +282,12 @@ function LearnPage() {
                                   search={{ ...labSearchFor(instrument), lesson: lesson.id }}
                                 >
                                   {record.practice
-                                    ? "Resume guided exercise"
-                                    : "Open guided exercise"}
+                                    ? exercise.project
+                                      ? "Resume guided project"
+                                      : "Resume guided exercise"
+                                    : exercise.project
+                                      ? "Open guided project"
+                                      : "Open guided exercise"}
                                   <ArrowRight className="size-4 shrink-0" aria-hidden="true" />
                                 </Link>
                               </Button>
@@ -293,19 +297,28 @@ function LearnPage() {
                               </p>
                             </div>
                           ) : null}
-                          <Button
-                            className="mt-6 w-full"
-                            variant={exercise ? "secondary" : "primary"}
-                            size="lg"
-                            onClick={nextStep}
-                          >
-                            I tried it
-                            <ArrowRight className="size-4" aria-hidden="true" />
-                          </Button>
-                          <p className="mt-2 text-xs leading-relaxed text-muted">
-                            Your own practice check-in. The app does not listen to or grade your
-                            instrument here.
-                          </p>
+                          {exercise?.project ? (
+                            <p className="mt-4 text-xs leading-relaxed text-muted">
+                              Finish Build, Choose, and Refine in the guided project to open the
+                              lesson check. Your progress is saved between stages.
+                            </p>
+                          ) : (
+                            <>
+                              <Button
+                                className="mt-6 w-full"
+                                variant={exercise ? "secondary" : "primary"}
+                                size="lg"
+                                onClick={nextStep}
+                              >
+                                I tried it
+                                <ArrowRight className="size-4" aria-hidden="true" />
+                              </Button>
+                              <p className="mt-2 text-xs leading-relaxed text-muted">
+                                Your own practice check-in. The app does not listen to or grade your
+                                instrument here.
+                              </p>
+                            </>
+                          )}
                         </>
                       ) : (
                         <>
@@ -476,14 +489,14 @@ function LearnPage() {
                   <div className="flex flex-wrap items-baseline justify-between gap-3">
                     <h2 className="font-display text-2xl font-semibold">Your learning path</h2>
                     <p className="text-sm text-muted">
-                      {summary.completed} / {summary.lessons.length} milestones explored
+                      {summary.completed} / {summary.lessons.length} lessons explored
                     </p>
                   </div>
                   <progress
                     className="studio-progress mt-4"
                     max={summary.lessons.length}
                     value={summary.completed}
-                    aria-label="Learning milestones explored"
+                    aria-label="Learning lessons explored"
                   />
                   <div className="mt-5 space-y-3">
                     {LEARNING_LEVELS.map((level, levelIndex) => {

@@ -10,6 +10,7 @@ import {
   type LearningPractice,
   type PracticeGuide,
   type PracticeReflection,
+  type PracticeRetryFocus,
 } from "./lesson-practice.ts";
 
 export const LEARNING_KEY = "sparksuite.learning.v1";
@@ -90,7 +91,9 @@ export function parseLearning(text: string): LearningState {
         record.step = 2;
       if (record.step < 2) delete record.answer;
       const exercise = lessonExercise(lesson.id);
-      const practice = exercise ? parsePractice(saved.practice, exercise.bpm) : undefined;
+      const practice = exercise
+        ? parsePractice(saved.practice, exercise.bpm, exercise.project)
+        : undefined;
       if (practice) record.practice = practice;
       next.records[lesson.id] = record;
     }
@@ -137,6 +140,7 @@ export function saveLearning(data: LearningState): boolean {
 export function beginLearning(data: LearningState, id: string): LearningState {
   const lesson = learningLesson(id);
   if (!lesson) return data;
+  const exercise = lessonExercise(id);
   const previous = data.records[id];
   // A completed lesson can be deliberately revisited without losing its milestone.
   const record =
@@ -151,6 +155,7 @@ export function beginLearning(data: LearningState, id: string): LearningState {
                   bpm: previous.practice.bpm,
                   guide: previous.practice.guide,
                   phase: "ready" as const,
+                  ...(exercise?.project ? { projectStage: 0 as const } : {}),
                 },
               }
             : {}),
@@ -177,7 +182,19 @@ export function beginLessonPractice(data: LearningState, id: string): LearningSt
       [id]: {
         ...record,
         step: record.step === 0 ? 1 : record.step,
-        practice: record.practice ?? { bpm: exercise.bpm, guide: "notes", phase: "ready" },
+        practice: record.practice
+          ? {
+              ...record.practice,
+              ...(exercise.project && record.practice.projectStage === undefined
+                ? { projectStage: 0 as const }
+                : {}),
+            }
+          : {
+              bpm: exercise.bpm,
+              guide: "notes",
+              phase: "ready",
+              ...(exercise.project ? { projectStage: 0 as const } : {}),
+            },
       },
     },
   };
@@ -188,7 +205,10 @@ export type PracticeAction =
   | { type: "guide"; guide: PracticeGuide }
   | { type: "attempt" }
   | { type: "reflect"; reflection: PracticeReflection }
+  | { type: "retry-focus"; focus: PracticeRetryFocus }
   | { type: "retry" }
+  | { type: "project-choice"; choice: 0 | 1 }
+  | { type: "project-next" }
   | { type: "return" };
 
 export function updateLessonPractice(
@@ -196,8 +216,10 @@ export function updateLessonPractice(
   id: string,
   action: PracticeAction,
 ): LearningState {
+  const lesson = learningLesson(id);
+  const exercise = lessonExercise(id);
   const record = data.records[id];
-  if (!lessonExercise(id) || !record?.practice || record.step === 3) return data;
+  if (!lesson || !exercise || !record?.practice || record.step === 3) return data;
   let practice = record.practice;
   let step = record.step;
   switch (action.type) {
@@ -209,34 +231,94 @@ export function updateLessonPractice(
       practice = { ...practice, guide: action.guide };
       break;
     case "attempt":
-      practice = { bpm: practice.bpm, guide: practice.guide, phase: "reflect" };
+      if (
+        practice.phase !== "ready" ||
+        (exercise.project && (practice.projectStage !== 2 || practice.projectChoice === undefined))
+      )
+        return data;
+      {
+        const { retryFocus: _retryFocus, reflection: _reflection, ...rest } = practice;
+        practice = { ...rest, phase: "reflect" };
+      }
       break;
     case "reflect":
       if (practice.phase !== "reflect" || !["again", "ready"].includes(action.reflection))
         return data;
-      practice = { ...practice, reflection: action.reflection };
+      if (action.reflection === "ready") {
+        const { retryFocus: _retryFocus, ...rest } = practice;
+        practice = { ...rest, reflection: action.reflection };
+      } else practice = { ...practice, reflection: action.reflection };
+      break;
+    case "retry-focus":
+      if (
+        practice.phase !== "reflect" ||
+        practice.reflection !== "again" ||
+        !["pulse", "technique"].includes(action.focus)
+      )
+        return data;
+      practice = { ...practice, retryFocus: action.focus };
       break;
     case "retry":
-      practice = { bpm: practice.bpm, guide: practice.guide, phase: "ready" };
+      if (practice.phase !== "reflect" || practice.reflection !== "again" || !practice.retryFocus)
+        return data;
+      {
+        const { reflection: _reflection, ...rest } = practice;
+        practice = {
+          ...rest,
+          phase: "ready",
+          ...(practice.retryFocus === "pulse" ? { bpm: 40, guide: "pulse" as const } : {}),
+        };
+      }
+      break;
+    case "project-choice":
+      if (
+        practice.phase !== "ready" ||
+        !exercise.project ||
+        practice.projectStage !== 1 ||
+        (action.choice !== 0 && action.choice !== 1)
+      )
+        return data;
+      practice = { ...practice, projectChoice: action.choice };
+      break;
+    case "project-next":
+      if (
+        practice.phase !== "ready" ||
+        !exercise.project ||
+        practice.projectStage === undefined ||
+        practice.projectStage >= 2 ||
+        (practice.projectStage === 1 && practice.projectChoice === undefined)
+      )
+        return data;
+      practice = {
+        ...practice,
+        projectStage: (practice.projectStage + 1) as 1 | 2,
+      };
       break;
     case "return":
-      if (practice.phase !== "reflect" || !practice.reflection) return data;
+      if (
+        practice.phase !== "reflect" ||
+        !practice.reflection ||
+        (exercise.project && (practice.projectStage !== 2 || practice.projectChoice === undefined))
+      )
+        return data;
       if (step === 1) step = 2;
       break;
   }
   return {
     ...data,
-    focus: { ...data.focus, [learningLesson(id)!.instrument]: "lesson" },
+    focus: { ...data.focus, [lesson.instrument]: "lesson" },
     records: { ...data.records, [id]: { ...record, step, practice } },
   };
 }
 
 export function advanceLearning(data: LearningState, id: string): LearningState {
+  const lesson = learningLesson(id);
   const record = data.records[id];
-  if (!learningLesson(id) || !record || (record.step !== 0 && record.step !== 1)) return data;
+  if (!lesson || !record || (record.step !== 0 && record.step !== 1)) return data;
+  if (record.step === 1 && lessonExercise(id)?.project) return data;
   return {
     ...data,
-    focus: { ...data.focus, [learningLesson(id)!.instrument]: "lesson" },
+    focus: { ...data.focus, [lesson.instrument]: "lesson" },
     records: { ...data.records, [id]: { ...record, step: record.step === 0 ? 1 : 2 } },
   };
 }

@@ -20,6 +20,7 @@ page.on("console", (message) => {
 const button = (name) => page.getByRole("button", { name, exact: true });
 const link = (name) => page.getByRole("link", { name, exact: true });
 const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("sparksuite.learning.v1")));
+assert.equal(LESSON_EXERCISES.length, 48, "Every curriculum lesson has guided practice");
 async function noOverflow() {
   assert.equal(
     await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
@@ -35,6 +36,12 @@ try {
   await button("Continue this lesson").click();
   await link("Open guided exercise").press("Enter");
   await page.getByRole("heading", { name: "Open E → F → E", exact: true }).waitFor();
+  await page.waitForFunction(() => document.activeElement?.tagName === "H2");
+  assert.equal(
+    await page.evaluate(() => document.activeElement?.tagName),
+    "H2",
+    "A newly created guided exercise receives keyboard focus",
+  );
   await button("Play one pass").waitFor();
   assert.equal(
     await page.getByText("Four minutes. Then stop.", { exact: true }).count(),
@@ -85,11 +92,13 @@ try {
     await page.getByRole("radio", { name: "I'd like another try", exact: true }).isChecked(),
     true,
   );
-  await page
-    .getByText("Try only open E and F once, without the guide.", { exact: false })
-    .waitFor();
-  await button("Try this exercise again").click();
-  assert.equal(await page.getByLabel("Practice tempo").inputValue(), "100");
+  assert.equal(await button("Try this adjustment").isDisabled(), true);
+  await page.getByRole("radio", { name: "I lost the pulse or my place", exact: true }).check();
+  await page.getByText("Try only Bar 1 at 40 BPM with Click only.", { exact: false }).waitFor();
+  await button("Try this adjustment").click();
+  assert.equal(await page.getByLabel("Practice tempo").inputValue(), "40");
+  assert.equal(await page.getByLabel("Practice guide").inputValue(), "pulse");
+  assert.equal(await button("Bar 2").count(), 0, "Pulse retry is limited to the first bar");
   assert.equal(await button("Stop guide").count(), 0, "Retry waits for the learner");
   await button("I tried the exercise").click();
   await page.getByRole("radio", { name: "I'm ready to move on", exact: true }).check();
@@ -112,6 +121,12 @@ try {
       waitUntil: "networkidle",
     });
     await page.getByRole("heading", { name: exercise.title, exact: true }).waitFor();
+    if (exercise.project) {
+      const recordBeforeStart = (await saved()).records[exercise.lessonId];
+      if (!recordBeforeStart?.practice) {
+        await button("Start guided project").click();
+      }
+    }
     await button("Play one pass").waitFor();
     const instrument = exercise.lessonId.split("-")[0];
     assert.equal(
@@ -119,17 +134,100 @@ try {
       instrument,
       "A direct lesson link selects the matching instrument",
     );
-    const barCount = Math.ceil(exercise.beats / 4);
+    const barCount = Math.ceil((exercise.project?.buildBeats ?? exercise.beats) / 4);
     await button(`Bar ${barCount}`).click();
     await page.getByRole("heading", { name: new RegExp(`^Bar ${barCount}`) }).waitFor();
     await noOverflow();
     await link("Back to lesson").click();
-    await link("Resume guided exercise").waitFor();
+    await link(exercise.project ? "Resume guided project" : "Resume guided exercise").waitFor();
     assert.equal(
       (await saved()).records[exercise.lessonId].completedOn === undefined,
       exercise.lessonId !== "guitar-first-sound",
     );
   }
+
+  // Advanced projects save each short stage and only unlock the lesson check after Refine.
+  const project = LESSON_EXERCISES.find((exercise) => exercise.lessonId === "guitar-arrangement");
+  assert.ok(project?.project, "Guitar arrangement has a resumable project");
+  const [build, choose, refine] = project.project.stages;
+  await page.evaluate((lessonId) => {
+    const key = "sparksuite.learning.v1";
+    const learning = JSON.parse(localStorage.getItem(key));
+    delete learning.records[lessonId];
+    delete learning.active.guitar;
+    localStorage.setItem(key, JSON.stringify(learning));
+  }, project.lessonId);
+  await page.goto(`${url}/techniques?lesson=guitar-arrangement`, { waitUntil: "networkidle" });
+  await page.getByRole("heading", { name: "Build, choose, then refine.", exact: true }).waitFor();
+  assert.equal(
+    (await saved()).records[project.lessonId],
+    undefined,
+    "A preview creates no progress",
+  );
+  await page.screenshot({ path: `${output}/lesson-project-${label}-preview.png`, fullPage: true });
+  await button("Start guided project").click();
+  await page.getByText("Project stage 1 of 3", { exact: true }).waitFor();
+  await page.screenshot({ path: `${output}/lesson-project-${label}-build.png`, fullPage: true });
+  assert.equal((await saved()).records[project.lessonId].practice.projectStage, 0);
+  assert.equal(
+    (await saved()).records[project.lessonId].completedOn,
+    undefined,
+    "Opening a project never completes its lesson",
+  );
+  await link("Back to lesson").click();
+  await page
+    .getByText("Finish Build, Choose, and Refine in the guided project", { exact: false })
+    .waitFor();
+  assert.equal(await button("I tried it").count(), 0, "A project cannot bypass its three stages");
+  assert.equal((await saved()).records[project.lessonId].step, 1);
+  await link("Resume guided project").click();
+  await page.getByText("Project stage 1 of 3", { exact: true }).waitFor();
+  await button(build.button).click();
+  await page.getByRole("heading", { name: "That stage counts.", exact: true }).waitFor();
+  assert.equal((await saved()).records[project.lessonId].practice.projectStage, 1);
+  assert.equal(await button("Stop guide").count(), 0, "A stage transition stops the guide");
+
+  // Leave at the stage break, then resume through the learner's path.
+  await link("Done for now").click();
+  await link("Learn").click();
+  await link("Resume guided project").click();
+  await page.getByText("Project stage 2 of 3", { exact: true }).waitFor();
+  assert.equal(await button(choose.button).isDisabled(), true, "Choose requires one direction");
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByText("Project stage 2 of 3", { exact: true }).waitFor();
+  await page.screenshot({ path: `${output}/lesson-project-${label}-choose.png`, fullPage: true });
+  assert.equal((await saved()).records[project.lessonId].practice.projectStage, 1);
+  assert.equal(await button("Stop guide").count(), 0, "Reloading a project never starts audio");
+  await page.locator('input[name="project-choice"]').first().check();
+  assert.equal((await saved()).records[project.lessonId].practice.projectChoice, 0);
+  await page.reload({ waitUntil: "networkidle" });
+  assert.equal(await page.locator('input[name="project-choice"]').first().isChecked(), true);
+  await button(choose.button).click();
+  await page.getByRole("heading", { name: "That stage counts.", exact: true }).waitFor();
+  assert.equal((await saved()).records[project.lessonId].practice.projectStage, 2);
+  await button("Continue to refine").click();
+  await page.getByText("Project stage 3 of 3", { exact: true }).waitFor();
+  await page.screenshot({ path: `${output}/lesson-project-${label}-refine.png`, fullPage: true });
+  await button(refine.button).click();
+  await page.getByRole("heading", { name: "What did you notice?", exact: true }).waitFor();
+  assert.equal((await saved()).records[project.lessonId].practice.projectStage, 2);
+  assert.equal((await saved()).records[project.lessonId].completedOn, undefined);
+  await page.reload({ waitUntil: "networkidle" });
+  await page.getByRole("radio", { name: "I'm ready to move on", exact: true }).check();
+  await button("Continue to lesson check").click();
+  await button("Finish this lesson").waitFor();
+  const projectRecord = (await saved()).records[project.lessonId];
+  assert.equal(
+    projectRecord.practice.projectStage,
+    2,
+    "Project stage survives lesson-check return",
+  );
+  assert.equal(
+    projectRecord.practice.projectChoice,
+    0,
+    "Project choice survives lesson-check return",
+  );
+  assert.equal(projectRecord.completedOn, undefined, "Project work does not complete the lesson");
 
   // Inspect the concrete chord-change handoff at desktop and both small widths.
   await page.goto(`${url}/techniques?lesson=guitar-em-to-g`, { waitUntil: "networkidle" });
@@ -149,6 +247,7 @@ try {
   }
   await button("I tried the exercise").click();
   await page.getByRole("radio", { name: "I'd like another try", exact: true }).check();
+  await page.locator('input[name="practice-retry-focus"]').nth(1).check();
   await page.screenshot({
     path: `${output}/lesson-practice-${label}-reflection.png`,
     fullPage: true,
@@ -165,12 +264,17 @@ try {
     true,
     "Check-in survives a pause and instrument switch",
   );
+  assert.equal(
+    await page.locator('input[name="practice-retry-focus"]').nth(1).isChecked(),
+    true,
+    "Targeted retry focus survives a pause and instrument switch",
+  );
   assert.equal((await saved()).records["guitar-em-to-g"].practice.bpm, 40);
 
-  // Existing labs still work; unknown and unsupported lesson IDs never show a mismatched lab.
+  // Existing labs still work; unknown lesson IDs never show a mismatched lab.
   await page.goto(`${url}/techniques?tab=down&chord=G`, { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Right hand", exact: true }).waitFor();
-  for (const id of ["not-a-lesson", "guitar-arrangement"]) {
+  for (const id of ["not-a-lesson"]) {
     await page.goto(`${url}/techniques?lesson=${id}`, { waitUntil: "networkidle" });
     await page
       .getByRole("heading", { name: "This guided exercise is unavailable.", exact: true })
@@ -225,7 +329,9 @@ try {
         ok: true,
         errors,
         checks: [
-          "24 matching exercises",
+          "48 matching exercises",
+          "resumable Build / Choose / Refine projects",
+          "one-variable retry coaching",
           "desktop/390px/320px",
           "keyboard and focus",
           "bounded optional audio and visual-only guide",

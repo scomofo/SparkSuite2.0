@@ -101,7 +101,8 @@ try {
     "Each instrument keeps its own time preference",
   );
   await button("Got the idea").click();
-  await button("I tried it").waitFor();
+  await link("Open guided project").waitFor();
+  assert.equal(await button("I tried it").count(), 0, "Advanced projects cannot skip stages");
 
   // A two-minute milestone has a real first-bar stopping point.
   await page.goto(`${url}/milestone?instrument=guitar`, { waitUntil: "networkidle" });

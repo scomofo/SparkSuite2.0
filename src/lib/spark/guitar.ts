@@ -56,6 +56,27 @@ export const CHORDS: Record<string, ChordShape> = {
     fingers: [null, 0, 1, 2, 3, 0],
     notes: ["A", "E", "A", "C#", "E"],
   },
+  E7: {
+    id: "E7",
+    name: "E7",
+    frets: [0, 2, 0, 1, 0, 0],
+    fingers: [0, 2, 0, 1, 0, 0],
+    notes: ["E", "B", "D", "G♯", "B", "E"],
+  },
+  "C-upper": {
+    id: "C-upper",
+    name: "C upper triad",
+    frets: [null, null, null, 5, 5, 3],
+    fingers: [null, null, null, 3, 4, 1],
+    notes: ["C", "E", "G"],
+  },
+  "Am-C-upper": {
+    id: "Am-C-upper",
+    name: "Am/C upper triad",
+    frets: [null, null, null, 5, 5, 5],
+    fingers: [null, null, null, 3, 4, 1],
+    notes: ["C", "E", "A"],
+  },
 };
 
 export const TRACKS = [
