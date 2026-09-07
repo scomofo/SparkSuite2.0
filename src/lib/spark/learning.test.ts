@@ -7,21 +7,32 @@ import {
   advanceLearning,
   answerLearning,
   beginLearning,
+  beginLessonPractice,
   emptyLearning,
   finishLearning,
   learningSummary,
   loadLearning,
   parseLearning,
   saveLearning,
+  updateLessonPractice,
   type LearningState,
 } from "./learning.ts";
+import { lessonExercise } from "./lesson-practice.ts";
 
 const TODAY = "2026-09-05";
 const id = "guitar-first-sound";
 function complete(data: LearningState, lessonId = id, day = TODAY) {
   const lesson = CURRICULUM.find((item) => item.id === lessonId)!;
   let next = beginLearning(data, lessonId);
-  next = advanceLearning(advanceLearning(next, lessonId), lessonId);
+  if (lessonExercise(lessonId)?.project) {
+    next = beginLessonPractice(next, lessonId);
+    next = updateLessonPractice(next, lessonId, { type: "project-next" });
+    next = updateLessonPractice(next, lessonId, { type: "project-choice", choice: 0 });
+    next = updateLessonPractice(next, lessonId, { type: "project-next" });
+    next = updateLessonPractice(next, lessonId, { type: "attempt" });
+    next = updateLessonPractice(next, lessonId, { type: "reflect", reflection: "ready" });
+    next = updateLessonPractice(next, lessonId, { type: "return" });
+  } else next = advanceLearning(advanceLearning(next, lessonId), lessonId);
   return finishLearning(answerLearning(next, lessonId, lesson.answer), lessonId, day);
 }
 

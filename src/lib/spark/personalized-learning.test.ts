@@ -6,15 +6,18 @@ import {
   advanceLearning,
   answerLearning,
   beginLearning,
+  beginLessonPractice,
   configureLearning,
   emptyLearning,
   finishLearning,
   learningPace,
   learningSummary,
   parseLearning,
+  updateLessonPractice,
   type LearningState,
 } from "./learning.ts";
 import { EXPERIENCE_OPTIONS, parseProfile, startingLesson } from "./learning-profile.ts";
+import { lessonExercise } from "./lesson-practice.ts";
 import {
   beginMilestone,
   milestoneReady,
@@ -29,7 +32,15 @@ const DAY = "2026-09-06";
 const roundTrip = (data: LearningState) => parseLearning(JSON.stringify(data));
 function complete(data: LearningState, id: string) {
   let next = beginLearning(data, id);
-  next = advanceLearning(advanceLearning(next, id), id);
+  if (lessonExercise(id)?.project) {
+    next = beginLessonPractice(next, id);
+    next = updateLessonPractice(next, id, { type: "project-next" });
+    next = updateLessonPractice(next, id, { type: "project-choice", choice: 0 });
+    next = updateLessonPractice(next, id, { type: "project-next" });
+    next = updateLessonPractice(next, id, { type: "attempt" });
+    next = updateLessonPractice(next, id, { type: "reflect", reflection: "ready" });
+    next = updateLessonPractice(next, id, { type: "return" });
+  } else next = advanceLearning(advanceLearning(next, id), id);
   return finishLearning(answerLearning(next, id, learningLesson(id)!.answer), id, DAY);
 }
 function savePiece(data: LearningState, instrument: InstrumentId = "guitar") {

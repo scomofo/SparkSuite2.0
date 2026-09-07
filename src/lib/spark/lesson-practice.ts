@@ -15,6 +15,7 @@ export type PracticeCue = {
   duration?: number;
   chord?: string;
 };
+export type PracticeSubdivision = 1 | 2 | 3 | 4;
 export type LessonExercise = {
   lessonId: string;
   title: string;
@@ -24,17 +25,34 @@ export type LessonExercise = {
   takeaway: string;
   bpm: number;
   beats: number;
+  subdivision?: PracticeSubdivision;
   cues: PracticeCue[];
   shapes?: string[];
   positions?: BassPos[];
+  retryLabel?: string;
+  project?: LessonProject;
 };
 export type PracticeGuide = "notes" | "pulse" | "silent";
 export type PracticeReflection = "again" | "ready";
+export type PracticeRetryFocus = "pulse" | "technique";
+export type PracticeProjectStage = 0 | 1 | 2;
+export type LessonProject = {
+  buildBeats: number;
+  stages: [
+    { label: "Build"; title: string; instruction: string; button: string },
+    { label: "Choose"; title: string; instruction: string; button: string },
+    { label: "Refine"; title: string; instruction: string; button: string },
+  ];
+  choices: [{ label: string; detail: string }, { label: string; detail: string }];
+};
 export type LearningPractice = {
   bpm: number;
   guide: PracticeGuide;
   phase: "ready" | "reflect";
   reflection?: PracticeReflection;
+  retryFocus?: PracticeRetryFocus;
+  projectStage?: PracticeProjectStage;
+  projectChoice?: 0 | 1;
 };
 
 export const PRACTICE_TEMPOS = [40, 50, 60, 70, 80, 90, 100] as const;
@@ -43,18 +61,80 @@ export function practiceTempo(value: unknown, fallback = 60): number {
     ? Math.max(40, Math.min(100, Math.round(value / 10) * 10))
     : fallback;
 }
-export function parsePractice(value: unknown, bpm: number): LearningPractice | undefined {
+export function parsePractice(
+  value: unknown,
+  bpm: number,
+  project?: LessonProject,
+): LearningPractice | undefined {
   if (!value || typeof value !== "object") return undefined;
   const raw = value as Record<string, unknown>;
-  const phase = raw.phase === "reflect" ? "reflect" : "ready";
+  const projectChoice: 0 | 1 | undefined =
+    raw.projectChoice === 0 || raw.projectChoice === 1 ? raw.projectChoice : undefined;
+  const projectStage: PracticeProjectStage =
+    project && raw.projectStage === 2
+      ? projectChoice !== undefined
+        ? 2
+        : 1
+      : project && raw.projectStage === 1
+        ? 1
+        : 0;
+  const projectCanReflect = !project || (projectStage === 2 && projectChoice !== undefined);
+  const phase = raw.phase === "reflect" && projectCanReflect ? "reflect" : "ready";
+  const reflection =
+    phase === "reflect" && (raw.reflection === "again" || raw.reflection === "ready")
+      ? raw.reflection
+      : undefined;
   return {
     bpm: practiceTempo(raw.bpm, bpm),
     guide: raw.guide === "pulse" || raw.guide === "silent" ? raw.guide : "notes",
     phase,
-    ...(phase === "reflect" && (raw.reflection === "again" || raw.reflection === "ready")
-      ? { reflection: raw.reflection }
+    ...(reflection ? { reflection } : {}),
+    ...(projectCanReflect &&
+    (phase === "ready" || reflection === "again") &&
+    (raw.retryFocus === "pulse" || raw.retryFocus === "technique")
+      ? { retryFocus: raw.retryFocus }
       : {}),
+    ...(project ? { projectStage } : {}),
+    ...(project && projectStage > 0 && projectChoice !== undefined ? { projectChoice } : {}),
   };
+}
+
+export function practiceSequence(exercise: LessonExercise, practice?: LearningPractice) {
+  const beats =
+    practice?.phase === "ready" && practice.retryFocus === "pulse"
+      ? Math.min(4, exercise.beats)
+      : exercise.project && (practice?.projectStage ?? 0) === 0
+        ? exercise.project.buildBeats
+        : exercise.beats;
+  return {
+    beats,
+    cues: exercise.cues.filter((cue) => cue.beat < beats),
+    positions: exercise.positions,
+    subdivision: exercise.subdivision,
+  };
+}
+
+export function retryCoaching(exercise: LessonExercise) {
+  const instrument = learningLesson(exercise.lessonId)!.instrument;
+  const techniqueLabel =
+    exercise.retryLabel ??
+    (instrument === "drums"
+      ? "My hands or feet tangled"
+      : instrument === "vocals"
+        ? "The sound or range felt uncomfortable"
+        : instrument === "piano"
+          ? "The notes or hand movement felt awkward"
+          : instrument === "bass"
+            ? "The notes or string changes felt awkward"
+            : "The notes or shapes felt awkward");
+  return [
+    {
+      id: "pulse" as const,
+      label: "I lost the pulse or my place",
+      adjustment: "Try only Bar 1 at 40 BPM with Click only. Count aloud, then stop after the bar.",
+    },
+    { id: "technique" as const, label: techniqueLabel, adjustment: exercise.hint },
+  ];
 }
 
 export function practiceShape(instrument: InstrumentId, chord: string): ChordShape | undefined {
@@ -105,6 +185,11 @@ function repeat(cues: PracticeCue[], bars: number) {
     cues.map((cue) => ({ ...cue, beat: cue.beat + bar * 4 })),
   ).flat();
 }
+function repeatEvery(cues: PracticeCue[], times: number, beats: number) {
+  return Array.from({ length: times }, (_, index) =>
+    cues.map((cue) => ({ ...cue, beat: cue.beat + index * beats })),
+  ).flat();
+}
 function chordBars(instrument: "guitar" | "ukulele", chords: string[]) {
   return chords.flatMap((chord, bar) => [
     strum(bar * 4, instrument, chord),
@@ -117,6 +202,34 @@ const bassG: BassPos = { string: 0, fret: 3, name: "G", role: "R" };
 const bassD: BassPos = { string: 1, fret: 5, name: "D", role: "5" };
 const bassHighG: BassPos = { string: 2, fret: 5, name: "G", role: "8" };
 const bassE: BassPos = { string: 0, fret: 0, name: "E", role: "R" };
+const bassFSharp: BassPos = { string: 0, fret: 2, name: "F♯", role: "ap" };
+const bassWalkingD: BassPos = { string: 1, fret: 5, name: "D", role: "R" };
+const bassWalkingF: BassPos = { string: 2, fret: 3, name: "F", role: "ap" };
+const bassWalkingFSharp: BassPos = { string: 2, fret: 4, name: "F♯", role: "ap" };
+const bassWalkingG: BassPos = { string: 2, fret: 5, name: "G", role: "R" };
+const bassWalkingA: BassPos = { string: 3, fret: 2, name: "A", role: "5" };
+const bassWalkingBHigh: BassPos = { string: 3, fret: 4, name: "B", role: "ap" };
+const bassWalkingB: BassPos = { string: 1, fret: 2, name: "B", role: "ap" };
+const bassWalkingC: BassPos = { string: 1, fret: 3, name: "C", role: "R" };
+const bassWalkingE: BassPos = { string: 2, fret: 2, name: "E", role: "ap" };
+
+function advancedProject(
+  buildBeats: number,
+  build: { title: string; instruction: string; button: string },
+  choose: { title: string; instruction: string; button: string },
+  refine: { title: string; instruction: string; button: string },
+  choices: LessonProject["choices"],
+): LessonProject {
+  return {
+    buildBeats,
+    stages: [
+      { label: "Build", ...build },
+      { label: "Choose", ...choose },
+      { label: "Refine", ...refine },
+    ],
+    choices,
+  };
+}
 
 export const LESSON_EXERCISES: LessonExercise[] = [
   {
@@ -575,6 +688,924 @@ export const LESSON_EXERCISES: LessonExercise[] = [
       note(5, "E♭", [63], "E-flat: a minor third above C"),
       rest(6),
       rest(7),
+    ],
+  },
+  {
+    lessonId: "guitar-triads",
+    title: "Two notes stay, one note moves",
+    bpm: 50,
+    beats: 16,
+    goal: "Alternate upper-string C and Am/C triads for four bars, changing only one pitch.",
+    setup:
+      "Use only the G, B, and high-E strings. C is 5–5–3; Am/C is 5–5–5. Reset if the small barre feels tense.",
+    hint: "Loop only the high-E note from fret 3 to fret 5 and back at 40 BPM, then restore the two shared notes.",
+    retryLabel: "The three-note change feels awkward",
+    takeaway:
+      "C and E stayed in place while G moved to A. That small move changed C into an Am inversion.",
+    shapes: ["C-upper", "Am-C-upper"],
+    cues: ["C-upper", "Am-C-upper", "C-upper", "Am-C-upper"].flatMap((chord, bar) => [
+      {
+        ...strum(bar * 4, "guitar", chord),
+        label: chord === "C-upper" ? "C ↓" : "Am/C ↓",
+        detail: chord === "C-upper" ? "Upper strings: 5–5–3" : "Upper strings: 5–5–5",
+        duration: 1.95,
+      },
+      { beat: bar * 4 + 1, label: "Hold", detail: "Let all three notes continue" },
+      { beat: bar * 4 + 2, label: "Release", detail: "Release without squeezing" },
+      {
+        beat: bar * 4 + 3,
+        label: chord === "C-upper" ? "Move 3 → 5" : "Move 5 → 3",
+        detail: "Prepare only the high-E note for the next shape",
+      },
+    ]),
+  },
+  {
+    lessonId: "guitar-pentatonic",
+    title: "A question, then an answer",
+    bpm: 50,
+    beats: 16,
+    goal: "Play the two-bar A-minor-pentatonic phrase twice, keeping beat 4 silent.",
+    setup: "High E: fret 5 is A and fret 8 is C. B string: fret 5 is E and fret 8 is G.",
+    hint: "Say “rest” on beat 4 while your foot keeps tapping, then begin the answer only on the next beat 1.",
+    retryLabel: "I rush through the planned rest",
+    takeaway:
+      "The repeated rhythm and silence make these notes sound like a question and answer, not a scale run.",
+    cues: repeatEvery(
+      [
+        note(0, "A", [69], "High E string, fret 5"),
+        note(1, "C", [72], "High E string, fret 8"),
+        note(2, "A", [69], "High E string, fret 5"),
+        rest(3, "Count the silence at the end of the question"),
+        note(4, "E", [64], "B string, fret 5"),
+        note(5, "G", [67], "B string, fret 8"),
+        note(6, "A", [69], "High E string, fret 5"),
+        rest(7, "Count the silence at the end of the answer"),
+      ],
+      2,
+      8,
+    ),
+  },
+  {
+    lessonId: "guitar-secondary-dominant",
+    title: "Hear E7 lean into Am",
+    bpm: 50,
+    beats: 16,
+    goal: "Play C–E7–Am–G once and follow G♯ rising one fret to A.",
+    setup: "Give each chord one bar. In E7, G♯ is G-string fret 1; in Am, A is G-string fret 2.",
+    hint: "Play only G-string fret 1 followed by fret 2 four times, then rebuild E7 and Am at 40 BPM.",
+    retryLabel: "E7 to Am tangles my fingers",
+    takeaway:
+      "The borrowed G♯ rises to A, giving E7 a directed pull toward Am without changing the whole key.",
+    shapes: ["C", "E7", "Am", "G"],
+    project: advancedProject(
+      12,
+      {
+        title: "Find the pull",
+        instruction: "Play C, E7, then Am. Listen for G♯ rising one fret into A.",
+        button: "I heard the arrival",
+      },
+      {
+        title: "Choose what to track",
+        instruction: "Choose one listening target, then play the full four-chord guide once.",
+        button: "Save my listening choice",
+      },
+      {
+        title: "Refine the cadence",
+        instruction: "Replay C–E7–Am–G and make the chosen arrival easier to hear.",
+        button: "I tried my refined pass",
+      },
+      [
+        { label: "The half-step", detail: "Track G♯ in E7 rising to A in Am." },
+        { label: "The chord arrival", detail: "Track the whole E7 chord settling into Am." },
+      ],
+    ),
+    cues: chordBars("guitar", ["C", "E7", "Am", "G"]),
+  },
+  {
+    lessonId: "guitar-arrangement",
+    title: "Sparse bar, busier bar",
+    bpm: 50,
+    beats: 16,
+    goal: "Compare sparse and busier rhythm on Em, then repeat the comparison on G.",
+    setup: "Bars 1 and 3 use one downstroke. Bars 2 and 4 use down, down-up, down, down-up.",
+    hint: "Mute the strings and play only the busy bar at 40 BPM while saying every number and and.",
+    retryLabel: "The busy bar loses the beat",
+    takeaway:
+      "Changing density while holding chord, tempo, and touch steady creates contrast you can compare.",
+    shapes: ["Em", "G"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the contrast",
+        instruction: "Play one sparse Em bar, then one busier Em bar without changing tempo.",
+        button: "I built two textures",
+      },
+      {
+        title: "Choose what to notice",
+        instruction: "Choose one listening focus, then compare the same sparse and busy bars on G.",
+        button: "Save my listening focus",
+      },
+      {
+        title: "Refine the ending",
+        instruction:
+          "After the four-bar reference stops, play eight bars yourself: sparse Em–G–Em–G, then busier Em–G–Em–Em. Keep the tempo steady, let the final Em ring, and revise one detail using your listening choice.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        { label: "Steady pulse", detail: "Track each beat 1 while the number of strokes changes." },
+        {
+          label: "Clear density",
+          detail: "Notice whether the busy bars sound fuller without speeding up.",
+        },
+      ],
+    ),
+    cues: ["Em", "G"].flatMap((chord, pair) => {
+      const first = pair * 8;
+      return [
+        { ...strum(first, "guitar", chord), duration: 3.8 },
+        { beat: first + 1, label: "Hold", detail: "Keep counting through the sparse bar" },
+        { beat: first + 2, label: "Hold", detail: "No new stroke" },
+        { beat: first + 3, label: "Prepare", detail: "Keep the pulse into the busier bar" },
+        { ...strum(first + 4, "guitar", chord), duration: 0.4 },
+        rest(first + 4.5, "Silent upward motion"),
+        { ...strum(first + 5, "guitar", chord), duration: 0.4 },
+        { ...strum(first + 5.5, "guitar", chord, true), duration: 0.4 },
+        { ...strum(first + 6, "guitar", chord), duration: 0.4 },
+        rest(first + 6.5, "Silent upward motion"),
+        { ...strum(first + 7, "guitar", chord), duration: 0.4 },
+        { ...strum(first + 7.5, "guitar", chord, true), duration: 0.4 },
+      ];
+    }),
+  },
+  {
+    lessonId: "piano-voice-leading",
+    title: "Keep C, move two notes",
+    bpm: 50,
+    beats: 16,
+    goal: "Alternate C major and F/C for four bars while C stays in the same place.",
+    setup: "Keep the pedal up. Play C4–E4–G4, then keep C4 and move E4 to F4 and G4 to A4.",
+    hint: "Keep C4 down and move only E4–G4 to F4–A4 three times at 40 BPM, then reverse.",
+    retryLabel: "The two-note move feels too large",
+    takeaway:
+      "C–F–A is still F major. Keeping the shared C makes the connection smaller and smoother.",
+    cues: [
+      [0, "C major upper notes", [64, 67], "E4–G4 over the held C4"],
+      [4, "F/C upper notes", [65, 69], "F4–A4 over the held C4"],
+      [8, "C major upper notes", [64, 67], "Return E4–G4 by the short route"],
+      [12, "F/C upper notes", [65, 69], "Finish with F4–A4 over C4"],
+    ].flatMap(([beat, label, notes, detail]) => [
+      note(beat as number, "C4 anchor", [60], "Hold C4 through the whole bar", 3.8),
+      note(beat as number, label as string, notes as number[], detail as string, 1.95),
+      { beat: (beat as number) + 1, label: "Hold C", detail: "Keep C4 as the anchor" },
+      { beat: (beat as number) + 2, label: "Release two", detail: "Release only the moving notes" },
+      { beat: (beat as number) + 3, label: "Look ahead", detail: "Prepare the next two notes" },
+    ]),
+  },
+  {
+    lessonId: "piano-seventh-cadence",
+    title: "Three chords find their way home",
+    bpm: 50,
+    beats: 12,
+    goal: "Play Dm7–G7–Cmaj7, one chord per bar, and hear F4 settle down to E4.",
+    setup:
+      "Keep the pedal up. Left hand plays D3, G3, then C3; the right hand supplies the other tones.",
+    hint: "Play only F4 from G7 and E4 from Cmaj7, then rebuild those two chords at 40 BPM.",
+    retryLabel: "The return to C is unclear",
+    takeaway:
+      "Dm7 prepares, G7 creates tension, and Cmaj7 resolves it; F moving to E makes the return audible.",
+    cues: [
+      note(0, "Dm7", [50, 65, 69, 72], "D3 with F4–A4–C5", 2.8),
+      { beat: 1, label: "Hold", detail: "Keep Dm7 down" },
+      { beat: 2, label: "Hear F", detail: "Notice F4 in the right hand" },
+      { beat: 3, label: "Find G7", detail: "Prepare G3–B3–D4–F4" },
+      note(4, "G7", [55, 59, 62, 65], "G3–B3–D4–F4", 2.8),
+      { beat: 5, label: "Hold", detail: "Keep G7 down" },
+      { beat: 6, label: "Hear F", detail: "F4 is ready to move down" },
+      { beat: 7, label: "Find Cmaj7", detail: "Prepare C3 with E4–G4–B4" },
+      note(8, "Cmaj7", [48, 64, 67, 71], "C3 with E4–G4–B4", 2.95),
+      { beat: 9, label: "Hear E", detail: "F4 has resolved down to E4" },
+      { beat: 10, label: "Hold", detail: "Let the home chord settle" },
+      { beat: 11, label: "Release", detail: "Release Cmaj7 together" },
+    ],
+  },
+  {
+    lessonId: "piano-secondary-dominant",
+    title: "Let D7 point toward G",
+    bpm: 50,
+    beats: 16,
+    goal: "Play C–D7–G7–C and follow F♯4 rising to G4.",
+    setup: "Keep the pedal up. D7 uses D3–C4–F♯4–A4; F♯ is the new note pointing toward G.",
+    hint: "Play F♯4 followed by G4 three times, then play only D7 to G7 at 40 BPM.",
+    retryLabel: "The pull toward G is missing",
+    takeaway:
+      "F♯ is outside C major, but its half-step rise to G gives D7 a clear temporary destination.",
+    project: advancedProject(
+      12,
+      {
+        title: "Build the detour",
+        instruction: "Play C–D7–G7 and listen for F♯ rising into G.",
+        button: "I heard the detour",
+      },
+      {
+        title: "Choose a listening line",
+        instruction: "Choose one moving note, then add the final C bar.",
+        button: "Save my listening line",
+      },
+      {
+        title: "Refine the return",
+        instruction: "Replay all four chords and make the chosen line clear without adding speed.",
+        button: "I tried my refined cadence",
+      },
+      [
+        { label: "F♯ to G", detail: "Hear D7 point into G7 through the rising half-step." },
+        { label: "F to E", detail: "Hear G7 settle into C through the falling half-step." },
+      ],
+    ),
+    cues: [
+      [0, "C", [48, 60, 64, 67], "C3 with C4–E4–G4"],
+      [4, "D7", [50, 60, 66, 69], "D3–C4–F♯4–A4"],
+      [8, "G7", [55, 59, 62, 65, 67], "G3–B3–D4–F4 with G4"],
+      [12, "C", [48, 60, 64, 67], "Return to C"],
+    ].flatMap(([beat, label, notes, detail], index) => [
+      note(
+        beat as number,
+        label as string,
+        notes as number[],
+        detail as string,
+        index === 3 ? 3.8 : 2.8,
+      ),
+      { beat: (beat as number) + 1, label: "Hold", detail: "Keep the chord down" },
+      { beat: (beat as number) + 2, label: "Listen", detail: "Track the closest moving note" },
+      { beat: (beat as number) + 3, label: "Prepare", detail: "Find the next chord before beat 1" },
+    ]),
+  },
+  {
+    lessonId: "piano-miniature",
+    title: "Four bars become a return",
+    bpm: 50,
+    beats: 16,
+    goal: "Play a four-bar phrase using one left-hand root and three right-hand notes per bar.",
+    setup: "Left hand holds C3–F3–G3–C3. Right hand rises C–D–E, then turns E–D–C.",
+    hint: "Play only the four left-hand roots at 40 BPM, then add the first right-hand note on beat 1.",
+    retryLabel: "My hands miss beat 1",
+    takeaway:
+      "A recognizable phrase can return with one controlled change; softer roots leave room for melody.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build the opening",
+        instruction: "Play the first two bars with one root and a three-note idea in each.",
+        button: "I built the opening",
+      },
+      {
+        title: "Choose the return",
+        instruction:
+          "Compare the fixed four-bar reference, then choose one change for a separate eight-bar A–A′ performance after the guide stops.",
+        button: "Save my return choice",
+      },
+      {
+        title: "Refine the balance",
+        instruction:
+          "After the guide stops, play C–F–G–C twice. Apply your chosen change to the second four-bar phrase, keep the roots softer than the melody, and end on C.",
+        button: "I tried my refined miniature",
+      },
+      [
+        {
+          label: "Longer final C",
+          detail:
+            "In bar 8 of your own performance, hold the final C through beat 4 instead of resting.",
+        },
+        {
+          label: "Higher return",
+          detail:
+            "In bars 5–8 of your own performance, play the returning melody one octave higher if comfortable.",
+        },
+      ],
+    ),
+    cues: [
+      [0, 48, 60, 62, 64, "C"],
+      [4, 53, 60, 62, 64, "F"],
+      [8, 55, 60, 62, 64, "G"],
+      [12, 48, 64, 62, 60, "C"],
+    ].flatMap(([beat, root, first, second, third, name]) => [
+      note(beat as number, "LH " + name + "3", [root as number], "Hold the root", 3.8),
+      note(beat as number, "RH start", [first as number], "Melody note on beat 1"),
+      note((beat as number) + 1, "RH next", [second as number], "Melody note on beat 2"),
+      note((beat as number) + 2, "RH finish", [third as number], "Melody note on beat 3"),
+      rest((beat as number) + 3, "Leave one counted beat of space"),
+    ]),
+  },
+  {
+    lessonId: "ukulele-fingerpicking",
+    title: "C to Am, one string at a time",
+    bpm: 50,
+    beats: 16,
+    goal: "Pick C–E–C–E for two bars on C, then C–E–A–E for two bars on Am.",
+    setup:
+      "Keep one C–E–A–E string order. Use thumb, index, middle, index; only one chord tone changes.",
+    hint: "Hold C and play C string → E string → A string → E string for one bar at 40 BPM.",
+    retryLabel: "The picking order gets scrambled",
+    takeaway:
+      "The picking order stayed constant while one chord tone changed, keeping the texture steady.",
+    shapes: ["C", "Am"],
+    cues: [
+      [60, 64, 72, 64, "C"],
+      [60, 64, 72, 64, "C"],
+      [60, 64, 69, 64, "Am"],
+      [60, 64, 69, 64, "Am"],
+    ].flatMap(([a, b, c, d, chord], bar) =>
+      [a, b, c, d].map((midi, beat) =>
+        note(
+          bar * 4 + beat,
+          ["C string", "E string", "A string", "E string"][beat],
+          [midi as number],
+          String(chord) + " chord · " + ["C", "E", "A", "E"][beat] + " string",
+        ),
+      ),
+    ),
+  },
+  {
+    lessonId: "ukulele-transpose",
+    title: "Same four jobs, a new home",
+    bpm: 40,
+    beats: 16,
+    goal: "Hear I–IV–V–I in C, then play the same four functions in G.",
+    setup: "Give each chord two counts: C–F–G–C, then G–C–D–G. D is 2–2–2–0.",
+    hint: "Play only D to G at 40 BPM; keep C-string fret 2 as an anchor while other fingers move.",
+    retryLabel: "The D chord has a muted string",
+    takeaway: "The chord names changed, but I–IV–V–I kept the same departure, tension, and return.",
+    shapes: ["C", "F", "G", "D"],
+    cues: ["C", "F", "G", "C", "G", "C", "D", "G"].flatMap((chord, index) => [
+      { ...strum(index * 2, "ukulele", chord), duration: 1.8 },
+      { beat: index * 2 + 1, label: "Hold", detail: "Let " + chord + " continue" },
+    ]),
+  },
+  {
+    lessonId: "ukulele-melody-chord",
+    title: "Brush softly, let the top note speak",
+    bpm: 50,
+    beats: 12,
+    goal: "Place a light three-string brush before top notes C–E–C, then let the final C ring.",
+    setup:
+      "Brush open G–C–E strings. Play the melody on the A string: fret 3 is C and fret 7 is E.",
+    hint: "Play A-string frets 3 → 7 → 3 alone, then add each open-string brush at half the volume.",
+    retryLabel: "The top melody note gets buried",
+    takeaway:
+      "Keeping accompaniment lighter and earlier gives the top notes a line the listener can follow.",
+    shapes: ["C"],
+    project: advancedProject(
+      4,
+      {
+        title: "Build the first gesture",
+        instruction: "Brush the open G–C–E strings lightly, then let top C speak.",
+        button: "I built the first gesture",
+      },
+      {
+        title: "Choose the spotlight",
+        instruction: "Choose one contrast, then follow the full C–E–C melody.",
+        button: "Save my spotlight choice",
+      },
+      {
+        title: "Refine the final note",
+        instruction:
+          "After the three-bar reference stops, play a four-bar phrase yourself: brush then top C, brush then top E, brush then top C, and let that final C ring through bar 4. Refine your chosen contrast.",
+        button: "I tried my refined texture",
+      },
+      [
+        { label: "Softer brush", detail: "Keep the melody louder than the three-string brush." },
+        { label: "Longer melody", detail: "Let each top note ring longer than its brush." },
+      ],
+    ),
+    cues: [
+      note(0, "Light brush", [67, 60, 64], "Open G–C–E strings", 0.6),
+      note(1, "Top C", [72], "A string, fret 3", 1.8),
+      { beat: 2, label: "Hold", detail: "Let top C continue" },
+      rest(3, "Keep counting"),
+      note(4, "Light brush", [67, 60, 64], "Open G–C–E strings", 0.6),
+      note(5, "Top E", [76], "A string, fret 7", 1.8),
+      { beat: 6, label: "Hold", detail: "Let top E continue" },
+      rest(7, "Keep counting"),
+      note(8, "Light brush", [67, 60, 64], "Open G–C–E strings", 0.6),
+      note(9, "Top C", [72], "A string, fret 3", 2.8),
+      { beat: 10, label: "Hold", detail: "Let the final C continue" },
+      { beat: 11, label: "Finish", detail: "Let the final C end naturally" },
+    ],
+  },
+  {
+    lessonId: "ukulele-arrange",
+    title: "Two textures, one clear ending",
+    bpm: 50,
+    beats: 17,
+    goal: "Build a four-bar C–Am–F–G guide with two textures, then land on C.",
+    setup:
+      "Pick C and Am, strum F and G on beats 1 and 3, then let one final C ring on the next beat 1.",
+    hint: "Loop the final picked Am bar into the first strummed F bar at 40 BPM and say every count.",
+    retryLabel: "The texture switch loses beat 1",
+    takeaway:
+      "Changing only the texture created contrast while the four-chord harmony stayed recognizable.",
+    shapes: ["C", "Am", "F", "G"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the picked half",
+        instruction: "Pick one C bar and one Am bar with the same four-string order.",
+        button: "I built the picked half",
+      },
+      {
+        title: "Choose what to notice",
+        instruction: "Choose one listening focus, then add the two-strum F and G bars and final C.",
+        button: "Save my listening focus",
+      },
+      {
+        title: "Refine the switch",
+        instruction:
+          "After the four-bar reference and final C stop, play C–Am–F–G twice yourself: fingerpick all four chords first, then strum all four. Protect the G-to-C texture switch between bars 4 and 5, and add a final ringing C.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        {
+          label: "Texture switch",
+          detail:
+            "Track picked Am changing to strummed F in the reference; in your eight-bar piece, track picked G changing to strummed C.",
+        },
+        {
+          label: "Final landing",
+          detail: "Track G moving to the final C without adding an extra count.",
+        },
+      ],
+    ),
+    cues: [
+      ...[60, 64, 72, 64].map((midi, beat) =>
+        note(beat, ["C", "E", "top C", "E"][beat], [midi], "C chord picking"),
+      ),
+      ...[60, 64, 69, 64].map((midi, beat) =>
+        note(4 + beat, ["C", "E", "A", "E"][beat], [midi], "Am chord picking"),
+      ),
+      ...["F", "G"].flatMap((chord, bar) => [
+        strum(8 + bar * 4, "ukulele", chord),
+        { beat: 9 + bar * 4, label: "Count", detail: "Keep counting" },
+        strum(10 + bar * 4, "ukulele", chord),
+        { beat: 11 + bar * 4, label: "Prepare", detail: "Prepare the next bar" },
+      ]),
+      {
+        ...strum(16, "ukulele", "C"),
+        label: "C ↓ · land",
+        detail: "Return to C on the new beat 1 and let it ring",
+      },
+    ],
+  },
+  {
+    lessonId: "bass-offbeats",
+    title: "E on 1, and-of-2, and 4",
+    bpm: 50,
+    beats: 16,
+    goal: "Play the three-note syncopation for four bars and keep every next beat 1 in place.",
+    setup: "Count 1-and-2-and-3-and-4-and. Play open E on 1, and-of-2, and 4.",
+    hint: "At 40 BPM, tap eight even motions while speaking the full count; sound only 1, and-of-2, and 4.",
+    retryLabel: "The offbeat lands beside beat 2",
+    takeaway: "The offbeat stayed connected because the silent counts continued underneath it.",
+    positions: [bassE],
+    cues: repeat(
+      [
+        note(0, "E", [28], "E string, open", 0.4),
+        rest(1, "Say beat 2"),
+        note(1.5, "E", [28], "E string, open on and-of-2", 0.4),
+        rest(2, "Say beat 3"),
+        note(3, "E", [28], "E string, open on beat 4"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "bass-approach-note",
+    title: "F♯ points to G",
+    bpm: 50,
+    beats: 13,
+    goal: "Play E–E–E–F♯, land on G, then repeat the approach and finish on G.",
+    setup: "Open E starts the line. F♯ is E-string fret 2 and G is fret 3; land G on beat 1.",
+    hint: "Loop only F♯ on 4 and G on the next 1 at 40 BPM, saying 4-and-1.",
+    retryLabel: "The fret-3 landing misses",
+    takeaway: "F♯ gained direction by resolving one fret upward to G on the strong beat.",
+    positions: [bassE, bassFSharp, bassG],
+    cues: [
+      note(0, "E", [28], "E string, open"),
+      note(1, "E", [28], "E string, open"),
+      note(2, "E", [28], "E string, open"),
+      note(3, "F♯", [30], "E string, fret 2", 0.5),
+      note(4, "G", [31], "E string, fret 3", 3.8),
+      { beat: 5, label: "Hold G", detail: "Let G continue" },
+      { beat: 6, label: "Hold G", detail: "Keep counting" },
+      { beat: 7, label: "Prepare E", detail: "Prepare the open string" },
+      note(8, "E", [28], "E string, open"),
+      note(9, "E", [28], "E string, open"),
+      note(10, "E", [28], "E string, open"),
+      note(11, "F♯", [30], "E string, fret 2", 0.5),
+      note(12, "G", [31], "E string, fret 3"),
+    ],
+  },
+  {
+    lessonId: "bass-walking",
+    title: "Three bars, three clear arrivals",
+    bpm: 50,
+    beats: 13,
+    goal: "Walk through Dm7–G7–Cmaj7, then land once more on C.",
+    setup: "Stay between frets 2 and 5. Roots arrive on beat 1; F♯ on beat 4 leads into G.",
+    hint: "Play only D → G → C, one whole bar each. Add inside notes after all roots land on beat 1.",
+    retryLabel: "There are too many neck locations",
+    takeaway:
+      "Interior notes created motion while D, G, and C on beat 1 kept the harmony readable.",
+    positions: [
+      bassWalkingD,
+      bassWalkingF,
+      bassWalkingA,
+      bassWalkingFSharp,
+      bassWalkingG,
+      bassWalkingBHigh,
+      bassWalkingB,
+      bassWalkingC,
+      bassWalkingE,
+    ],
+    project: advancedProject(
+      12,
+      {
+        title: "Build three connected bars",
+        instruction: "Play the full Dm7–G7–Cmaj7 walking line and keep every quarter note even.",
+        button: "I built three bars",
+      },
+      {
+        title: "Choose the motion",
+        instruction:
+          "Choose one guide through the inside notes, then play the 12-note line and its final C landing.",
+        button: "Save my walking choice",
+      },
+      {
+        title: "Refine the landing",
+        instruction: "Replay the line and make the final C arrival clear without rushing.",
+        button: "I tried my refined line",
+      },
+      [
+        { label: "Track roots", detail: "Aim attention at D, G, and C on each beat 1." },
+        { label: "Track approach", detail: "Aim attention at F♯ moving one fret into G." },
+      ],
+    ),
+    cues: [
+      note(0, "D", [38], "A string, fret 5"),
+      note(1, "F", [41], "D string, fret 3"),
+      note(2, "A", [45], "G string, fret 2"),
+      note(3, "F♯", [42], "D string, fret 4"),
+      note(4, "G", [43], "D string, fret 5"),
+      note(5, "B", [47], "G string, fret 4"),
+      note(6, "D", [38], "A string, fret 5"),
+      note(7, "B", [35], "A string, fret 2"),
+      note(8, "C", [36], "A string, fret 3"),
+      note(9, "E", [40], "D string, fret 2"),
+      note(10, "G", [43], "D string, fret 5"),
+      note(11, "E", [40], "D string, fret 2"),
+      note(12, "C", [36], "A string, fret 3"),
+    ],
+  },
+  {
+    lessonId: "bass-support-and-fill",
+    title: "Support, fill, return",
+    bpm: 50,
+    beats: 13,
+    goal: "Keep two supporting bars steady, add one short fill, and land back on E.",
+    setup: "Use quarter-note E and G roots. The final G–D–F♯–G fill leads to open E.",
+    hint: "Tap G–D–F♯–G–E as five equal motions at 40 BPM before adding pitches.",
+    retryLabel: "The fill speeds up",
+    takeaway: "The fill served the phrase because it kept the pulse and returned clearly to E.",
+    positions: [bassE, bassG, bassD, bassFSharp],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the support",
+        instruction: "Play one E bar and one G bar with even quarter notes.",
+        button: "I built the support",
+      },
+      {
+        title: "Choose the fill focus",
+        instruction: "Choose one guardrail, then play the guide through its four-note fill.",
+        button: "Save my fill choice",
+      },
+      {
+        title: "Refine the return",
+        instruction:
+          "After the short reference stops, play eight bars of alternating Em–G roots yourself. Replace bar 8 with G–D–F♯–G, land on E on the next beat 1, and revise using your chosen focus.",
+        button: "I tried my refined bass part",
+      },
+      [
+        { label: "Equal spacing", detail: "Keep all fill notes the same rhythmic distance apart." },
+        { label: "Clear landing", detail: "Place the returning E exactly on the next beat 1." },
+      ],
+    ),
+    cues: [
+      ...Array.from({ length: 4 }, (_, beat) => note(beat, "E", [28], "E string, open")),
+      ...Array.from({ length: 4 }, (_, beat) => note(4 + beat, "G", [31], "E string, fret 3")),
+      note(8, "G", [31], "E string, fret 3"),
+      note(9, "D", [38], "A string, fret 5"),
+      note(10, "F♯", [30], "E string, fret 2"),
+      note(11, "G", [31], "E string, fret 3"),
+      note(12, "E", [28], "Return to open E"),
+    ],
+  },
+  {
+    lessonId: "drums-sixteenths",
+    title: "Three taps, one deliberate gap",
+    bpm: 40,
+    beats: 8,
+    subdivision: 4,
+    goal: "Play two bars of number–e–and–rest, leaving every “a” completely silent.",
+    setup:
+      "Use one pad or knee. Say every sixteenth syllable; tap the number, e, and, then leave “a” silent.",
+    hint: "Loop one beat: say 1-e-and-a, tap only 1-e-and, and hold the stick up through a.",
+    retryLabel: "The silent “a” disappears",
+    takeaway:
+      "The silent a takes the same space as every tap. Preserving it keeps the next beat from arriving early.",
+    cues: Array.from({ length: 8 }, (_, beat) => [
+      {
+        ...drum(beat, [1]),
+        label: String((beat % 4) + 1) + " · S",
+        detail: "Snare on the number",
+      },
+      { ...drum(beat + 0.25, [1]), label: "e · S", detail: "Snare on e" },
+      { ...drum(beat + 0.5, [1]), label: "and · S", detail: "Snare on and" },
+      { beat: beat + 0.75, label: "a · rest", detail: "Leave a silent; keep counting" },
+    ]).flat(),
+  },
+  {
+    lessonId: "drums-accents",
+    title: "Strong two and four, quiet detail",
+    bpm: 50,
+    beats: 8,
+    subdivision: 2,
+    goal: "Play two bars with strong snares on 2 and 4 and one quiet note on and-of-3.",
+    setup:
+      "Use one surface. Begin strong strokes higher than the quiet stroke. The sound guide marks timing at one even level; make the volume contrast yourself.",
+    hint: "Play only 3-and-4: no hit on 3, a low quiet stroke on and, then an easy higher stroke on 4.",
+    retryLabel: "The quiet note is too loud",
+    takeaway: "The quiet note adds detail without competing with the backbeat on beats 2 and 4.",
+    cues: repeat(
+      [
+        rest(0, "Beat 1; keep the pulse"),
+        { ...drum(1, [1]), label: "S · strong", detail: "Strong, relaxed snare on 2" },
+        rest(2, "Beat 3; keep the pulse"),
+        { ...drum(2.5, [1]), label: "s · quiet", detail: "Very quiet snare on and-of-3" },
+        { ...drum(3, [1]), label: "S · strong", detail: "Strong, relaxed snare on 4" },
+      ],
+      2,
+    ),
+  },
+  {
+    lessonId: "drums-three-over-two",
+    title: "Six slots, two steady streams",
+    bpm: 40,
+    beats: 8,
+    subdivision: 3,
+    goal: "Play four 3:2 cycles: hat on slots 1, 3, 5 and snare on slots 1 and 4.",
+    setup: "Each two-beat cycle has six equal slots. Hat and snare begin together.",
+    hint: "Say “together, two, hat, snare, hat, six”; freeze the snare hand until slot 4.",
+    retryLabel: "The two streams merge together",
+    takeaway:
+      "Three and two stay even because both parts share one six-slot grid and meet at the next cycle.",
+    project: advancedProject(
+      4,
+      {
+        title: "Build two cycles",
+        instruction: "Say all six slots and play the two hand patterns through two cycles.",
+        button: "I built two cycles",
+      },
+      {
+        title: "Choose an anchor",
+        instruction: "Choose one anchor, then play all four cycles with that anchor steady.",
+        button: "Save my anchor",
+      },
+      {
+        title: "Refine the overlap",
+        instruction: "Replay four cycles and make each together point feel relaxed.",
+        button: "I tried my refined pattern",
+      },
+      [
+        {
+          label: "Voice the six slots",
+          detail: "Keep saying every slot while the hands leave gaps.",
+        },
+        { label: "Mark the two", detail: "Use a foot tap on the two large beats in each cycle." },
+      ],
+    ),
+    cues: Array.from({ length: 4 }, (_, cycle) => {
+      const first = cycle * 2;
+      return [
+        { ...drum(first, [1, 2]), label: "1 · together", detail: "Snare and hat together" },
+        { beat: first + 1 / 3, label: "2 · rest", detail: "Both sides wait" },
+        { ...drum(first + 2 / 3, [2]), label: "3 · H", detail: "Hat side only" },
+        { ...drum(first + 1, [1]), label: "4 · S", detail: "Snare side only" },
+        { ...drum(first + 4 / 3, [2]), label: "5 · H", detail: "Hat side only" },
+        { beat: first + 5 / 3, label: "6 · rest", detail: "Prepare the next together" },
+      ];
+    }).flat(),
+  },
+  {
+    lessonId: "drums-arrange",
+    title: "Two textures, one clear landing",
+    bpm: 50,
+    beats: 13,
+    subdivision: 2,
+    goal: "Move from quarter-note hats to eighth-note hats, add a short fill, and land on kick.",
+    setup:
+      "Keep the kick–snare backbeat. Only hat density changes; the last snare–tom fill leads to beat 1.",
+    hint: "Loop only 4-and-1 three times—snare, tom, kick—before replaying the guide.",
+    retryLabel: "The fill hides the landing",
+    takeaway:
+      "A stable pulse made the denser section intentional, and the landing completed the transition.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build the section change",
+        instruction: "Play one bar of quarter hats, then one bar of eighth hats at one tempo.",
+        button: "I built the section change",
+      },
+      {
+        title: "Choose what to notice",
+        instruction:
+          "Choose one listening focus, then play the fixed snare–tom fill into the landing.",
+        button: "Save my listening focus",
+      },
+      {
+        title: "Refine the landing",
+        instruction:
+          "After the short reference stops, play four bars of quarter hats and four bars of eighth hats yourself. Put the snare–tom fill on bar 8’s last beat, return to one full bar of quarter hats, and compare the transition using your listening choice.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        {
+          label: "Section pulse",
+          detail: "Track the backbeat while the hi-hat changes from quarters to eighths.",
+        },
+        { label: "Fill landing", detail: "Track the snare–tom fill arriving on the next kick." },
+      ],
+    ),
+    cues: [
+      ...Array.from({ length: 4 }, (_, beat) => drum(beat, [beat % 2, 2])),
+      ...Array.from({ length: 8 }, (_, slot) =>
+        drum(4 + slot / 2, slot % 2 ? [2] : [Math.floor(slot / 2) % 2, 2]),
+      ),
+      ...Array.from({ length: 6 }, (_, slot) =>
+        drum(8 + slot / 2, slot % 2 ? [2] : [Math.floor(slot / 2) % 2, 2]),
+      ),
+      { ...drum(11, [1]), label: "S · fill", detail: "Snare on beat 4" },
+      { ...drum(11.5, [3]), label: "T · fill", detail: "Tom on and-of-4" },
+      { ...drum(12, [0, 2]), label: "K + H · land", detail: "Kick and hat on the new beat 1" },
+    ],
+  },
+  {
+    lessonId: "vocals-rhythmic-phrasing",
+    title: "Wait, then enter between the beats",
+    bpm: 50,
+    beats: 8,
+    subdivision: 2,
+    goal: "Place “come” on and-of-2, “back” on 3, and “home” on 4 twice.",
+    setup: "Speak, use one easy pitch, or listen and tap each word. The C reference is optional.",
+    hint: "Tap four quarters and say only “come” halfway between taps 2 and 3; then add “back home.”",
+    retryLabel: "“Come” lands on beat 3",
+    takeaway:
+      "Counting the silence prepared the offbeat entrance without changing the quarter-note pulse.",
+    cues: repeat(
+      [
+        rest(0, "Count 1 and keep waiting"),
+        rest(1, "Count 2; enter halfway to 3"),
+        note(1.5, "Come", [60], "Speak, sing comfortably, or tap on and-of-2", 0.35),
+        note(2, "Back", [60], "Speak, sing comfortably, or tap on beat 3", 0.75),
+        note(3, "Home", [60], "Speak, sing comfortably, or tap on beat 4", 0.75),
+      ],
+      2,
+    ),
+  },
+  {
+    lessonId: "vocals-harmony-line",
+    title: "Two lines, then both together",
+    bpm: 60,
+    beats: 12,
+    goal: "Hear C–D–E, hear E–F–G, then follow one chosen line while both sound.",
+    setup:
+      "Listening and pointing to the lower or upper line is a complete attempt. Hum only if comfortable.",
+    hint: "Replay the melody bar twice and harmony bar twice; point low or high during the final bar.",
+    retryLabel: "The two lines blur together",
+    takeaway:
+      "The melody and harmony keep their own direction when combined, even as the interval changes.",
+    cues: [
+      note(0, "Melody C", [60]),
+      note(1, "Melody D", [62]),
+      note(2, "Melody E", [64]),
+      rest(3, "The melody line ends"),
+      note(4, "Harmony E", [64]),
+      note(5, "Harmony F", [65]),
+      note(6, "Harmony G", [67]),
+      rest(7, "The harmony line ends"),
+      note(8, "C + E", [60, 64], "Follow either line"),
+      note(9, "D + F", [62, 65], "Follow either line"),
+      note(10, "E + G", [64, 67], "Follow either line"),
+      rest(11, "Both lines finish"),
+    ],
+  },
+  {
+    lessonId: "vocals-interpretation",
+    title: "Same words, different focus",
+    bpm: 60,
+    beats: 8,
+    goal: "Compare emphasis on “I” with emphasis on “home” and name how the intention changes.",
+    setup:
+      "The neutral C marks timing only. Speak, sing comfortably, or silently tap the highlighted word.",
+    hint: "Say only “I” on the first bar's beat 1 and “home” on the second bar's beat 4, then add the other words.",
+    retryLabel: "Both versions feel the same",
+    takeaway:
+      "Changing one stressed word can change meaning while the words and pulse stay the same.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build two readings",
+        instruction: "Follow both four-beat versions once: first stress I, then stress home.",
+        button: "I compared both readings",
+      },
+      {
+        title: "Choose the intention",
+        instruction:
+          "Use the fixed guide to compare both readings. After it stops, choose the meaning you want and speak or comfortably sing that reading twice, resting between attempts.",
+        button: "Save my intention",
+      },
+      {
+        title: "Refine one word",
+        instruction:
+          "After the guide stops, repeat your chosen reading at an easy volume, clarify only the selected stressed word, and leave a planned rest afterward.",
+        button: "I tried my refined reading",
+      },
+      [
+        { label: "Speaker matters", detail: "Stress I to clarify who will return." },
+        { label: "Destination matters", detail: "Stress home to clarify where the return leads." },
+      ],
+    ),
+    cues: [
+      note(0, "I · stress", [60], "Emphasize I; neutral pitch marks timing", 0.7),
+      note(1, "will", [60], "Ordinary stress", 0.7),
+      note(2, "come", [60], "Ordinary stress", 0.7),
+      note(3, "home", [60], "Ordinary stress", 0.7),
+      note(4, "I", [60], "Ordinary stress", 0.7),
+      note(5, "will", [60], "Ordinary stress", 0.7),
+      note(6, "come", [60], "Ordinary stress", 0.7),
+      note(7, "home · stress", [60], "Emphasize home; neutral pitch marks timing", 0.7),
+    ],
+  },
+  {
+    lessonId: "vocals-performance-plan",
+    title: "Two phrases, one clear revision",
+    bpm: 50,
+    beats: 8,
+    subdivision: 2,
+    goal: "Complete two connected phrases with planned rests using speech, singing, or listening.",
+    setup: "Use I–will on 1-and, come on 2, home on 3, rest on 4; repeat the shape with new words.",
+    hint: "Count the first phrase's rest as 4, then place “Leave” only on the next 1 before rebuilding.",
+    retryLabel: "Phrase B starts before its new 1",
+    takeaway:
+      "A specific plan for rhythm, direction, and rests creates a performance you can revise.",
+    project: advancedProject(
+      4,
+      {
+        title: "Build phrase A",
+        instruction:
+          "Choose a comfortable mode and follow the first four-beat phrase with its rest.",
+        button: "I built phrase A",
+      },
+      {
+        title: "Choose a review lens",
+        instruction: "Choose one thing to notice, then join phrase A to phrase B.",
+        button: "Save my review lens",
+      },
+      {
+        title: "Refine one thing",
+        instruction: "Make one adjustment to the chosen lens and replay the same two phrases.",
+        button: "I tried my refined performance",
+      },
+      [
+        {
+          label: "Entrance timing",
+          detail: "Listen for phrase B beginning exactly on its new beat 1.",
+        },
+        {
+          label: "Pitch direction",
+          detail: "Trace the up-and-down contour without forcing range.",
+        },
+      ],
+    ),
+    cues: [
+      note(0, "I", [60], "Speech, a comfortable octave, or listening", 0.35),
+      note(0.5, "will", [60], "and-of-1", 0.35),
+      note(1, "come", [62], "Beat 2", 0.75),
+      note(2, "home", [64], "Beat 3", 0.75),
+      rest(3, "Rest on beat 4; breathe normally"),
+      note(4, "Leave", [64], "Begin phrase B on the new beat 1", 0.35),
+      note(4.5, "the", [64], "and-of-1", 0.35),
+      note(5, "light", [62], "Beat 2", 0.75),
+      note(6, "on", [60], "Beat 3", 0.75),
+      rest(7, "Rest on beat 4; finish comfortably"),
     ],
   },
 ];

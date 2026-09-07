@@ -216,7 +216,7 @@ const guitar = path("guitar", [
     explanation:
       "An arrangement changes how an idea is presented: register, rhythm, density, or dynamics. A useful revision changes one variable, then compares the result. Finishing a short piece gives you something concrete to assess.",
     example:
-      "Bars 1–4: Em–G with one strum per bar. Bars 5–8: repeat with eighth-note strums. End on Em and let it ring.",
+      "Bars 1–4: Em–G–Em–G with one strum per bar. Bars 5–8: Em–G–Em–Em with eighth-note strums. Let the final Em ring.",
     practice: [
       "Choose the example or your own two-chord loop and count eight bars.",
       "Play two versions: sparse, then busier. Keep the tempo the same.",
@@ -1130,7 +1130,7 @@ const vocals = path("vocals", [
     explanation:
       "A performance plan connects pitch, rhythm, text, and breathing places. Work on a short comfortable excerpt so you can make a specific comparison. Evaluate one musical criterion at a time; a completed lesson is a practice milestone, not a vocal assessment.",
     example:
-      "Phrase A: 'I will come home.' Phrase B: 'Leave the light on.' Give each four beats, with a rest on beat 4; vary the emphasis in B.",
+      "Phrase A: 'I will come home.' Phrase B: 'Leave the light on.' In each phrase, place the first two words on beat 1-and, the remaining words on beats 2 and 3, then rest on beat 4; vary the emphasis in B.",
     practice: [
       "Choose speech or a comfortable three-note melody; plan each rest.",
       "Perform both phrases twice, keeping a steady pulse and an easy sound.",

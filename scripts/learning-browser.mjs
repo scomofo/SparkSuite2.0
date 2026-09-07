@@ -145,7 +145,12 @@ try {
   });
   await page.getByRole("button", { name: "Got the idea", exact: true }).click();
   await page.getByText("This browser could not save your learning.", { exact: false }).waitFor();
-  await page.getByRole("button", { name: "I tried it", exact: true }).waitFor();
+  await page.getByRole("link", { name: "Open guided project", exact: true }).waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: "I tried it", exact: true }).count(),
+    0,
+    "Advanced projects cannot skip stages when storage is unavailable",
+  );
   assert.deepEqual(errors, [], "Clean browser console and runtime");
   writeFileSync(
     `${output}/learning-${label}-checks.json`,
