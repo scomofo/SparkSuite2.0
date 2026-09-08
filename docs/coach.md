@@ -53,6 +53,12 @@ Only the selected instrument's structured progress is submitted. Personal milest
 
 Unavailable service, rejected requests, malformed/refused responses, usage limits, cancellation, and timeouts display an honest message. The existing guided lesson remains available. There are no simulated production coach replies or automatic retries.
 
+### Request pauses
+
+SparkSuite distinguishes a request that is still running, its ten-second request spacing, and its hourly coach limit. The older message “The coach is taking a short pause” covered all three local conditions; it was not an OpenAI response and did not indicate whether a key was accepted.
+
+After asking, a countdown appears beside the disabled Ask button. An error remains visible during this wait, so a quick retry cannot hide the original failure behind a cooldown message. A `429` response can extend the wait using its `Retry-After` header; local cooldown responses report the actual remaining seconds. Cancelling a request or changing a key does not remove the active wait. When it ends, the learner must choose **Ask my coach** again—no request is sent automatically.
+
 ## Validation and release gate
 
 `npm test` includes coach context, pedagogy, and server boundary tests. The coach browser suite runs against development and production builds. Its successful-reply scenarios use explicit test-only response fixtures; they do not demonstrate live model quality.

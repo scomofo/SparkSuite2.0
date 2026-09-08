@@ -193,12 +193,19 @@ export function createCoachService(dependencies: Dependencies = {}) {
       }
       if (inFlight || time < nextRequestAt || requests >= 60) {
         const retryAfter =
-          requests >= 60 ? Math.ceil(((currentHour + 1) * 3_600_000 - time) / 1000) : 10;
+          requests >= 60
+            ? Math.ceil(((currentHour + 1) * 3_600_000 - time) / 1000)
+            : inFlight
+              ? 10
+              : Math.ceil((nextRequestAt - time) / 1000);
+        const error =
+          requests >= 60
+            ? "SparkSuite’s hourly coach limit has been reached. You can try again when the wait ends. Your guided lesson is still available."
+            : inFlight
+              ? "Another coach request is still running. Give it a moment, then try again. Your guided lesson is still available."
+              : "SparkSuite spaces coach requests 10 seconds apart. You can try again when the wait ends.";
         return json(
-          {
-            error:
-              "The coach is taking a short pause. Your guided lesson is ready whenever you are.",
-          },
+          { error },
           429,
           { "Retry-After": String(retryAfter) },
         );
