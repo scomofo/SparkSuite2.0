@@ -21,9 +21,19 @@ CAST UDL informs [support for executive functions](https://udlguidelines.cast.or
 
 These are pedagogical design choices. Automated tests establish request behavior and curriculum mappings, not clinical efficacy or the quality of live model advice. Adult learner testing and live response evaluation are still required.
 
-## Private pilot configuration
+## Add your own key in Settings
 
-The endpoint is disabled by default. All three server environment settings are required:
+Open **Settings → AI coach**, paste your OpenAI API key into the password field, and choose **Use for this session**. Then choose **Open coach**. No environment configuration or pilot access code is required for this personal-key mode. Saving checks the key's format only; OpenAI validates it when you explicitly ask a question, and requests use your OpenAI account's API quota and billing.
+
+The key stays only in memory in the current browser tab. It survives navigation inside SparkSuite but is cleared by Remove key, a refresh, or leaving/closing the page. It is never saved in localStorage, sessionStorage, cookies, learning progress, URLs, the repository, or server configuration. The password field clears after it is accepted. This session setting does not synchronize across tabs or devices.
+
+An explicit coach request sends the key in `X-Spark-OpenAI-Key` to SparkSuite's same-origin server over HTTPS (loopback HTTP is allowed for local development). The server uses it only for that request's fixed OpenAI endpoint; it does not return it or include it in model context, and redirects are rejected. The app and server necessarily handle the key in memory: use a trusted deployment, and configure hosting/proxy observability to redact credential headers and avoid capturing request headers. No automatic model request is made while typing, saving the key, navigating, or checking availability.
+
+Personal-key mode is available by default. `SPARK_COACH_ENABLED=false` explicitly disables both personal and hosted modes. A missing, empty, or rejected personal key never authorizes use of the app owner's key. Shared service request limits below still apply; these are not individual accounts or a global provider spending limit.
+
+## Hosted private pilot configuration
+
+The app-owner-funded mode is disabled by default. All three server environment settings are required:
 
 | Setting | Purpose |
 | --- | --- |
@@ -47,7 +57,7 @@ Unavailable service, rejected requests, malformed/refused responses, usage limit
 
 `npm test` includes coach context, pedagogy, and server boundary tests. The coach browser suite runs against development and production builds. Its successful-reply scenarios use explicit test-only response fixtures; they do not demonstrate live model quality.
 
-Before enabling the pilot with a working provider account, review real replies for these cases:
+Before inviting learners to either coach mode, review real replies with a working provider account for these cases:
 
 | Learner situation | Required observation |
 | --- | --- |

@@ -16,6 +16,7 @@ import { Route as MilestoneRouteImport } from './routes/milestone'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ResultsRouteImport } from './routes/results'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as StartRouteImport } from './routes/start'
 import { Route as TechniquesRouteImport } from './routes/techniques'
@@ -57,6 +58,11 @@ const ProgressRoute = ProgressRouteImport.update({
 const ResultsRoute = ResultsRouteImport.update({
   id: '/results',
   path: '/results',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SkillsRoute = SkillsRouteImport.update({
@@ -103,6 +109,7 @@ export interface FileRoutesByFullPath {
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
   '/results': typeof ResultsRoute
+  '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/start': typeof StartRoute
   '/techniques': typeof TechniquesRoute
@@ -119,6 +126,7 @@ export interface FileRoutesByTo {
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
   '/results': typeof ResultsRoute
+  '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/start': typeof StartRoute
   '/techniques': typeof TechniquesRoute
@@ -136,6 +144,7 @@ export interface FileRoutesById {
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
   '/results': typeof ResultsRoute
+  '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/start': typeof StartRoute
   '/techniques': typeof TechniquesRoute
@@ -154,6 +163,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/progress'
     | '/results'
+    | '/settings'
     | '/skills'
     | '/start'
     | '/techniques'
@@ -170,6 +180,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/progress'
     | '/results'
+    | '/settings'
     | '/skills'
     | '/start'
     | '/techniques'
@@ -186,6 +197,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/progress'
     | '/results'
+    | '/settings'
     | '/skills'
     | '/start'
     | '/techniques'
@@ -203,6 +215,7 @@ export interface RootRouteChildren {
   PracticeRoute: typeof PracticeRoute
   ProgressRoute: typeof ProgressRoute
   ResultsRoute: typeof ResultsRoute
+  SettingsRoute: typeof SettingsRoute
   SkillsRoute: typeof SkillsRoute
   StartRoute: typeof StartRoute
   TechniquesRoute: typeof TechniquesRoute
@@ -261,6 +274,13 @@ declare module '@tanstack/react-router' {
       path: '/results'
       fullPath: '/results'
       preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/skills': {
@@ -323,6 +343,7 @@ const rootRouteChildren: RootRouteChildren = {
   PracticeRoute: PracticeRoute,
   ProgressRoute: ProgressRoute,
   ResultsRoute: ResultsRoute,
+  SettingsRoute: SettingsRoute,
   SkillsRoute: SkillsRoute,
   StartRoute: StartRoute,
   TechniquesRoute: TechniquesRoute,

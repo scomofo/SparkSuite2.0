@@ -54,6 +54,8 @@ const first = learningPath("guitar")[0];
 const project = learningPath("guitar")[6];
 const exercise = lessonExercise(project.id);
 const testCode = "browser-regression-fixture-only";
+const fixtureKey = "sk-proj-browser-fixture-never-valid-1234567890";
+const personalKeyError = "OpenAI did not accept your API key. Update it in Settings and try again.";
 const privateNote = "PRIVATE MILESTONE NOTE: do not send this to the coach";
 const fixtureAdvice = {
   message: 'Browser response fixture: <img src="invalid" onerror="alert(1)"> **plain text**',
@@ -71,6 +73,7 @@ const lessonTarget = (lesson, kind = "lesson") => ({
 });
 let fixtureTarget = lessonTarget(first);
 let mode = "success";
+let fixtureAvailability = { available: true, personalKeyAllowed: true };
 
 async function capture(name, widths = [1280, 390, 320]) {
   for (const width of widths) {
@@ -119,6 +122,26 @@ async function ask() {
 async function expectFocus(text) {
   await page.waitForFunction((text) => document.activeElement?.textContent === text, text);
 }
+async function expectKeyAbsentFromStorage(targetPage = page) {
+  assert.equal(
+    await targetPage.evaluate(
+      (key) =>
+        JSON.stringify([
+          ...Object.entries(localStorage),
+          ...Object.entries(sessionStorage),
+          document.cookie,
+        ]).includes(key),
+      fixtureKey,
+    ),
+    false,
+    "A personal key never enters localStorage, sessionStorage, or document cookies",
+  );
+  assert.equal(
+    JSON.stringify(await targetPage.context().cookies()).includes(fixtureKey),
+    false,
+    "No browser cookie contains the personal key",
+  );
+}
 async function releaseHeld() {
   for (const request of held.splice(0)) {
     await request.route
@@ -145,7 +168,7 @@ try {
   assert.equal(availability.status(), 200);
   assert.deepEqual(
     await availability.json(),
-    { available: false },
+    { available: false, personalKeyAllowed: true },
     "Run browser QA with the coach disabled",
   );
   const disabled = await page.request.post(`${url}/api/coach`, { data: {} });
@@ -172,6 +195,7 @@ try {
       "Unavailable state never offers a model request",
     );
     assert.equal(await link("Open my lesson").getAttribute("href"), "/learn");
+    assert.equal(await link("Coach settings").getAttribute("href"), "/settings");
     assert.deepEqual(
       await storage(),
       before,
@@ -198,7 +222,7 @@ try {
   fixturesEnabled = true;
   await page.route("**/api/coach", async (route) => {
     if (route.request().method() === "GET") {
-      await route.fulfill({ json: { available: true } });
+      await route.fulfill({ json: fixtureAvailability });
       return;
     }
     assert.equal(route.request().method(), "POST");
@@ -211,6 +235,13 @@ try {
       await route.fulfill({
         status: 503,
         json: { error: "Browser failure fixture. Please try again." },
+      });
+      return;
+    }
+    if (mode === "personal-unauthorized") {
+      await route.fulfill({
+        status: 401,
+        json: { error: personalKeyError },
       });
       return;
     }
@@ -446,6 +477,206 @@ try {
   );
   assert.equal(await button("Stop guide").count(), 0);
   checks.push("Fixture: milestone action opens the current saved reflection");
+
+  // A deliberately invalid credential stays entirely inside intercepted browser requests.
+  // Saving it checks session handling, never whether OpenAI accepts the credential.
+  fixtureTarget = lessonTarget(first);
+  mode = "success";
+  await seed(emptyLearning());
+  fixtureAvailability = { available: false, personalKeyAllowed: true };
+  const personalKeyRequests = [];
+  const forbiddenProviderRequests = [];
+  page.on("request", (request) => {
+    if (
+      Object.values(request.headers()).includes(fixtureKey) ||
+      request.postData()?.includes(fixtureKey) ||
+      request.url().includes(fixtureKey)
+    ) {
+      personalKeyRequests.push({ url: request.url(), method: request.method() });
+    }
+  });
+  await page.route("https://api.openai.com/**", async (route) => {
+    forbiddenProviderRequests.push(route.request().url());
+    await route.abort();
+  });
+  await page.setViewportSize({ width: 1280, height: 600 });
+  const shellSettings = link("Settings").first();
+  await shellSettings.scrollIntoViewIfNeeded();
+  assert.equal(
+    await shellSettings.evaluate((element) => {
+      const settings = element.getBoundingClientRect();
+      return [...document.querySelectorAll('nav[aria-label="Main navigation"] a')].some((item) => {
+        const nav = item.getBoundingClientRect();
+        return (
+          nav.width > 0 &&
+          nav.height > 0 &&
+          nav.left < settings.right &&
+          nav.right > settings.left &&
+          nav.top < settings.bottom &&
+          nav.bottom > settings.top
+        );
+      });
+    }),
+    false,
+    "Settings does not overlap navigation at a short desktop height",
+  );
+  await shellSettings.click();
+  const keyInput = page.getByLabel("OpenAI API key", { exact: true });
+  await keyInput.waitFor();
+  await shellSettings.scrollIntoViewIfNeeded();
+  await page.screenshot({
+    path: `${output}/coach-${label}-settings-short-desktop-fixture.png`,
+  });
+  assert.equal(await keyInput.getAttribute("type"), "password", "The key input is masked");
+  const beforePersonalKey = await storage();
+  const beforePersonalPosts = posts.length;
+  await keyInput.fill(fixtureKey);
+  await button("Use for this session").press("Enter");
+  await button("Remove key").waitFor();
+  await page
+    .getByText("Ready to try your coach. Your key has not been verified with OpenAI.", {
+      exact: true,
+    })
+    .waitFor();
+  await expectFocus("Ready to try your coach. Your key will be checked when you ask.");
+  assert.equal(await keyInput.inputValue(), "", "Saving clears the key from the textbox");
+  assert.equal((await page.locator("body").innerText()).includes(fixtureKey), false);
+  assert.equal(posts.length, beforePersonalPosts, "Saving a key never asks the coach");
+  assert.deepEqual(personalKeyRequests, [], "Saving a key sends no request containing it");
+  assert.deepEqual(forbiddenProviderRequests, [], "Saving does not contact OpenAI");
+  await expectKeyAbsentFromStorage();
+  assert.deepEqual(await storage(), beforePersonalKey, "Key setup does not change progress or XP");
+  await capture("settings-session-key-fixture");
+  await link("Open coach").press("Enter");
+  await heading("What would help right now?").waitFor();
+  await page.getByText("Using your OpenAI key for this session.", { exact: true }).waitFor();
+  assert.equal(await page.getByLabel("Coach access code", { exact: true }).count(), 0);
+  assert.equal(
+    posts.length,
+    beforePersonalPosts,
+    "Client navigation retains the key without asking",
+  );
+  await expectKeyAbsentFromStorage();
+  await capture("personal-key-ready-fixture", [390]);
+
+  // A separate browser context cannot inherit a key from this page’s memory.
+  const isolatedContext = await browser.newContext();
+  try {
+    const isolatedPage = await isolatedContext.newPage();
+    isolatedPage.on("pageerror", (error) => errors.push(error.message));
+    let isolatedPosts = 0;
+    await isolatedPage.route("**/api/coach", async (route) => {
+      if (route.request().method() === "GET") {
+        await route.fulfill({ json: fixtureAvailability });
+      } else {
+        isolatedPosts += 1;
+        await route.fulfill({
+          status: 503,
+          json: { error: "Isolated browser fixture has no key." },
+        });
+      }
+    });
+    await isolatedPage.goto(`${url}/coach`, { waitUntil: "networkidle" });
+    await isolatedPage
+      .getByText("The AI coach is not available yet. Your guided learning is ready below.", {
+        exact: true,
+      })
+      .waitFor();
+    assert.equal(
+      await isolatedPage.getByRole("button", { name: "Ask my coach", exact: true }).count(),
+      0,
+    );
+    await isolatedPage.getByRole("link", { name: "Coach settings", exact: true }).press("Enter");
+    assert.equal(await isolatedPage.getByLabel("OpenAI API key", { exact: true }).inputValue(), "");
+    assert.equal(
+      await isolatedPage.getByRole("button", { name: "Remove key", exact: true }).count(),
+      0,
+    );
+    assert.equal(isolatedPosts, 0);
+    await expectKeyAbsentFromStorage(isolatedPage);
+  } finally {
+    await isolatedContext.close();
+  }
+
+  mode = "personal-unauthorized";
+  const personalSent = page.waitForRequest(
+    (request) => new URL(request.url()).pathname === "/api/coach" && request.method() === "POST",
+  );
+  await button("Ask my coach").press("Enter");
+  await personalSent;
+  await expectFocus(personalKeyError);
+  assert.equal(posts.length, beforePersonalPosts + 1);
+  const personalRequest = posts.at(-1);
+  assert.equal(personalRequest.headers["x-spark-openai-key"], fixtureKey);
+  assert.equal(personalRequest.headers["x-spark-coach-code"], undefined);
+  assert.equal(JSON.stringify(personalRequest.body).includes(fixtureKey), false);
+  assert.deepEqual(personalKeyRequests, [{ url: `${url}/api/coach`, method: "POST" }]);
+  assert.deepEqual(forbiddenProviderRequests, []);
+  await expectKeyAbsentFromStorage();
+  assert.deepEqual(
+    await storage(),
+    beforePersonalKey,
+    "A provider error changes no progress or XP",
+  );
+  checks.push(
+    "Fixture: masked Settings key, cleared textbox, no save-time request, memory-only client navigation, isolated browser context, personal header only on explicit ask, actionable 401",
+  );
+
+  mode = "hold";
+  const pendingPersonal = page.waitForRequest(
+    (request) => new URL(request.url()).pathname === "/api/coach" && request.method() === "POST",
+  );
+  await button("Ask my coach").press("Enter");
+  await pendingPersonal;
+  await button("Cancel").waitFor();
+  await link("Coach settings").press("Enter");
+  await button("Remove key").press("Enter");
+  await expectFocus("Key removed from this session.");
+  assert.equal(await keyInput.inputValue(), "");
+  assert.equal(await button("Remove key").count(), 0);
+  await releaseHeld();
+  await expectKeyAbsentFromStorage();
+  const afterRemovalPosts = posts.length;
+  await link("Open coach").press("Enter");
+  await page
+    .getByText("The AI coach is not available yet. Your guided learning is ready below.", {
+      exact: true,
+    })
+    .waitFor();
+  assert.equal(
+    await button("Ask my coach").count(),
+    0,
+    "Removing the key disables personal requests",
+  );
+  assert.equal(await suggestion().count(), 0, "The removed key’s delayed response stays hidden");
+  assert.equal(posts.length, afterRemovalPosts);
+
+  await link("Coach settings").press("Enter");
+  await keyInput.fill(fixtureKey);
+  await button("Use for this session").press("Enter");
+  await button("Remove key").waitFor();
+  await link("Open coach").press("Enter");
+  await heading("What would help right now?").waitFor();
+  await page.reload({ waitUntil: "networkidle" });
+  await page
+    .getByText("The AI coach is not available yet. Your guided learning is ready below.", {
+      exact: true,
+    })
+    .waitFor();
+  assert.equal(await button("Ask my coach").count(), 0, "A refresh clears the session key");
+  assert.equal(
+    posts.length,
+    afterRemovalPosts,
+    "Removing, replacing, and refreshing do not ask the model",
+  );
+  await link("Coach settings").press("Enter");
+  assert.equal(await keyInput.inputValue(), "");
+  assert.equal(await button("Remove key").count(), 0);
+  await expectKeyAbsentFromStorage();
+  assert.deepEqual(forbiddenProviderRequests, []);
+  checks.push(
+    "Fixture: removing the key discards pending advice, disables personal requests, and refresh clears the key; Settings fits 1280/390/320px",
+  );
   assert.deepEqual(errors, [], "No unexpected browser errors");
   const verdict = {
     label,
