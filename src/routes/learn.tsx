@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, Clock, Coffee } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
+import { CoachLink } from "@/components/coach-link";
 import { MilestoneCard } from "@/components/milestone-card";
 import { LessonDemo } from "@/components/lesson-demo";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,7 @@ function LearnPage() {
           </label>
         </header>
 
+        <CoachLink className="mt-5" />
         {!ready ? (
           <p role="status" className="mt-8 text-muted">
             Finding your place…

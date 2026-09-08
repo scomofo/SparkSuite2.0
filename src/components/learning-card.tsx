@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CoachLink } from "@/components/coach-link";
 import { nextLearningAction } from "@/lib/spark/next-learning-action";
 import { timePlan } from "@/lib/spark/learning-profile";
 import { labSearchFor } from "@/lib/spark/labs";
@@ -114,6 +115,7 @@ export function LearningCard() {
           </div>
         </>
       )}
+      <CoachLink className="mt-4" />
       {!storageOk ? (
         <p role="status" className="mt-3 text-sm text-warn">
           This browser could not save your learning. Keep this tab open to keep your place.
