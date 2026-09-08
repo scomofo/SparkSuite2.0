@@ -33,6 +33,17 @@ page.on("console", (message) => {
 const button = (name) => page.getByRole("button", { name, exact: true });
 const link = (name) => page.getByRole("link", { name, exact: true });
 const heading = (name) => page.getByRole("heading", { name, exact: true });
+async function choose(name, interaction = "pointer") {
+  const radio = page.getByRole("radio", { name, exact: true });
+  if (interaction === "keyboard") {
+    await radio.focus();
+    await page.keyboard.press("Space");
+  } else {
+    // Custom choices expose a visible label around their visually hidden native input.
+    await page.locator("label").filter({ has: radio }).click();
+  }
+  assert.equal(await radio.isChecked(), true, `${name} can be selected with ${interaction}`);
+}
 const suggestion = () => page.getByRole("region", { name: "Your coach’s suggestion", exact: true });
 const storage = () =>
   page.evaluate(() => ({
@@ -254,14 +265,14 @@ try {
     true,
   );
   for (const name of ["I'm stuck", "Explain an idea", "I'm coming back", "What next?"]) {
-    await page.getByRole("radio", { name, exact: true }).check();
+    await choose(name, name === "Explain an idea" ? "keyboard" : "pointer");
   }
   await page.locator("summary").filter({ hasText: "Adjust today’s support" }).press("Enter");
   assert.equal(await page.getByRole("radio", { name: "2 min", exact: true }).isChecked(), true);
   assert.equal(await page.getByRole("radio", { name: "Steady", exact: true }).isChecked(), true);
-  await page.getByRole("radio", { name: "5 min", exact: true }).check();
-  await page.getByRole("radio", { name: "Low energy", exact: true }).check();
-  await page.getByRole("radio", { name: "I'm coming back", exact: true }).check();
+  await choose("5 min");
+  await choose("Low energy", "keyboard");
+  await choose("I'm coming back");
   const question = page.getByRole("textbox", { name: /Anything you want help with/ });
   await question.fill("q".repeat(650));
   assert.equal((await question.inputValue()).length, 600);
