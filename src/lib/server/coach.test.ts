@@ -665,7 +665,8 @@ describe("coach request lifecycle", () => {
     advance(9_999);
     const paused = await service.respond(request());
     assert.equal(paused.status, 429);
-    assert.ok(Number(paused.headers.get("retry-after")) > 0);
+    assert.equal(paused.headers.get("retry-after"), "1");
+    assert.match((await paused.json()).error, /10 seconds apart/);
     assert.equal(calls.length, 1);
     advance(1);
     assert.equal((await service.respond(request())).status, 200);
@@ -687,7 +688,10 @@ describe("coach request lifecycle", () => {
     const pending = service.respond(request());
     await started.promise;
     advance(10_000);
-    assert.equal((await service.respond(request())).status, 429);
+    const busy = await service.respond(request());
+    assert.equal(busy.status, 429);
+    assert.equal(busy.headers.get("retry-after"), "10");
+    assert.match((await busy.json()).error, /Another coach request is still running/);
     assert.equal(calls.length, 1);
     finish.resolve(provider());
     assert.equal((await pending).status, 200);
@@ -704,6 +708,7 @@ describe("coach request lifecycle", () => {
     const paused = await service.respond(request());
     assert.equal(paused.status, 429);
     assert.equal(paused.headers.get("retry-after"), "2900");
+    assert.match((await paused.json()).error, /hourly coach limit/);
     assert.equal(calls.length, 60);
     advance(2_900_000);
     assert.equal((await service.respond(request())).status, 200);
@@ -772,7 +777,10 @@ describe("coach request lifecycle", () => {
       },
     });
     assert.equal((await service.respond(request())).status, 503);
-    assert.equal((await service.respond(request())).status, 429);
+    const paused = await service.respond(request());
+    assert.equal(paused.status, 429);
+    assert.equal(paused.headers.get("retry-after"), "10");
+    assert.match((await paused.json()).error, /10 seconds apart/);
     advance(10_000);
     assert.equal((await service.respond(request())).status, 200);
     assert.equal(calls.length, 2);

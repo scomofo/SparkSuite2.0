@@ -56,6 +56,7 @@ const exercise = lessonExercise(project.id);
 const testCode = "browser-regression-fixture-only";
 const fixtureKey = "sk-proj-browser-fixture-never-valid-1234567890";
 const personalKeyError = "OpenAI did not accept your API key. Update it in Settings and try again.";
+const rateLimitError = "Browser hourly-limit fixture. Try again after the countdown.";
 const privateNote = "PRIVATE MILESTONE NOTE: do not send this to the coach";
 const fixtureAdvice = {
   message: 'Browser response fixture: <img src="invalid" onerror="alert(1)"> **plain text**',
@@ -73,6 +74,7 @@ const lessonTarget = (lesson, kind = "lesson") => ({
 });
 let fixtureTarget = lessonTarget(first);
 let mode = "success";
+let fixtureRetryAfter = "3600";
 let fixtureAvailability = { available: true, personalKeyAllowed: true };
 
 async function capture(name, widths = [1280, 390, 320]) {
@@ -111,7 +113,19 @@ async function seed(learning, instrument = "guitar") {
   await page.goto(`${url}/coach`, { waitUntil: "networkidle" });
   await heading("What would help right now?").waitFor();
 }
-async function ask() {
+async function expectReadyToAsk() {
+  await page.waitForFunction(() => {
+    const submit = document.querySelector('button[type="submit"]');
+    return submit && !submit.disabled;
+  });
+}
+async function finishCooldown() {
+  // Advance the browser clock, avoiding a real ten-second wait between fixture requests.
+  if (await page.locator("#coach-retry-wait").count()) await page.clock.fastForward(10_000);
+  await expectReadyToAsk();
+}
+async function ask({ wait = true } = {}) {
+  if (wait) await finishCooldown();
   await page.getByLabel("Coach access code", { exact: true }).fill(testCode);
   const sent = page.waitForRequest(
     (request) => new URL(request.url()).pathname === "/api/coach" && request.method() === "POST",
@@ -142,15 +156,23 @@ async function expectKeyAbsentFromStorage(targetPage = page) {
     "No browser cookie contains the personal key",
   );
 }
-async function releaseHeld() {
+async function releaseHeld({ rateLimited = false } = {}) {
   for (const request of held.splice(0)) {
     await request.route
-      .fulfill({
-        json: {
-          advice: { ...fixtureAdvice, message: "STALE RESPONSE FIXTURE — must stay hidden" },
-          target: request.target,
-        },
-      })
+      .fulfill(
+        rateLimited
+          ? {
+              status: 429,
+              headers: { "Retry-After": "3600" },
+              json: { error: "STALE RATE LIMIT FIXTURE — must stay hidden" },
+            }
+          : {
+              json: {
+                advice: { ...fixtureAdvice, message: "STALE RESPONSE FIXTURE — must stay hidden" },
+                target: request.target,
+              },
+            },
+      )
       .catch(() => {}); // A cancelled fetch may have already closed its route.
   }
   await page.evaluate(
@@ -158,6 +180,10 @@ async function releaseHeld() {
   );
   assert.equal(
     await page.getByText("STALE RESPONSE FIXTURE — must stay hidden", { exact: true }).count(),
+    0,
+  );
+  assert.equal(
+    await page.getByText("STALE RATE LIMIT FIXTURE — must stay hidden", { exact: true }).count(),
     0,
   );
 }
@@ -219,6 +245,7 @@ try {
 
   // The remainder intercepts this local endpoint with explicit test fixtures.
   // These fixtures exercise UI behavior and do not validate live model quality.
+  await page.clock.install();
   fixturesEnabled = true;
   await page.route("**/api/coach", async (route) => {
     if (route.request().method() === "GET") {
@@ -242,6 +269,14 @@ try {
       await route.fulfill({
         status: 401,
         json: { error: personalKeyError },
+      });
+      return;
+    }
+    if (mode === "rate-limited") {
+      await route.fulfill({
+        status: 429,
+        headers: { "Retry-After": fixtureRetryAfter },
+        json: { error: rateLimitError },
       });
       return;
     }
@@ -380,8 +415,33 @@ try {
     request.body.question,
     "Failure preserves the learner’s question",
   );
+  const failurePosts = posts.length;
+  assert.equal(await button("Ask my coach").isDisabled(), true);
+  await page.locator("#coach-retry-wait").waitFor();
+  const initialCountdown = await page.locator("#coach-retry-wait").innerText();
+  await page.locator("form").evaluate((form) => form.requestSubmit());
+  await page.clock.fastForward(1_000);
+  await page.waitForFunction(
+    (previous) => document.querySelector("#coach-retry-wait")?.textContent !== previous,
+    initialCountdown,
+  );
+  assert.equal(posts.length, failurePosts, "Forced form submission cannot bypass the cooldown");
+  assert.equal(
+    await page.getByRole("alert").innerText(),
+    "Browser failure fixture. Please try again.",
+    "Waiting preserves the first provider error instead of replacing it with a pause message",
+  );
+  await capture("retry-countdown-fixture", [390]);
+  await page.clock.fastForward(9_000);
+  await expectReadyToAsk();
+  assert.equal(await page.locator("#coach-retry-wait").count(), 0);
+  assert.equal(posts.length, failurePosts, "Cooldown expiry never automatically retries");
+  assert.equal(
+    await page.getByRole("alert").innerText(),
+    "Browser failure fixture. Please try again.",
+  );
   mode = "success";
-  await ask();
+  await ask({ wait: false });
   await suggestion().waitFor();
   await button("Ask another question").click();
   mode = "invalid-target";
@@ -389,7 +449,39 @@ try {
   await expectFocus("Your coach could not return a clear next step. Please try again.");
   assert.equal(await suggestion().count(), 0, "A mismatched destination cannot render an action");
   checks.push(
-    "Fixture: accessible failure/retry and rejection of a different instrument’s destination",
+    "Fixture: first failure and question remain visible during countdown, forced submit is guarded, expiry requires manual retry, different-instrument destination rejected",
+  );
+
+  mode = "rate-limited";
+  await ask();
+  await expectFocus(rateLimitError);
+  const hourlyPosts = posts.length;
+  await page.clock.fastForward(59 * 60_000);
+  assert.equal(
+    await button("Ask my coach").isDisabled(),
+    true,
+    "A numeric hourly Retry-After is honored",
+  );
+  assert.equal(await page.locator("#coach-retry-wait").count(), 1);
+  await page.clock.fastForward(60_000);
+  await expectReadyToAsk();
+  assert.equal(posts.length, hourlyPosts, "An hourly cooldown also never retries automatically");
+  assert.equal(await page.getByRole("alert").innerText(), rateLimitError);
+  for (const invalidHeader of ["not-a-number", "99999999"]) {
+    fixtureRetryAfter = invalidHeader;
+    await ask({ wait: false });
+    await expectFocus(rateLimitError);
+    assert.equal(await button("Ask my coach").isDisabled(), true);
+    await page.clock.fastForward(10_000);
+    await expectReadyToAsk();
+    assert.equal(
+      await page.locator("#coach-retry-wait").count(),
+      0,
+      `Invalid Retry-After ${invalidHeader} keeps the bounded ten-second fallback`,
+    );
+  }
+  checks.push(
+    "Fixture: hourly Retry-After honored, malformed/oversized headers bounded, no automatic retries",
   );
 
   mode = "hold";
@@ -403,9 +495,20 @@ try {
   await button("Cancel").press("Enter");
   await expectFocus("What would help right now?");
   await page
-    .getByText("Stopped waiting. You can ask again when you’re ready.", { exact: true })
+    .getByText("Stopped waiting. Your guided learning is still available.", { exact: true })
     .waitFor();
-  await releaseHeld();
+  assert.equal(
+    await button("Ask my coach").isDisabled(),
+    true,
+    "Cancel preserves the original cooldown",
+  );
+  await finishCooldown();
+  await releaseHeld({ rateLimited: true });
+  assert.equal(
+    await button("Ask my coach").isEnabled(),
+    true,
+    "A canceled response cannot add an hourly cooldown",
+  );
   assert.equal(await suggestion().count(), 0);
   await ask();
   await button("Cancel").waitFor();
@@ -413,10 +516,21 @@ try {
   await heading("What would help right now?").waitFor();
   assert.equal(await question.inputValue(), "", "Changing instrument clears the earlier question");
   assert.equal(await page.getByLabel("Coach access code", { exact: true }).inputValue(), "");
+  assert.equal(
+    await button("Ask my coach").isDisabled(),
+    true,
+    "Instrument changes preserve the original cooldown",
+  );
+  await finishCooldown();
   await releaseHeld();
+  assert.equal(
+    await button("Ask my coach").isEnabled(),
+    true,
+    "An old instrument’s response cannot disable requests",
+  );
   assert.equal(await suggestion().count(), 0);
   checks.push(
-    "Fixture: cancel and instrument change discard delayed replies and restore usable controls",
+    "Fixture: cancel and instrument change retain the initial wait but discard stale hourly limits and advice",
   );
 
   fixtureTarget = lessonTarget(project, "practice");
@@ -623,6 +737,7 @@ try {
   );
 
   mode = "hold";
+  await finishCooldown();
   const pendingPersonal = page.waitForRequest(
     (request) => new URL(request.url()).pathname === "/api/coach" && request.method() === "POST",
   );
@@ -634,7 +749,7 @@ try {
   await expectFocus("Key removed from this session.");
   assert.equal(await keyInput.inputValue(), "");
   assert.equal(await button("Remove key").count(), 0);
-  await releaseHeld();
+  await releaseHeld({ rateLimited: true });
   await expectKeyAbsentFromStorage();
   const afterRemovalPosts = posts.length;
   await link("Open coach").press("Enter");
@@ -657,6 +772,17 @@ try {
   await button("Remove key").waitFor();
   await link("Open coach").press("Enter");
   await heading("What would help right now?").waitFor();
+  assert.equal(
+    await button("Ask my coach").isDisabled(),
+    true,
+    "Settings navigation and key replacement preserve the original wait",
+  );
+  await finishCooldown();
+  assert.equal(
+    await button("Ask my coach").isEnabled(),
+    true,
+    "An old key’s stale response cannot disable the replacement key",
+  );
   await page.reload({ waitUntil: "networkidle" });
   await page
     .getByText("The AI coach is not available yet. Your guided learning is ready below.", {

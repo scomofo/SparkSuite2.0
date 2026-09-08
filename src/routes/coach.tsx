@@ -32,6 +32,45 @@ const ENERGY_OPTIONS = [
 type Availability = "checking" | "available" | "unavailable" | "offline";
 type SavedReply = { reply: CoachReply; snapshot: string };
 
+// Browser callbacks alone write this tab-memory deadline; navigation keeps the wait.
+let coachRetryDeadline = 0;
+
+function useCoachWait() {
+  const deadline = useRef(0);
+  const [until, setUntil] = useState(0);
+  const [seconds, setSeconds] = useState(0);
+
+  useEffect(() => {
+    deadline.current = coachRetryDeadline;
+    setUntil(coachRetryDeadline);
+    setSeconds(Math.max(0, Math.ceil((coachRetryDeadline - Date.now()) / 1000)));
+  }, []);
+
+  useEffect(() => {
+    if (!until) return;
+    const timer = window.setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000));
+      setSeconds(remaining);
+      if (!remaining) window.clearInterval(timer);
+    }, 250);
+    return () => window.clearInterval(timer);
+  }, [until]);
+
+  function extend(duration: number) {
+    if (typeof window === "undefined") return;
+    deadline.current = Math.max(coachRetryDeadline, Date.now() + duration * 1000);
+    coachRetryDeadline = deadline.current;
+    setUntil(deadline.current);
+    setSeconds(Math.max(0, Math.ceil((deadline.current - Date.now()) / 1000)));
+  }
+
+  return { deadline, seconds, extend };
+}
+
+function formatCoachWait(seconds: number) {
+  return seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}m ${seconds % 60}s`;
+}
+
 /** Treat the reply as text and only allow the current curriculum destination. */
 function readReply(value: unknown, target: CoachTarget): CoachReply | null {
   if (!value || typeof value !== "object") return null;
@@ -51,6 +90,7 @@ function readReply(value: unknown, target: CoachTarget): CoachReply | null {
 }
 
 function CoachPage() {
+  const retryWait = useCoachWait();
   const instrument = useSpark((s) => s.instrument);
   const selectInstrument = useSpark((s) => s.selectInstrument);
   const sparkReady = useSpark((s) => s.hydrated);
@@ -94,7 +134,7 @@ function CoachPage() {
           </label>
         </header>
         {ready ? (
-          <CoachSession key={instrument} instrument={instrument} />
+          <CoachSession key={instrument} instrument={instrument} retryWait={retryWait} />
         ) : (
           <p role="status" className="mt-8 text-sm text-muted">
             Finding your place…
@@ -105,7 +145,13 @@ function CoachPage() {
   );
 }
 
-function CoachSession({ instrument }: { instrument: InstrumentId }) {
+function CoachSession({
+  instrument,
+  retryWait,
+}: {
+  instrument: InstrumentId;
+  retryWait: ReturnType<typeof useCoachWait>;
+}) {
   const keySession = useCoachKeySession();
   const data = useLearning((s) => s.data);
   const storageOk = useLearning((s) => s.storageOk);
@@ -201,13 +247,13 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
     request.current?.abort();
     request.current = null;
     setPending(false);
-    setNotice("Stopped waiting. You can ask again when you’re ready.");
+    setNotice("Stopped waiting. Your guided learning is still available.");
     formHeading.current?.focus();
   }
 
   async function ask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (request.current || !canAsk) return;
+    if (request.current || !canAsk || Date.now() < retryWait.deadline.current) return;
     const personalKey = usingPersonalKey ? getCoachSessionKey() : null;
     if (usingPersonalKey && !personalKey) return;
     if (personalKey && !isCoachKeyTransportSecure(window.location.href)) {
@@ -235,6 +281,7 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
     setNotice("");
     setSavedReply(null);
     try {
+      retryWait.extend(10);
       const response = await fetch("/api/coach", {
         method: "POST",
         headers: {
@@ -248,6 +295,13 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
         cache: "no-store",
         redirect: "error",
       });
+      if (controller.signal.aborted || request.current !== controller) return;
+      if (response.status === 429) {
+        const header = response.headers.get("Retry-After");
+        const seconds = header && /^\d+$/.test(header) ? Number(header) : NaN;
+        if (Number.isSafeInteger(seconds) && seconds > 0 && seconds <= 3600)
+          retryWait.extend(seconds);
+      }
       const body: unknown = await response.json();
       if (controller.signal.aborted || request.current !== controller) return;
       if (!response.ok) {
@@ -510,10 +564,16 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
               {notice}
             </p>
           ) : null}
+          {retryWait.seconds > 0 ? (
+            <p id="coach-retry-wait" className="mt-4 text-sm text-muted">
+              You can ask again in {formatCoachWait(retryWait.seconds)}.
+            </p>
+          ) : null}
           <Button
             type="submit"
             size="lg"
-            disabled={pending}
+            disabled={pending || retryWait.seconds > 0}
+            aria-describedby={retryWait.seconds > 0 ? "coach-retry-wait" : undefined}
             className="mt-5 h-auto min-h-12 w-full whitespace-normal py-3"
           >
             {pending ? (
