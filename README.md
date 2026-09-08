@@ -81,4 +81,4 @@ Personalized-learning checks cover all four starting levels on all six instrumen
 
 ## Progress-aware coach
 
-SparkSuite includes an optional private AI coach pilot. It uses the learner's current lesson or project to offer one practical next step, with NAfME musical processes and UDL supports informing the guidance. The normal learning path remains available when the coach is disabled. See [coach behavior, configuration, and release checks](docs/coach.md).
+SparkSuite includes an optional AI coach. It uses the learner's current lesson or project to offer one practical next step, with NAfME musical processes and UDL supports informing the guidance. In **Settings → AI coach**, a learner can add their own OpenAI key for the current tab session; refreshing or closing the page clears it. Requests are made only when they ask and use their OpenAI account. A separately configured hosted pilot can use an app-owner key and private access code. The normal learning path remains available without either setup. See [coach behavior, configuration, and release checks](docs/coach.md).

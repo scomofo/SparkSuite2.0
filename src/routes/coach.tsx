@@ -4,6 +4,8 @@ import { ArrowLeft, ArrowRight, BookOpen, LoaderCircle, MessageCircle } from "lu
 import { AppShell } from "@/components/app-shell";
 import { Button } from "@/components/ui/button";
 import { buildCoachContext, scopeCoachLearning } from "@/lib/spark/coach";
+import { isCoachKeyTransportSecure } from "@/lib/spark/coach-key";
+import { getCoachSessionKey, useCoachKeySession } from "@/lib/spark/coach-key-session";
 import {
   COACH_INTENTS,
   type CoachAdvice,
@@ -104,6 +106,7 @@ function CoachPage() {
 }
 
 function CoachSession({ instrument }: { instrument: InstrumentId }) {
+  const keySession = useCoachKeySession();
   const data = useLearning((s) => s.data);
   const storageOk = useLearning((s) => s.storageOk);
   const [intent, setIntent] = useState<CoachIntent>("next");
@@ -114,6 +117,7 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
   const [question, setQuestion] = useState("");
   const [accessCode, setAccessCode] = useState("");
   const [availability, setAvailability] = useState<Availability>("checking");
+  const [personalKeyAllowed, setPersonalKeyAllowed] = useState(false);
   const [availabilityAttempt, setAvailabilityAttempt] = useState(0);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState("");
@@ -142,11 +146,17 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
     [data, instrument, intent, minutes, energy, today],
   );
   const reply = savedReply?.snapshot === snapshot ? savedReply.reply : null;
+  const usingPersonalKey = keySession.hasKey && personalKeyAllowed;
+  const canAsk =
+    availability !== "checking" &&
+    availability !== "offline" &&
+    (usingPersonalKey || availability === "available");
 
   useEffect(() => {
     const controller = new AbortController();
     setAvailability("checking");
-    fetch("/api/coach", { signal: controller.signal, cache: "no-store" })
+    setPersonalKeyAllowed(false);
+    fetch("/api/coach", { signal: controller.signal, cache: "no-store", redirect: "error" })
       .then(async (response) => {
         if (!response.ok) throw new Error("availability");
         const result: unknown = await response.json();
@@ -159,6 +169,7 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
         )
           throw new Error("availability");
         setAvailability(result.available ? "available" : "unavailable");
+        setPersonalKeyAllowed("personalKeyAllowed" in result && result.personalKeyAllowed === true);
       })
       .catch(() => {
         if (!controller.signal.aborted) setAvailability("offline");
@@ -177,7 +188,7 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
       request.current?.abort();
       request.current = null;
     };
-  }, [snapshot]);
+  }, [snapshot, keySession.revision]);
 
   useEffect(() => {
     if (reply) responseHeading.current?.focus();
@@ -196,7 +207,13 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
 
   async function ask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (request.current || availability !== "available") return;
+    if (request.current || !canAsk) return;
+    const personalKey = usingPersonalKey ? getCoachSessionKey() : null;
+    if (usingPersonalKey && !personalKey) return;
+    if (personalKey && !isCoachKeyTransportSecure(window.location.href)) {
+      setError("Open SparkSuite over HTTPS before using your OpenAI key.");
+      return;
+    }
     const live = useLearning.getState();
     if (!live.hydrated || useSpark.getState().instrument !== instrument) return;
     const learning = scopeCoachLearning(live.data, instrument);
@@ -220,9 +237,16 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
     try {
       const response = await fetch("/api/coach", {
         method: "POST",
-        headers: { "Content-Type": "application/json", "X-Spark-Coach-Code": accessCode.trim() },
+        headers: {
+          "Content-Type": "application/json",
+          ...(personalKey
+            ? { "X-Spark-OpenAI-Key": personalKey }
+            : { "X-Spark-Coach-Code": accessCode.trim() }),
+        },
         body: JSON.stringify(payload),
         signal: controller.signal,
+        cache: "no-store",
+        redirect: "error",
       });
       const body: unknown = await response.json();
       if (controller.signal.aborted || request.current !== controller) return;
@@ -273,12 +297,22 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
           This browser could not save your learning. Keep this tab open to keep your place.
         </p>
       ) : null}
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+        {usingPersonalKey ? (
+          <p className="text-xs text-muted">Using your OpenAI key for this session.</p>
+        ) : personalKeyAllowed ? (
+          <p className="text-xs text-muted">You can connect your own OpenAI key in Settings.</p>
+        ) : null}
+        <Link to="/settings" className="inline-flex min-h-11 items-center text-sm text-ember">
+          Coach settings <ArrowRight className="ml-2 size-4" aria-hidden="true" />
+        </Link>
+      </div>
 
       {availability === "checking" ? (
         <p role="status" className="mt-7 text-sm text-muted">
           Checking your coach…
         </p>
-      ) : availability !== "available" ? (
+      ) : !canAsk ? (
         <>
           <p role="status" className="mt-7 text-sm leading-relaxed text-muted">
             {availability === "unavailable"
@@ -427,25 +461,35 @@ function CoachSession({ instrument }: { instrument: InstrumentId }) {
           <p id="coach-question-hint" className="mt-2 text-xs text-muted">
             Keep it about your music. {question.length}/600 characters
           </p>
-          <label htmlFor="coach-access" className="mt-6 block text-sm font-medium">
-            Coach access code
-          </label>
-          <input
-            id="coach-access"
-            type="password"
-            autoComplete="off"
-            value={accessCode}
-            required
-            maxLength={256}
-            disabled={pending}
-            onChange={(event) => setAccessCode(event.target.value)}
-            aria-describedby="coach-access-hint"
-            className="mt-3 block min-h-11 w-full rounded-md border border-border bg-bg px-3 text-sm disabled:opacity-60"
-          />
-          <p id="coach-access-hint" className="mt-2 text-xs leading-relaxed text-muted">
-            Use the code provided for the coach pilot. It stays in memory only while this page is
-            open.
-          </p>
+          {!usingPersonalKey ? (
+            <>
+              <label htmlFor="coach-access" className="mt-6 block text-sm font-medium">
+                Coach access code
+              </label>
+              <input
+                id="coach-access"
+                type="password"
+                autoComplete="off"
+                value={accessCode}
+                required
+                maxLength={256}
+                disabled={pending}
+                onChange={(event) => setAccessCode(event.target.value)}
+                aria-describedby="coach-access-hint"
+                className="mt-3 block min-h-11 w-full rounded-md border border-border bg-bg px-3 text-sm disabled:opacity-60"
+              />
+              <p id="coach-access-hint" className="mt-2 text-xs leading-relaxed text-muted">
+                Use the code provided for the coach pilot. It stays in memory only while this page
+                is open.
+              </p>
+            </>
+          ) : (
+            <p className="mt-6 text-xs leading-relaxed text-muted">
+              This request uses your OpenAI account and may incur API charges. Your key is sent
+              through SparkSuite’s server only when you ask. Remove it in Settings whenever you
+              like.
+            </p>
+          )}
           <p className="mt-6 text-xs leading-relaxed text-muted">
             When you ask, your selected {instrumentById(instrument).name.toLowerCase()} learning
             progress, choices above, and question are sent to OpenAI. No microphone or audio is

@@ -2,6 +2,7 @@ import { timingSafeEqual } from "node:crypto";
 import { buildCoachContext, parseCoachRequest } from "../spark/coach.ts";
 import type { CoachAdvice } from "../spark/coach-types.ts";
 import { coachPedagogy } from "../spark/coach-pedagogy.ts";
+import { isCoachKeyTransportSecure, normalizeCoachKey } from "../spark/coach-key.ts";
 
 const MAX_BODY_BYTES = 24_000;
 const ADVICE_FIELDS = ["message", "why", "tryThis", "stopAfter", "checkIn"] as const;
@@ -116,7 +117,7 @@ function responseAdvice(raw: unknown): CoachAdvice | null {
   }
 }
 
-/** Private pilot only. Counters cap one warm instance; they are not a global spending limit. */
+/** Counters cap one warm instance across credential modes; they are not a global spending limit. */
 export function createCoachService(dependencies: Dependencies = {}) {
   const environment = dependencies.environment ?? (() => process.env);
   const send = dependencies.fetch ?? globalThis.fetch;
@@ -127,21 +128,42 @@ export function createCoachService(dependencies: Dependencies = {}) {
   let nextRequestAt = 0;
 
   return {
-    availability: () => json({ available: configured(environment()) }),
+    availability: () => {
+      const env = environment();
+      return json({
+        available: configured(env),
+        personalKeyAllowed: env.SPARK_COACH_ENABLED !== "false",
+      });
+    },
     async respond(request: Request): Promise<Response> {
       const env = environment();
-      if (!configured(env))
+      const usingPersonalKey = request.headers.has("X-Spark-OpenAI-Key");
+      if (env.SPARK_COACH_ENABLED === "false" || (!usingPersonalKey && !configured(env)))
         return json(
           { error: "The AI coach is not available yet. Your guided learning is still ready." },
           503,
         );
       if (request.headers.get("origin") !== new URL(request.url).origin)
         return json({ error: "Open the coach in SparkSuite to ask a question." }, 403);
-      if (!authorized(request, env.SPARK_COACH_ACCESS_CODE!))
-        return json(
-          { error: "That coach access code was not accepted. Check it and try again." },
-          401,
-        );
+      let apiKey: string;
+      if (usingPersonalKey) {
+        if (!isCoachKeyTransportSecure(request.url))
+          return json(
+            { error: "Open SparkSuite over HTTPS before using the API key in Settings." },
+            403,
+          );
+        const personalKey = normalizeCoachKey(request.headers.get("X-Spark-OpenAI-Key")!);
+        if (!personalKey)
+          return json({ error: "Check the OpenAI API key in Settings and try again." }, 401);
+        apiKey = personalKey;
+      } else {
+        if (!authorized(request, env.SPARK_COACH_ACCESS_CODE!))
+          return json(
+            { error: "That coach access code was not accepted. Check it and try again." },
+            401,
+          );
+        apiKey = env.OPENAI_API_KEY!;
+      }
       if (!request.headers.get("content-type")?.toLowerCase().startsWith("application/json"))
         return json({ error: "The coach could not read this request. Please try again." }, 415);
 
@@ -192,8 +214,9 @@ export function createCoachService(dependencies: Dependencies = {}) {
       try {
         const response = await send("https://api.openai.com/v1/responses", {
           method: "POST",
+          redirect: "error",
           headers: {
-            Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+            Authorization: `Bearer ${apiKey}`,
             "Content-Type": "application/json",
           },
           signal,
@@ -228,6 +251,19 @@ export function createCoachService(dependencies: Dependencies = {}) {
         });
         if (!response.ok) {
           // Never return provider error payloads, credentials, or learner questions in logs.
+          if (usingPersonalKey && response.status === 401)
+            return json(
+              { error: "OpenAI did not accept your API key. Update it in Settings and try again." },
+              401,
+            );
+          if (usingPersonalKey && response.status === 403)
+            return json(
+              {
+                error:
+                  "Your API key cannot access the coach model. Check its OpenAI permissions, then update the key in Settings.",
+              },
+              403,
+            );
           if (response.status === 429)
             return json(
               {
