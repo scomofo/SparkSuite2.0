@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CoachRouteImport } from './routes/coach'
 import { Route as LearnRouteImport } from './routes/learn'
 import { Route as MilestoneRouteImport } from './routes/milestone'
 import { Route as PracticeRouteImport } from './routes/practice'
@@ -21,10 +22,16 @@ import { Route as TechniquesRouteImport } from './routes/techniques'
 import { Route as TheoryRouteImport } from './routes/theory'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as TunerRouteImport } from './routes/tuner'
+import { Route as ApiCoachRouteImport } from './routes/api/coach'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CoachRoute = CoachRouteImport.update({
+  id: '/coach',
+  path: '/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LearnRoute = LearnRouteImport.update({
@@ -82,9 +89,15 @@ const TunerRoute = TunerRouteImport.update({
   path: '/tuner',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCoachRoute = ApiCoachRouteImport.update({
+  id: '/api/coach',
+  path: '/api/coach',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
   '/learn': typeof LearnRoute
   '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
@@ -96,9 +109,11 @@ export interface FileRoutesByFullPath {
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
   '/tuner': typeof TunerRoute
+  '/api/coach': typeof ApiCoachRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
   '/learn': typeof LearnRoute
   '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
@@ -110,10 +125,12 @@ export interface FileRoutesByTo {
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
   '/tuner': typeof TunerRoute
+  '/api/coach': typeof ApiCoachRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/coach': typeof CoachRoute
   '/learn': typeof LearnRoute
   '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
@@ -125,11 +142,13 @@ export interface FileRoutesById {
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
   '/tuner': typeof TunerRoute
+  '/api/coach': typeof ApiCoachRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/coach'
     | '/learn'
     | '/milestone'
     | '/practice'
@@ -141,9 +160,11 @@ export interface FileRouteTypes {
     | '/theory'
     | '/today'
     | '/tuner'
+    | '/api/coach'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/coach'
     | '/learn'
     | '/milestone'
     | '/practice'
@@ -155,9 +176,11 @@ export interface FileRouteTypes {
     | '/theory'
     | '/today'
     | '/tuner'
+    | '/api/coach'
   id:
     | '__root__'
     | '/'
+    | '/coach'
     | '/learn'
     | '/milestone'
     | '/practice'
@@ -169,10 +192,12 @@ export interface FileRouteTypes {
     | '/theory'
     | '/today'
     | '/tuner'
+    | '/api/coach'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CoachRoute: typeof CoachRoute
   LearnRoute: typeof LearnRoute
   MilestoneRoute: typeof MilestoneRoute
   PracticeRoute: typeof PracticeRoute
@@ -184,6 +209,7 @@ export interface RootRouteChildren {
   TheoryRoute: typeof TheoryRoute
   TodayRoute: typeof TodayRoute
   TunerRoute: typeof TunerRoute
+  ApiCoachRoute: typeof ApiCoachRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -193,6 +219,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/coach': {
+      id: '/coach'
+      path: '/coach'
+      fullPath: '/coach'
+      preLoaderRoute: typeof CoachRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/learn': {
@@ -272,11 +305,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TunerRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/coach': {
+      id: '/api/coach'
+      path: '/api/coach'
+      fullPath: '/api/coach'
+      preLoaderRoute: typeof ApiCoachRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CoachRoute: CoachRoute,
   LearnRoute: LearnRoute,
   MilestoneRoute: MilestoneRoute,
   PracticeRoute: PracticeRoute,
@@ -288,6 +329,7 @@ const rootRouteChildren: RootRouteChildren = {
   TheoryRoute: TheoryRoute,
   TodayRoute: TodayRoute,
   TunerRoute: TunerRoute,
+  ApiCoachRoute: ApiCoachRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
