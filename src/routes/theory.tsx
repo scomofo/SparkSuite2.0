@@ -176,7 +176,9 @@ function TheoryPage() {
             ? "The neck changes with the instrument."
             : inst.surface === "pads"
               ? "Listen; the kit doesn’t have a neck."
-              : "Listen; there are no frets to map, so the sound is the reference."}
+              : inst.id === "lapsteel"
+                ? "Listen; a straight bar plays whole positions, so the sound is the reference."
+                : "Listen; there are no frets to map, so the sound is the reference."}
         </p>
       </header>
 

@@ -19,6 +19,8 @@ const DAILY_EXERCISES: Record<string, string> = {
   lesson_violin_first_finger_01: "violin-first-finger",
   lesson_violin_slur_01: "violin-slurs",
   lesson_violin_walk_01: "violin-d-tetrachord",
+  lesson_lapsteel_open_01: "lapsteel-c6-and-the-bar",
+  lesson_lapsteel_slide_01: "lapsteel-slide-into",
 };
 
 export function hasInstrumentPattern(item: { lessonId?: string; process?: string }) {

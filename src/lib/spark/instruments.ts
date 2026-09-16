@@ -1,7 +1,7 @@
 import type { Lesson, PlanItem } from "./types.ts";
 import { LESSONS as GUITAR_LESSONS, TRACKS as GUITAR_TRACKS, FIRST_PROMISE as GUITAR_PROMISE } from "./guitar.ts";
 
-export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals" | "mandolin" | "banjo" | "violin";
+export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals" | "mandolin" | "banjo" | "violin" | "lapsteel";
 
 export type InstrumentDef = {
   id: InstrumentId;
@@ -136,6 +136,19 @@ export const INSTRUMENTS: InstrumentDef[] = [
     openFreq: [196.0, 293.66, 440.0, 659.25],
     openPc: [7, 2, 9, 4],
     firstChords: [],
+    theoryNeck: "none",
+  },
+  {
+    id: "lapsteel",
+    name: "Lap steel",
+    kicker: "C6",
+    promise: "Open strings already make a chord. Lay the bar straight and slide it home.",
+    family: "strings",
+    surface: "strings",
+    stringNames: ["C", "E", "G", "A", "C", "E"],
+    openFreq: [130.81, 164.81, 196.0, 220.0, 261.63, 329.63],
+    openPc: [0, 4, 7, 9, 0, 4],
+    firstChords: ["C", "F"],
     theoryNeck: "none",
   },
 ];
@@ -1282,6 +1295,151 @@ const VIOLIN_LESSONS: Lesson[] = [
   },
 ];
 
+const LAPSTEEL_LESSONS: Lesson[] = [
+  {
+    id: "lesson_lapsteel_open_01",
+    title: "Open C6",
+    skill: "lapsteel_open",
+    trackId: "track_lapsteel_foundations",
+    order: 1,
+    type: "warmup",
+    objectives: ["Pick C E G A C E in order", "Then brush the open chord"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: [],
+    masteryRequired: 0.7,
+  },
+  {
+    id: "lesson_lapsteel_c_01",
+    title: "Open position C",
+    skill: "lapsteel_c",
+    trackId: "track_lapsteel_positions",
+    order: 2,
+    type: "chord",
+    objectives: ["Brush all six open strings", "Let the chord ring"],
+    chords: ["C"],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_lapsteel_open_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_lapsteel_f_01",
+    title: "Bar at the fifth fret",
+    skill: "lapsteel_f",
+    trackId: "track_lapsteel_positions",
+    order: 3,
+    type: "chord",
+    objectives: ["Straight bar directly above fret 5", "Every string clear"],
+    chords: ["F"],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_lapsteel_c_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_lapsteel_cf_01",
+    title: "Porch Swing",
+    skill: "lapsteel_cf",
+    trackId: "track_lapsteel_songs",
+    order: 4,
+    type: "song",
+    objectives: ["Change on beat 1", "Lift and land the bar cleanly"],
+    chords: ["C", "F"],
+    pattern: "D",
+    bars: 16,
+    bpm: 60,
+    prerequisites: ["lesson_lapsteel_f_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Porch Swing",
+    criteria: ["The loop finishes", "The bar lands on one"],
+    why: "Open C and one bar position. That is a tune.",
+    interpret: "Let each chord ring into the change.",
+  },
+  {
+    id: "lesson_lapsteel_respond_cf_01",
+    title: "Same position or different",
+    skill: "lapsteel_listen",
+    trackId: "track_lapsteel_songs",
+    order: 5,
+    type: "skill",
+    objectives: ["Hear C, then F", "Name same position or different"],
+    chords: ["C", "F"],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_lapsteel_cf_01"],
+    masteryRequired: 0.7,
+    process: "respond",
+    repertoire: "Porch Swing",
+    listenPrompt: { a: "C", b: "F", ask: "Same position or different?", answer: "different" },
+    criteria: ["You listened first", "You named one thing"],
+    why: "Porch Swing uses both. Name the difference.",
+  },
+  {
+    id: "lesson_lapsteel_g_01",
+    title: "Bar at the seventh fret",
+    skill: "lapsteel_g",
+    trackId: "track_lapsteel_positions",
+    order: 6,
+    type: "chord",
+    objectives: ["Straight bar above fret 7", "Two frets past F"],
+    chords: ["G"],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_lapsteel_f_01"],
+    masteryRequired: 0.75,
+    why: "The V that pulls back home.",
+  },
+  {
+    id: "lesson_lapsteel_slide_01",
+    title: "Slide into position",
+    skill: "lapsteel_slide",
+    trackId: "track_lapsteel_songs",
+    order: 7,
+    type: "rhythm",
+    objectives: ["Slide F to G, arriving on the beat", "Keep the bar pressing lightly"],
+    chords: ["F", "G"],
+    pattern: "D-D-",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_lapsteel_g_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Slide",
+    criteria: ["The slide arrives on the beat", "The chord keeps ringing"],
+    why: "Porch Swing with the bar in motion.",
+    interpret: "Arrive on the beat, not after it.",
+  },
+  {
+    id: "lesson_lapsteel_create_hang_01",
+    title: "Your hang",
+    skill: "lapsteel_create",
+    trackId: "track_lapsteel_songs",
+    order: 8,
+    type: "song",
+    objectives: ["Stay on C, or move to F", "Play the one you picked"],
+    chords: ["C", "F"],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_lapsteel_cf_01"],
+    masteryRequired: 0.7,
+    process: "create",
+    repertoire: "Your hang",
+    createOptions: ["C", "C–F"],
+    criteria: ["You picked it", "You played it through"],
+    why: "You pick the idea. That's the piece.",
+    interpret: "Play the one you picked like you meant it.",
+  },
+];
+
 const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
   guitar: [...GUITAR_TRACKS],
   piano: [
@@ -1324,6 +1482,11 @@ const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
     { id: "track_violin_position", name: "First position" },
     { id: "track_violin_songs", name: "Songs" },
   ],
+  lapsteel: [
+    { id: "track_lapsteel_foundations", name: "Foundations" },
+    { id: "track_lapsteel_positions", name: "Bar positions" },
+    { id: "track_lapsteel_songs", name: "Songs" },
+  ],
 };
 
 const ALL: Record<InstrumentId, Lesson[]> = {
@@ -1336,6 +1499,7 @@ const ALL: Record<InstrumentId, Lesson[]> = {
   mandolin: MANDOLIN_LESSONS,
   banjo: BANJO_LESSONS,
   violin: VIOLIN_LESSONS,
+  lapsteel: LAPSTEEL_LESSONS,
 };
 
 export function lessonsFor(id: InstrumentId) {
@@ -1357,6 +1521,7 @@ export function foundationsFor(id: InstrumentId) {
     mandolin: ["lesson_mandolin_open_01"],
     banjo: ["lesson_banjo_open_01"],
     violin: ["lesson_violin_open_01"],
+    lapsteel: ["lesson_lapsteel_open_01"],
   };
   return map[id];
 }
@@ -1377,6 +1542,7 @@ export function firstLessonIds(id: InstrumentId): [string, string, string] {
     mandolin: ["lesson_mandolin_open_01", "lesson_mandolin_g_01", "lesson_mandolin_gc_01"],
     banjo: ["lesson_banjo_open_01", "lesson_banjo_g_01", "lesson_banjo_gd7_01"],
     violin: ["lesson_violin_open_01", "lesson_violin_first_finger_01", "lesson_violin_walk_01"],
+    lapsteel: ["lesson_lapsteel_open_01", "lesson_lapsteel_c_01", "lesson_lapsteel_cf_01"],
   };
   return map[id];
 }
@@ -1437,6 +1603,18 @@ export function banjoChordFrequencies(chord: string): number[] {
     fret === null ? [] : [open[index] * Math.pow(2, fret / 12)],
   ) ?? [];
 }
+
+/**
+ * Straight-bar positions on a six-string lap steel in C6 (C–E–G–A–C–E). Every
+ * string sits under the bar at the same fret, so each position is a sixth chord
+ * named by its root: open is C6, fret 5 is F6, fret 7 is G6, fret 2 is D6.
+ */
+export const LAPSTEEL_CHORDS: Record<string, { frets: (number | null)[]; fingers: (number | null)[]; notes: string[] }> = {
+  C: { frets: [0, 0, 0, 0, 0, 0], fingers: [0, 0, 0, 0, 0, 0], notes: ["C", "E", "G", "A", "C", "E"] },
+  D: { frets: [2, 2, 2, 2, 2, 2], fingers: [1, 1, 1, 1, 1, 1], notes: ["D", "F♯", "A", "B", "D", "F♯"] },
+  F: { frets: [5, 5, 5, 5, 5, 5], fingers: [1, 1, 1, 1, 1, 1], notes: ["F", "A", "C", "D", "F", "A"] },
+  G: { frets: [7, 7, 7, 7, 7, 7], fingers: [1, 1, 1, 1, 1, 1], notes: ["G", "B", "D", "E", "G", "B"] },
+};
 
 export const PIANO_VOICINGS: Record<string, number[]> = {
   C: [60, 64, 67],

@@ -144,7 +144,36 @@ const violin = [
   { beat: 15, label: "Release", detail: "Let the bow slow and lift" },
 ];
 
-/** Nine original, short arrangements. Variations change the music rather than a score. */
+const LAPSTEEL_NOTES: Record<string, number[]> = {
+  C: [48, 52, 55, 57, 60, 64],
+  F: [53, 57, 60, 62, 65, 69],
+  G: [55, 59, 62, 64, 67, 71],
+};
+const lapsteel = ["C", "F", "G", "C"].flatMap((chord, bar) =>
+  bar === 3
+    ? [
+        {
+          ...n(12, "C ↓", LAPSTEEL_NOTES.C, 3.8),
+          chord,
+          detail: "Lift to open C and let all six strings ring",
+        },
+        { beat: 13, label: "Hold", detail: "Let the open chord ring" },
+        { beat: 14, label: "Hold", detail: "Let the open chord ring" },
+        { beat: 15, label: "Hold", detail: "Let the open chord ring" },
+      ]
+    : [
+        {
+          ...n(bar * 4, chord + " ↓", LAPSTEEL_NOTES[chord], 1.8),
+          chord,
+          detail: chord + ": brush and let it ring",
+        },
+        quiet(bar * 4 + 1, "Hold"),
+        quiet(bar * 4 + 2, "Prepare"),
+        quiet(bar * 4 + 3, "Prepare"),
+      ],
+);
+
+/** Ten original, short arrangements. Variations change the music rather than a score. */
 export const MUSICAL_MILESTONES: MusicalMilestone[] = [
   {
     instrument: "guitar",
@@ -330,8 +359,36 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
           : cue.beat < 12 && cue.beat % 4 === 2
             ? { ...cue, label: "F♯ ∨", detail: "Up-bow alone" }
             : cue.beat === 12
-              ? { ...cue, label: "D ⊓", detail: "Final D on one slow down-bow after the last up-bow" }
+              ? {
+                  ...cue,
+                  label: "D ⊓",
+                  detail: "Final D on one slow down-bow after the last up-bow",
+                }
               : cue,
+    ),
+  },
+  {
+    instrument: "lapsteel",
+    title: "Home, away, and home",
+    goal: "Brush open C, the bar at fret 5, the bar at fret 7, then land on open C.",
+    setup:
+      "Straight bar above the marker with light pressure. C is open, F is fret 5, G is fret 7. Brush on beat 1 and let each chord ring.",
+    variation: "Slide into every change",
+    variationHint:
+      "Instead of lifting and placing the bar, slide it from position to position on the last beat of each bar so it arrives on beat 1.",
+    lessons: ["lapsteel-c6-and-the-bar", "lapsteel-pick-pulse", "lapsteel-straight-bar"],
+    bpm: 50,
+    beats: 16,
+    shapes: ["C", "F", "G"],
+    cues: lapsteel,
+    alternate: lapsteel.map((cue) =>
+      cue.beat < 12 && cue.beat % 4 === 3
+        ? {
+            beat: cue.beat,
+            label: "⟋",
+            detail: "Slide the bar toward the next position; arrive on beat 1",
+          }
+        : cue,
     ),
   },
 ];
