@@ -16,6 +16,8 @@ export function labSearchFor(id: InstrumentId): LabSearch {
       return { tab: "drone", chord: "C" };
     case "mandolin":
       return { tab: "down", chord: "G" };
+    case "banjo":
+      return { tab: "roll", chord: "G" };
     default:
       return { tab: "down", chord: "Em" };
   }
@@ -74,6 +76,13 @@ export function labCardFor(id: InstrumentId): LabCard | null {
         kicker: "Mandolin lab",
         title: "Pick",
         body: "Downstrokes, alternate picking, the chop, tremolo. Four minutes. Then stop.",
+        cta: "Four minutes",
+      };
+    case "banjo":
+      return {
+        kicker: "Banjo lab",
+        title: "Roll",
+        body: "Forward roll, pinch, hammer-on, slide, vamp. Four minutes. Then stop.",
         cta: "Four minutes",
       };
     default:

@@ -516,7 +516,8 @@ function GuidedPractice({
                       <span className="text-xs text-muted">
                         {lesson.instrument === "guitar" ||
                         lesson.instrument === "ukulele" ||
-                        lesson.instrument === "mandolin"
+                        lesson.instrument === "mandolin" ||
+                        lesson.instrument === "banjo"
                           ? "↓ down · ↑ up"
                           : "Numbers are beats"}
                         {sequence.subdivision === 4

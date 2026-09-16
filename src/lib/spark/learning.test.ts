@@ -39,7 +39,7 @@ function complete(data: LearningState, lessonId = id, day = TODAY) {
 describe("guided curriculum", () => {
   it("has complete, uniquely identified lessons and an ordered prerequisite path for every instrument", () => {
     assert.equal(CURRICULUM.length, INSTRUMENTS.length * 8);
-    assert.equal(INSTRUMENTS.length, 7);
+    assert.equal(INSTRUMENTS.length, 8);
     assert.equal(new Set(CURRICULUM.map((lesson) => lesson.id)).size, CURRICULUM.length);
     for (const instrument of INSTRUMENTS) {
       const lessons = learningPath(instrument.id);

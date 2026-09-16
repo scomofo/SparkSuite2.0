@@ -1,7 +1,7 @@
 import type { Lesson, PlanItem } from "./types.ts";
 import { LESSONS as GUITAR_LESSONS, TRACKS as GUITAR_TRACKS, FIRST_PROMISE as GUITAR_PROMISE } from "./guitar.ts";
 
-export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals" | "mandolin";
+export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals" | "mandolin" | "banjo";
 
 export type InstrumentDef = {
   id: InstrumentId;
@@ -15,6 +15,8 @@ export type InstrumentDef = {
   openPc: number[];
   firstChords: string[];
   theoryNeck: "guitar" | "piano" | "four" | "none";
+  /** Indexes of the strings the theory neck shows; omitted means all strings. */
+  theoryStrings?: number[];
 };
 
 export const INSTRUMENTS: InstrumentDef[] = [
@@ -109,6 +111,20 @@ export const INSTRUMENTS: InstrumentDef[] = [
     firstChords: ["G", "C"],
     theoryNeck: "four",
   },
+  {
+    id: "banjo",
+    name: "Banjo",
+    kicker: "gDGBD",
+    promise: "Open strings already make a G chord. Add one roll and it moves.",
+    family: "strings",
+    surface: "strings",
+    stringNames: ["g", "D", "G", "B", "D"],
+    openFreq: [392.0, 146.83, 196.0, 246.94, 293.66],
+    openPc: [7, 2, 7, 11, 2],
+    firstChords: ["G", "D7"],
+    theoryNeck: "four",
+    theoryStrings: [1, 2, 3, 4],
+  },
 ];
 
 export function instrumentById(id: string): InstrumentDef {
@@ -117,6 +133,18 @@ export function instrumentById(id: string): InstrumentDef {
 
 export function isInstrumentId(id: unknown): id is InstrumentId {
   return typeof id === "string" && INSTRUMENTS.some((i) => i.id === id);
+}
+
+/** The instrument as the theory neck sees it: only the strings that run the full neck. */
+export function theoryNeckDef(inst: InstrumentDef): InstrumentDef {
+  const keep = inst.theoryStrings;
+  if (!keep) return inst;
+  return {
+    ...inst,
+    stringNames: keep.map((i) => inst.stringNames[i]),
+    openFreq: keep.map((i) => inst.openFreq[i]),
+    openPc: keep.map((i) => inst.openPc[i]),
+  };
 }
 
 const PIANO_LESSONS: Lesson[] = [
@@ -971,6 +999,151 @@ const MANDOLIN_LESSONS: Lesson[] = [
   },
 ];
 
+const BANJO_LESSONS: Lesson[] = [
+  {
+    id: "lesson_banjo_open_01",
+    title: "Open gDGBD",
+    skill: "banjo_open",
+    trackId: "track_banjo_foundations",
+    order: 1,
+    type: "warmup",
+    objectives: ["Pick D G B D, then the short g", "One clean note per string"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: [],
+    masteryRequired: 0.7,
+  },
+  {
+    id: "lesson_banjo_g_01",
+    title: "G is already there",
+    skill: "banjo_g",
+    trackId: "track_banjo_shapes",
+    order: 2,
+    type: "chord",
+    objectives: ["Brush all five open strings", "Hear G major with no fingers down"],
+    chords: ["G"],
+    pattern: "D",
+    bars: 8,
+    bpm: 72,
+    prerequisites: ["lesson_banjo_open_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_banjo_d7_01",
+    title: "D7 shape",
+    skill: "banjo_d7",
+    trackId: "track_banjo_shapes",
+    order: 3,
+    type: "chord",
+    objectives: ["G string fret 2, B string fret 1, D string fret 2", "Leave the short g open"],
+    chords: ["D7"],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: ["lesson_banjo_g_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_banjo_gd7_01",
+    title: "Creek Road",
+    skill: "banjo_gd7",
+    trackId: "track_banjo_songs",
+    order: 4,
+    type: "song",
+    objectives: ["Change on beat 1", "Keep the thumb steady"],
+    chords: ["G", "D7"],
+    pattern: "D",
+    bars: 16,
+    bpm: 76,
+    prerequisites: ["lesson_banjo_d7_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Creek Road",
+    criteria: ["The loop finishes", "The change lands on one"],
+    why: "Open G and one shape. That is a tune.",
+    interpret: "Let the open strings ring between changes.",
+  },
+  {
+    id: "lesson_banjo_respond_gd7_01",
+    title: "Same chord or different",
+    skill: "banjo_listen",
+    trackId: "track_banjo_songs",
+    order: 5,
+    type: "skill",
+    objectives: ["Hear G, then D7", "Name same chord or different"],
+    chords: ["G", "D7"],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: ["lesson_banjo_gd7_01"],
+    masteryRequired: 0.7,
+    process: "respond",
+    repertoire: "Creek Road",
+    listenPrompt: { a: "G", b: "D7", ask: "Same chord or different?", answer: "different" },
+    criteria: ["You listened first", "You named one thing"],
+    why: "Creek Road uses both. Name the difference.",
+  },
+  {
+    id: "lesson_banjo_c_01",
+    title: "C shape",
+    skill: "banjo_c",
+    trackId: "track_banjo_shapes",
+    order: 6,
+    type: "chord",
+    objectives: ["D string fret 2, B string fret 1, first D fret 2", "Middle G stays open"],
+    chords: ["C"],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: ["lesson_banjo_d7_01"],
+    masteryRequired: 0.75,
+    why: "The IV that opens the loop up.",
+  },
+  {
+    id: "lesson_banjo_roll_01",
+    title: "Forward roll",
+    skill: "banjo_roll",
+    trackId: "track_banjo_rolls",
+    order: 7,
+    type: "rhythm",
+    objectives: ["Thumb, index, middle in order", "Eight even notes per bar"],
+    chords: ["G", "D7"],
+    pattern: "DDDDDDDD",
+    bars: 8,
+    bpm: 80,
+    prerequisites: ["lesson_banjo_gd7_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Forward roll",
+    criteria: ["The roll stays even", "The chord changes on one"],
+    why: "Creek Road with the right hand moving.",
+    interpret: "Keep the roll rolling through the change.",
+  },
+  {
+    id: "lesson_banjo_create_hang_01",
+    title: "Your hang",
+    skill: "banjo_create",
+    trackId: "track_banjo_songs",
+    order: 8,
+    type: "song",
+    objectives: ["Stay on G, or switch to D7", "Play the one you picked"],
+    chords: ["G", "D7"],
+    pattern: "D",
+    bars: 8,
+    bpm: 72,
+    prerequisites: ["lesson_banjo_gd7_01"],
+    masteryRequired: 0.7,
+    process: "create",
+    repertoire: "Your hang",
+    createOptions: ["G", "G–D7"],
+    criteria: ["You picked it", "You played it through"],
+    why: "You pick the idea. That's the piece.",
+    interpret: "Play the one you picked like you meant it.",
+  },
+];
+
 const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
   guitar: [...GUITAR_TRACKS],
   piano: [
@@ -1002,6 +1175,12 @@ const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
     { id: "track_mandolin_chords", name: "Chords" },
     { id: "track_mandolin_songs", name: "Songs" },
   ],
+  banjo: [
+    { id: "track_banjo_foundations", name: "Foundations" },
+    { id: "track_banjo_shapes", name: "Shapes" },
+    { id: "track_banjo_rolls", name: "Rolls" },
+    { id: "track_banjo_songs", name: "Songs" },
+  ],
 };
 
 const ALL: Record<InstrumentId, Lesson[]> = {
@@ -1012,6 +1191,7 @@ const ALL: Record<InstrumentId, Lesson[]> = {
   drums: DRUM_LESSONS,
   vocals: VOCAL_LESSONS,
   mandolin: MANDOLIN_LESSONS,
+  banjo: BANJO_LESSONS,
 };
 
 export function lessonsFor(id: InstrumentId) {
@@ -1031,6 +1211,7 @@ export function foundationsFor(id: InstrumentId) {
     drums: ["lesson_drums_kick_01"],
     vocals: ["lesson_vocals_drone_01"],
     mandolin: ["lesson_mandolin_open_01"],
+    banjo: ["lesson_banjo_open_01"],
   };
   return map[id];
 }
@@ -1049,6 +1230,7 @@ export function firstLessonIds(id: InstrumentId): [string, string, string] {
     drums: ["lesson_drums_kick_01", "lesson_drums_backbeat_01", "lesson_drums_four_01"],
     vocals: ["lesson_vocals_drone_01", "lesson_vocals_match_c_01", "lesson_vocals_hold_01"],
     mandolin: ["lesson_mandolin_open_01", "lesson_mandolin_g_01", "lesson_mandolin_gc_01"],
+    banjo: ["lesson_banjo_open_01", "lesson_banjo_g_01", "lesson_banjo_gd7_01"],
   };
   return map[id];
 }
@@ -1086,6 +1268,19 @@ export const MANDOLIN_CHORDS: Record<string, { frets: (number | null)[]; fingers
   D: { frets: [2, 0, 0, 2], fingers: [1, 0, 0, 2], notes: ["A", "D", "A", "F♯"] },
   Am: { frets: [2, 2, 3, 0], fingers: [1, 2, 3, 0], notes: ["A", "E", "C", "E"] },
   Em: { frets: [0, 2, 2, 0], fingers: [0, 1, 2, 0], notes: ["G", "E", "B", "E"] },
+};
+
+/**
+ * Frets in g–D–G–B–D order for a five-string banjo in open G. The short fifth
+ * string (first entry) starts at fret 5 and is always shown open here.
+ */
+export const BANJO_CHORDS: Record<string, { frets: (number | null)[]; fingers: (number | null)[]; notes: string[] }> = {
+  G: { frets: [0, 0, 0, 0, 0], fingers: [0, 0, 0, 0, 0], notes: ["g", "D", "G", "B", "D"] },
+  C: { frets: [0, 2, 0, 1, 2], fingers: [0, 2, 0, 1, 3], notes: ["g", "E", "G", "C", "E"] },
+  D7: { frets: [0, 0, 2, 1, 2], fingers: [0, 0, 2, 1, 3], notes: ["g", "D", "A", "C", "E"] },
+  D: { frets: [0, 0, 2, 3, 4], fingers: [0, 0, 1, 2, 3], notes: ["g", "D", "A", "D", "F♯"] },
+  Em: { frets: [0, 2, 0, 0, 2], fingers: [0, 1, 0, 0, 2], notes: ["g", "E", "G", "B", "E"] },
+  Am: { frets: [0, 2, 2, 1, 2], fingers: [0, 2, 3, 1, 4], notes: ["g", "E", "A", "C", "E"] },
 };
 
 export const PIANO_VOICINGS: Record<string, number[]> = {

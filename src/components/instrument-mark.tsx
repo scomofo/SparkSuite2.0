@@ -9,6 +9,7 @@ const SRC: Record<InstrumentId, string> = {
   drums: "/instruments/drums.jpg",
   vocals: "/instruments/vocals.jpg",
   mandolin: "/instruments/mandolin.jpg",
+  banjo: "/instruments/banjo.jpg",
 };
 
 export function InstrumentMark({ id, className }: { id: InstrumentId; className?: string }) {

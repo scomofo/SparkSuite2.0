@@ -1,5 +1,7 @@
 # Banjo brief (five-string, open G)
 
+**Status: implemented.** The banjo path is in the codebase. The fifth string is listed first in the definition and kept open in every chord record; the theory neck shows only the four long strings through the new optional `theoryStrings` field on `InstrumentDef` and the `theoryNeckDef` helper. The mark at `public/instruments/banjo.jpg` is a rendered drawing placeholder to replace with a photo.
+
 ## Decisions to make first
 
 **The fifth string.** On a five-string banjo the short fifth string starts at fret 5 and is almost always played open (high G). Two components assume every string runs from the nut: `ChordDiagram` draws frets from fret 1, and `neckVoicing` in `theory.ts` will happily place a chord tone at fret 2 on the fifth string. Recommended v1 approach:

@@ -8,7 +8,7 @@ import { ChromaticStrip, TheoryFretboard } from "@/components/theory-fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { Button } from "@/components/ui/button";
 import { pianoChord, pianoTone, pluck, scheduleRun, strum, unlockAudio, type AudioRun } from "@/lib/spark/audio";
-import { instrumentById, midiToFreq, stringFreq } from "@/lib/spark/instruments";
+import { instrumentById, midiToFreq, stringFreq, theoryNeckDef } from "@/lib/spark/instruments";
 import {
   cagedShapes,
   chordLabel,
@@ -71,7 +71,7 @@ function pickerFromPc(pc: number) {
 }
 
 function hearQuality(rootPc: number, qualityId: string, when?: number) {
-  const inst = instrumentById(useSpark.getState().instrument);
+  const inst = theoryNeckDef(instrumentById(useSpark.getState().instrument));
   unlockAudio();
   if (inst.theoryNeck === "piano" || inst.surface === "keys" || inst.surface === "voice") {
     pianoChord(chordMidis(rootPc, qualityId).map(midiToFreq), when);
@@ -90,7 +90,7 @@ function hearQuality(rootPc: number, qualityId: string, when?: number) {
 }
 
 function playNeckFret(stringIndex: number, fret: number) {
-  const inst = instrumentById(useSpark.getState().instrument);
+  const inst = theoryNeckDef(instrumentById(useSpark.getState().instrument));
   unlockAudio();
   if (inst.theoryNeck === "four") {
     pluck(stringFreq(inst, stringIndex, fret));
@@ -113,7 +113,7 @@ function NeckFor({
   preferFlats: boolean;
 }) {
   const instrument = useSpark((s) => s.instrument);
-  const inst = instrumentById(instrument);
+  const inst = theoryNeckDef(instrumentById(instrument));
   if (inst.theoryNeck === "none") return null;
   if (inst.theoryNeck === "piano") {
     return (
@@ -144,7 +144,7 @@ function TheoryPage() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
   const instrument = useSpark((s) => s.instrument);
-  const inst = instrumentById(instrument);
+  const inst = theoryNeckDef(instrumentById(instrument));
   const tabs = inst.id === "guitar" ? TABS : TABS.filter((t) => t.id !== "caged");
   const tab = search.tab === "caged" && inst.id !== "guitar" ? "build" : search.tab;
   const patch = (next: Partial<Search>) => {
@@ -214,7 +214,7 @@ function Chip({
 
 function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search>) => void }) {
   const instrument = useSpark((s) => s.instrument);
-  const inst = instrumentById(instrument);
+  const inst = theoryNeckDef(instrumentById(instrument));
   const rootPc = pcOf(search.root);
   const flats = flatsForKey(search.root, "major");
   const quality = qualityById(search.q);
@@ -388,7 +388,7 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
 
 function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>) => void }) {
   const instrument = useSpark((s) => s.instrument);
-  const inst = instrumentById(instrument);
+  const inst = theoryNeckDef(instrumentById(instrument));
   const keyPc = pcOf(search.key);
   const flats = flatsForKey(search.key, search.mode);
   const [sevenths, setSevenths] = useState(false);

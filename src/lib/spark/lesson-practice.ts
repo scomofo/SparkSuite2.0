@@ -1,6 +1,6 @@
 import { learningLesson } from "./curriculum.ts";
 import { CHORDS } from "./guitar.ts";
-import { MANDOLIN_CHORDS, UKE_CHORDS, type InstrumentId } from "./instruments.ts";
+import { BANJO_CHORDS, MANDOLIN_CHORDS, UKE_CHORDS, type InstrumentId } from "./instruments.ts";
 import type { BassPos } from "./bass.ts";
 import type { ChordShape } from "./types.ts";
 
@@ -126,7 +126,11 @@ export function retryCoaching(exercise: LessonExercise) {
           ? "The notes or hand movement felt awkward"
           : instrument === "bass"
             ? "The notes or string changes felt awkward"
-            : "The notes or shapes felt awkward");
+            : instrument === "mandolin"
+              ? "The pick direction or the shapes felt awkward"
+              : instrument === "banjo"
+                ? "The roll or the shapes felt awkward"
+                : "The notes or shapes felt awkward");
   return [
     {
       id: "pulse" as const,
@@ -144,14 +148,17 @@ export function practiceShape(instrument: InstrumentId, chord: string): ChordSha
       ? UKE_CHORDS[chord]
       : instrument === "mandolin"
         ? MANDOLIN_CHORDS[chord]
-        : undefined;
+        : instrument === "banjo"
+          ? BANJO_CHORDS[chord]
+          : undefined;
   return shape ? { ...shape, id: chord, name: chord } : undefined;
 }
-type StrummedInstrument = "guitar" | "ukulele" | "mandolin";
+type StrummedInstrument = "guitar" | "ukulele" | "mandolin" | "banjo";
 const OPEN_MIDI: Record<StrummedInstrument, number[]> = {
   guitar: [40, 45, 50, 55, 59, 64],
   ukulele: [67, 60, 64, 69],
   mandolin: [55, 62, 69, 76],
+  banjo: [67, 50, 55, 59, 62],
 };
 function chordNotes(instrument: StrummedInstrument, chord: string) {
   const open = OPEN_MIDI[instrument];
@@ -240,6 +247,34 @@ function advancedProject(
     ],
     choices,
   };
+}
+
+/** MIDI for one banjo string under a chord shape; string 0 is the short fifth string. */
+function banjoString(chord: string, string: number) {
+  return OPEN_MIDI.banjo[string] + (BANJO_CHORDS[chord].frets[string] ?? 0);
+}
+/** A forward roll (T I M T I M T M on strings 3 2 1 5 2 1 3 1) over one bar of a chord. */
+function banjoRollBar(beat: number, chord: string) {
+  const order: [number, string][] = [
+    [2, "T"],
+    [3, "I"],
+    [4, "M"],
+    [0, "T"],
+    [3, "I"],
+    [4, "M"],
+    [2, "T"],
+    [4, "M"],
+  ];
+  return order.map(([string, finger], index) => ({
+    ...note(
+      beat + index / 2,
+      finger,
+      [banjoString(chord, string)],
+      chord + " · " + ["short g", "4th", "3rd", "2nd", "1st"][string] + " string, " + finger,
+      0.4,
+    ),
+    chord,
+  }));
 }
 
 export const LESSON_EXERCISES: LessonExercise[] = [
@@ -1866,6 +1901,244 @@ export const LESSON_EXERCISES: LessonExercise[] = [
         ...strum(16, "mandolin", "G"),
         label: "G ↓ · land",
         detail: "Return to G on the new beat 1 and let it ring",
+      },
+    ],
+  },
+  {
+    lessonId: "banjo-open-g",
+    title: "Four long strings, one short one",
+    bpm: 60,
+    beats: 12,
+    goal: "Pick D, G, B, D, then the short g, then brush all five open strings.",
+    setup:
+      "Thumb on the fourth string, index on the second, middle on the first. The short fifth string is always played open.",
+    hint: "Name one string at a time with the guide stopped. Find the short g string with the thumb.",
+    takeaway:
+      "The open strings already sound G major. The fifth string is the high g on top of the chord.",
+    cues: [
+      note(0, "D", [50], "4th string, open"),
+      note(1, "G", [55], "3rd string, open"),
+      note(2, "B", [59], "2nd string, open"),
+      note(3, "D", [62], "1st string, open"),
+      note(4, "g", [67], "Short 5th string, open"),
+      rest(5, "Rest; the short string rings"),
+      note(6, "G ↓", [67, 50, 55, 59, 62], "Brush all five open strings", 1.8),
+      { beat: 7, label: "Hold", detail: "Let the open G ring" },
+      note(8, "G ↓", [67, 50, 55, 59, 62], "Brush all five open strings", 3.8),
+      { beat: 9, label: "Hold", detail: "Let the open G ring" },
+      { beat: 10, label: "Hold", detail: "Let the open G ring" },
+      { beat: 11, label: "Hold", detail: "Let the open G ring to the end" },
+    ],
+  },
+  {
+    lessonId: "banjo-pulse-brush",
+    title: "Two brushes, four counts",
+    bpm: 60,
+    beats: 16,
+    goal: "Brush the muted strings on 1 and 3 for four bars; count through 2 and 4.",
+    setup:
+      "Rest your fretting hand lightly across the strings so they make a soft, unpitched sound.",
+    hint: "Tap the rhythm on your knee for one bar. Keep saying all four numbers, including the quiet ones.",
+    takeaway: "The spaces belong to the beat too. If you miss a brush, join the next count.",
+    cues: repeat(
+      [
+        { beat: 0, label: "↓", detail: "Brush muted strings down", muted: true },
+        rest(1),
+        { beat: 2, label: "↓", detail: "Brush muted strings down", muted: true },
+        rest(3),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "banjo-g-to-d7",
+    title: "G → D7, one change at a time",
+    bpm: 60,
+    beats: 16,
+    goal: "Alternate open G and D7 for four bars, brushing only on each beat 1.",
+    setup:
+      "G is all five strings open. D7 is 0–0–2–1–2 in g–D–G–B–D order. Use beats 3 and 4 to place the shape.",
+    hint: "Put the guide on hold and place D7 from open strings three times. Then try two bars at 40 BPM.",
+    takeaway:
+      "You gave each change a place in the bar. Keep the same small goal on your next attempt.",
+    shapes: ["G", "D7"],
+    cues: chordBars("banjo", ["G", "D7", "G", "D7"]),
+  },
+  {
+    lessonId: "banjo-forward-roll",
+    title: "Eight notes, three fingers",
+    bpm: 60,
+    beats: 16,
+    goal: "Try four bars of the forward roll over open G: thumb, index, middle in turn.",
+    setup: "Strings 3–2–1–5–2–1–3–1. Say 1-and-2-and-3-and-4-and; one note on each syllable.",
+    hint: "Play only 3–2–1 with T, I, M at 40 BPM until the three notes are even, then add the thumb on the short g.",
+    retryLabel: "The fingers lose their order",
+    takeaway:
+      "The roll is a pattern of fingers, not of notes. The same motion works under any shape.",
+    shapes: ["G"],
+    cues: repeat(banjoRollBar(0, "G"), 4),
+  },
+  {
+    lessonId: "banjo-three-chord-loop",
+    title: "G, C, D7, and home",
+    bpm: 50,
+    beats: 16,
+    goal: "Roll through G, C, D7, and G, one bar each, changing shape on beat 1.",
+    setup:
+      "C is 0–2–0–1–2 and D7 is 0–0–2–1–2. Keep the roll going; only the fretting hand changes.",
+    hint: "Roll one bar of C into one bar of D7 at 40 BPM. The B-string finger stays at fret 1 for both.",
+    retryLabel: "The roll stops while the shape changes",
+    takeaway:
+      "The right hand kept rolling while the left hand moved. That is how a tune keeps its pulse.",
+    shapes: ["G", "C", "D7"],
+    cues: ["G", "C", "D7", "G"].flatMap((chord, bar) => banjoRollBar(bar * 4, chord)),
+  },
+  {
+    lessonId: "banjo-hammer-and-slide",
+    title: "Notes that move after the pick",
+    bpm: 50,
+    beats: 16,
+    goal: "Hammer on and slide on the third string, then let the open G answer, for four bars.",
+    setup:
+      "Pick the open 3rd string, hammer a finger onto fret 2. Pick fret 2, slide it to fret 4. Then pick open again.",
+    hint: "Try only the hammer-on with the guide stopped: pick open G, then land the finger firmly at fret 2 without picking.",
+    retryLabel: "The hammered or slid note does not sound",
+    takeaway:
+      "One pick can carry two notes. Firm landing and steady pressure make the second note speak.",
+    cues: repeat(
+      [
+        note(0, "G", [55], "3rd string, open, picked"),
+        note(0.5, "H", [57], "Hammer on to fret 2; no pick", 0.4),
+        note(1, "A", [57], "3rd string, fret 2, picked"),
+        note(1.5, "S", [59], "Slide to fret 4; no pick", 0.4),
+        note(2, "G", [55], "3rd string, open, picked"),
+        rest(3, "Rest; keep counting"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "banjo-backup-and-break",
+    title: "Two jobs in one tune",
+    bpm: 50,
+    beats: 16,
+    goal: "Vamp two bars of G and D7, then roll two bars of the same chords.",
+    setup:
+      "Vamp: brush the chord on 1 and 3, chop it short on 2 and 4. Roll: the forward roll under the same shapes.",
+    hint: "Play only the two vamp bars at 40 BPM. Release finger pressure for the chop without lifting off.",
+    retryLabel: "The switch from vamp to roll loses beat 1",
+    takeaway:
+      "Backup and lead share one pulse. The chord shapes did not change; the right hand did.",
+    shapes: ["G", "D7"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the vamp",
+        instruction: "Brush G and D7 on 1 and 3 with a short chop on 2 and 4, one bar each.",
+        button: "I built the vamp",
+      },
+      {
+        title: "Choose your break",
+        instruction: "Choose how the last two bars move, then add them after the vamp.",
+        button: "Save my break choice",
+      },
+      {
+        title: "Refine the switch",
+        instruction:
+          "After the four-bar reference stops, play the vamp and then your chosen break yourself, twice through. Protect beat 1 of bar 3, where the right hand changes jobs, and keep the count steady.",
+        button: "I tried my refined switch",
+      },
+      [
+        {
+          label: "Roll through",
+          detail: "Forward roll under G, then D7, eight even notes per bar.",
+        },
+        {
+          label: "Pinch and ring",
+          detail: "Thumb and middle together on 1 and 3, let the chord ring between.",
+        },
+      ],
+    ),
+    cues: [
+      ...["G", "D7"].flatMap((chord, bar) => [
+        strum(bar * 4, "banjo", chord),
+        {
+          beat: bar * 4 + 1,
+          label: "Chop",
+          detail: "Release pressure and chop",
+          muted: true,
+          chord,
+        },
+        strum(bar * 4 + 2, "banjo", chord),
+        {
+          beat: bar * 4 + 3,
+          label: "Chop",
+          detail: "Release pressure and chop",
+          muted: true,
+          chord,
+        },
+      ]),
+      ...banjoRollBar(8, "G"),
+      ...banjoRollBar(12, "D7"),
+    ],
+  },
+  {
+    lessonId: "banjo-arrangement",
+    title: "Roll it, brush it, end it",
+    bpm: 50,
+    beats: 17,
+    goal: "Build a four-bar guide: roll G and C, brush D7 and G, and land on a final open-G brush.",
+    setup:
+      "Bars 1–2: forward roll on G, then C. Bars 3–4: brush D7 on 1 and 3, then G on 1. Land on a full open-G brush.",
+    hint: "Loop the final rolled C bar into the first brushed D7 bar at 40 BPM and say every count.",
+    retryLabel: "The texture switch loses beat 1",
+    takeaway:
+      "Changing only the right hand created contrast while the three-chord harmony stayed recognizable.",
+    shapes: ["G", "C", "D7"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the rolled half",
+        instruction: "Roll one bar of G and one bar of C with the same finger order.",
+        button: "I built the rolled half",
+      },
+      {
+        title: "Choose the ending",
+        instruction: "Choose one ending, then add the brushed D7 and G bars and the final brush.",
+        button: "Save my ending choice",
+      },
+      {
+        title: "Refine the landing",
+        instruction:
+          "After the four-bar reference and final brush stop, play the whole arrangement yourself twice. Protect the switch from rolling to brushing between bars 2 and 3, and give the final G its full count.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        {
+          label: "Tag ending",
+          detail: "Pinch the open G twice on the final beat 1 and 2, then stop.",
+        },
+        {
+          label: "Ring out",
+          detail: "One brush across all five strings on the final beat 1, and let it ring.",
+        },
+      ],
+    ),
+    cues: [
+      ...banjoRollBar(0, "G"),
+      ...banjoRollBar(4, "C"),
+      strum(8, "banjo", "D7"),
+      { beat: 9, label: "Count", detail: "Keep counting; no new brush" },
+      strum(10, "banjo", "D7"),
+      { beat: 11, label: "Prepare", detail: "Lift to open G while you count" },
+      strum(12, "banjo", "G"),
+      { beat: 13, label: "Count", detail: "Keep counting; no new brush" },
+      { beat: 14, label: "Count", detail: "Keep counting; no new brush" },
+      { beat: 15, label: "Prepare", detail: "Get ready for the landing" },
+      {
+        ...strum(16, "banjo", "G"),
+        label: "G ↓ · land",
+        detail: "Brush all five open strings on the new beat 1 and let them ring",
       },
     ],
   },

@@ -15,7 +15,7 @@ File: `src/lib/spark/instruments.ts`
 
 - Add the id to the `InstrumentId` union.
 - Add an `InstrumentDef` to `INSTRUMENTS`. Fields: `id`, `name`, `kicker` (tuning or a two-word tag), `promise` (one sentence about the first session), `family: "strings"`, `surface: "strings"`, `stringNames` (low to high in playing order), `openFreq` (Hz, same order), `openPc` (pitch class 0 to 11, same order), `firstChords`, `theoryNeck`.
-- `theoryNeck` options: `"guitar"` uses six-string CAGED voicings and is guitar only. `"four"` builds a voicing from `openPc` and works for any string count. `"piano"` shows a keyboard. `"none"` hides the neck. See each brief for the recommendation.
+- `theoryNeck` options: `"guitar"` uses six-string CAGED voicings and is guitar only. `"four"` builds a voicing from `openPc` and works for any string count. `"piano"` shows a keyboard. `"none"` hides the neck. Optional `theoryStrings` lists the string indexes the theory neck shows, for instruments with a short string (banjo uses `[1, 2, 3, 4]`). See each brief for the recommendation.
 
 Typecheck now fails at every `Record<InstrumentId, ...>`. That is the list of steps 2 and 3.
 

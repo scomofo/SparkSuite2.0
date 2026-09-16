@@ -266,7 +266,7 @@ describe("musical milestone attempts and saved versions", () => {
 describe("one original piece per instrument and its musical variations", () => {
   it("uses playable notes, real preparation lessons, complete bars, and bounded durations", () => {
     assert.equal(new Set(MUSICAL_MILESTONES.map((piece) => piece.instrument)).size, INSTRUMENTS.length);
-    assert.equal(INSTRUMENTS.length, 7);
+    assert.equal(INSTRUMENTS.length, 8);
     for (const piece of MUSICAL_MILESTONES) {
       assert.ok(piece.lessons.every((id) => learningLesson(id)?.instrument === piece.instrument));
       for (const variation of [false, true]) {

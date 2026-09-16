@@ -1339,6 +1339,219 @@ const mandolin = path("mandolin", [
   },
 ]);
 
+const banjo = path("banjo", [
+  {
+    slug: "open-g",
+    level: "foundations",
+    title: "Five strings that already agree",
+    outcome: "Name the five strings and hear that the open strings make G major.",
+    explanation:
+      "A five-string banjo in open G is tuned g–D–G–B–D. The fifth string is the short one: it starts at the fifth fret and is tuned to a high g, so the string nearest your face is not the lowest. With no fingers down, the open strings sound a G major chord.",
+    example:
+      "Pick D, G, B, D on the four long strings, then the short g with the thumb. Then brush all five.",
+    practice: [
+      "Rest the banjo against you and find the short fifth string with your thumb.",
+      "Pick each long string once, thickest to thinnest, naming D, G, B, D.",
+      "Brush all five open strings and listen for one chord.",
+    ],
+    question: "What is unusual about the fifth string on a five-string banjo?",
+    options: [
+      "It is short, starts at fret 5, and is tuned high",
+      "It is the lowest string",
+      "It must always be fretted",
+    ],
+    answer: 0,
+    feedback:
+      "The fifth string is shorter than the others and tuned to a high g. It is usually played open, never as the bass.",
+    demo: {
+      label: "Long strings, short g, then the open chord",
+      notes: [[50], [55], [59], [62], [67], [], [67, 50, 55, 59, 62], []],
+    },
+  },
+  {
+    slug: "pulse-brush",
+    level: "foundations",
+    title: "A pulse over an open chord",
+    outcome: "Keep counting while a brush or a rest happens.",
+    explanation:
+      "The beat is the regular pulse. In 4/4, four beats make one bar. A brush drags the fingers across all strings on one beat. Brushing on 1 and 3 leaves 2 and 4 silent; those beats still take their full time, so keep counting through them.",
+    example: "Count 1–2–3–4. Brush the open strings down on 1 and 3; let 2 and 4 pass.",
+    practice: [
+      "Tap your foot and count four evenly, twice.",
+      "Lightly mute the strings with your fretting hand; brush down on 1 and 3.",
+      "Keep counting through the silent beats for four bars.",
+    ],
+    question: "If you miss the brush on beat 3, what preserves the pulse?",
+    options: [
+      "Restart every time",
+      "Keep counting and join the next beat",
+      "Brush twice on beat 4",
+    ],
+    answer: 1,
+    feedback:
+      "The pulse continues through a missed sound. Rejoin it; restarting or rushing changes the timing.",
+  },
+  {
+    slug: "g-to-d7",
+    level: "beginner",
+    title: "The first change",
+    outcome: "Move between open G and D7 without rushing beat 1.",
+    explanation:
+      "Open G needs no fingers. D7 in g–D–G–B–D fret order is 0–0–2–1–2: the third string at fret 2, the second at fret 1, the first at fret 2. This beginner D7 leaves out the chord's third, which is why it sounds open. The short fifth string stays open. Place the shape during beats 3 and 4 so it is ready on beat 1.",
+    example: "One bar of open G, one bar of D7. Brush on beat 1 only; place the shape on 3 and 4.",
+    practice: [
+      "Place D7 and pick each string slowly to find a clear sound.",
+      "Lift to open G, then place D7 again, three times, without brushing.",
+      "Count four per shape and brush only beat 1 for four bars.",
+    ],
+    question: "Which strings are fretted for the beginner D7 shape?",
+    options: [
+      "The third, second, and first strings",
+      "The short fifth string only",
+      "All five strings",
+    ],
+    answer: 0,
+    feedback:
+      "D7 is 0–0–2–1–2: the third string at fret 2, second at fret 1, first at fret 2. The fifth and fourth strings stay open.",
+    demo: { label: "Open G then D7", notes: [[67, 50, 55, 59, 62], [], [67, 50, 57, 60, 64], []] },
+  },
+  {
+    slug: "forward-roll",
+    level: "beginner",
+    title: "Eight notes, three fingers",
+    outcome: "Play a forward roll as eight even eighth notes.",
+    explanation:
+      "A roll is a repeating right-hand pattern that keeps a steady stream of notes going. The forward roll uses thumb, index, and middle in order. Count 1-and-2-and-3-and-4-and; each syllable gets one note. The fingers follow a fixed string order, so the same motion works under any chord shape.",
+    example: "Strings 3–2–1–5–2–1–3–1 with T–I–M–T–I–M–T–M, one note per syllable, over open G.",
+    practice: [
+      "Say the eight syllables while tapping thumb, index, middle on your leg.",
+      "Play strings 3, 2, 1 with T, I, M slowly until the three notes are even.",
+      "Add the thumb on the short g and play the full roll for four bars.",
+    ],
+    question: "What stays the same when a roll is played under a new chord?",
+    options: [
+      "The finger and string order",
+      "The pitches of every note",
+      "The number of fingers that fret",
+    ],
+    answer: 0,
+    feedback:
+      "The roll is a right-hand pattern. The fretting hand changes the pitches, but the finger and string order repeats unchanged.",
+    demo: {
+      label: "Forward roll over open G",
+      notes: [[55], [59], [62], [67], [59], [62], [55], [62]],
+    },
+  },
+  {
+    slug: "three-chord-loop",
+    level: "intermediate",
+    title: "G, C, D7, and home",
+    outcome: "Keep a roll going through a I–IV–V7–I progression.",
+    explanation:
+      "In G major, G is I, C is IV, and D7 is V7. C in g–D–G–B–D order is 0–2–0–1–2. Notice that C and D7 both fret the second string at fret 1, so that finger can stay while the others move. Keeping the roll going while the shape changes is the main skill; the right hand must not pause for the left.",
+    example: "One bar each: G, C, D7, G. Forward roll throughout; change shapes on beat 1.",
+    practice: [
+      "Place C, then D7, three times without picking, keeping the fret-1 finger down.",
+      "Roll one bar of C into one bar of D7 at a slow tempo.",
+      "Play the four-bar loop twice, listening for the roll to stay even through each change.",
+    ],
+    question: "Which finger can stay in place between C and D7?",
+    options: [
+      "The second-string finger at fret 1",
+      "The fourth-string finger at fret 2",
+      "No finger can stay",
+    ],
+    answer: 0,
+    feedback:
+      "Both shapes fret the second string at fret 1. Keeping it down makes the change smaller and the roll steadier.",
+    demo: {
+      label: "G, C, D7, G",
+      notes: [
+        [67, 50, 55, 59, 62],
+        [],
+        [67, 52, 55, 60, 64],
+        [],
+        [67, 50, 57, 60, 64],
+        [],
+        [67, 50, 55, 59, 62],
+        [],
+      ],
+    },
+  },
+  {
+    slug: "hammer-and-slide",
+    level: "intermediate",
+    title: "Notes that move after the pick",
+    outcome: "Sound a second note with a hammer-on or a slide instead of a pick.",
+    explanation:
+      "A hammer-on lands a fretting finger firmly on a ringing string so a higher note sounds without a new pick. A slide keeps the finger pressed and moves it along the string to a new fret. Both connect notes smoothly and are part of the banjo's voice. Firm landing and steady pressure matter more than force.",
+    example:
+      "Pick the open third string, hammer onto fret 2. Pick fret 2, slide to fret 4. Pick open again.",
+    practice: [
+      "Pick the open third string, then land a finger at fret 2 without picking; listen for the new note.",
+      "Pick fret 2 and slide the same finger to fret 4, keeping pressure the whole way.",
+      "Play the example for four bars at a slow tempo, leaving beat 4 empty.",
+    ],
+    question: "What makes a hammer-on sound?",
+    options: [
+      "Landing the finger firmly on a ringing string",
+      "Picking the string twice quickly",
+      "Lifting the finger off the string",
+    ],
+    answer: 0,
+    feedback:
+      "The finger's landing sets the string vibrating at the new fret. No second pick is used; lifting off is a pull-off, a different technique.",
+    demo: { label: "Open, hammer, pick, slide, open", notes: [[55], [57], [57], [59], [55], []] },
+  },
+  {
+    slug: "backup-and-break",
+    level: "advanced",
+    title: "Two jobs in one tune",
+    outcome: "Play backup under a chord loop and switch to a rolled break.",
+    explanation:
+      "In a group the banjo either plays backup, a rhythmic vamp behind a singer or another instrument, or takes a break, a rolled melody pass. A vamp brushes the chord on 1 and 3 and chops it short on 2 and 4 by releasing finger pressure. The break rolls the same shapes. Practising both over one progression makes the switch dependable.",
+    example: "Two bars of vamp on G and D7, then two bars of forward roll on G and D7.",
+    practice: [
+      "Vamp G and D7 for two bars, releasing pressure for the chops.",
+      "Roll G and D7 for two bars with the forward roll.",
+      "Join them and keep the count steady across the switch on beat 1 of bar 3.",
+    ],
+    question: "What changes when the banjo moves from backup to a break?",
+    options: ["The right-hand pattern", "The chord progression", "The pulse"],
+    answer: 0,
+    feedback:
+      "The chords and the pulse carry through both roles. The right hand switches from vamp brushes and chops to a roll.",
+    demo: {
+      label: "Vamp, then roll, on G",
+      notes: [[67, 50, 55, 59, 62], [], [67, 50, 55, 59, 62], [], [55], [59], [62], [67]],
+    },
+  },
+  {
+    slug: "arrangement",
+    level: "advanced",
+    title: "Arrange a short tune",
+    outcome: "Plan, perform, and revise a four-bar arrangement with a clear ending.",
+    explanation:
+      "An arrangement decides how the right hand presents a progression over time. Rolling two bars and brushing the next two gives contrast without new chords. An ending that lands on the home chord, open G, tells the listener the piece is finished. Choose one criterion to revise after each attempt; a finished lesson is a practice milestone, not a performance grade.",
+    example:
+      "Bars 1–2: forward roll on G, then C. Bars 3–4: brush D7 on 1 and 3, then G on 1. Land on a full open-G brush.",
+    practice: [
+      "Play the rolled bars, then the brushed bars, at one steady tempo.",
+      "Add the final brush on the next beat 1 and let it ring for a full count.",
+      "Choose one thing to change, such as the ending or the texture switch, and repeat.",
+    ],
+    question: "Which review gives you a usable next step?",
+    options: [
+      "Decide the whole take was good or bad",
+      "Name one transition to place more clearly next time",
+      "Double the tempo immediately",
+    ],
+    answer: 1,
+    feedback:
+      "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+  },
+]);
+
 export const CURRICULUM: LearningLesson[] = [
   ...guitar,
   ...piano,
@@ -1347,6 +1560,7 @@ export const CURRICULUM: LearningLesson[] = [
   ...drums,
   ...vocals,
   ...mandolin,
+  ...banjo,
 ];
 export const learningPath = (instrument: InstrumentId) =>
   CURRICULUM.filter((lesson) => lesson.instrument === instrument);

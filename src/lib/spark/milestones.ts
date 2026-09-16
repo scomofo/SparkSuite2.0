@@ -109,7 +109,26 @@ const mandolin = ["G", "C", "D", "G"].flatMap((chord, bar) =>
       ],
 );
 
-/** Seven original, short arrangements. Variations change the music rather than a score. */
+/** One rolled bar copied from the three-chord-loop exercise (bars: G, C, D7, G). */
+const banjoRoll = (beat: number, bar: number) =>
+  lessonExercise("banjo-three-chord-loop")!
+    .cues.filter((cue) => Math.floor(cue.beat / 4) === bar)
+    .map((cue) => ({ ...cue, beat: beat + (cue.beat - bar * 4) }));
+const banjo = [
+  ...banjoRoll(0, 0),
+  ...banjoRoll(4, 1),
+  ...banjoRoll(8, 2),
+  {
+    ...n(12, "G ↓", [67, 50, 55, 59, 62], 3.8),
+    chord: "G",
+    detail: "Brush all five open strings and let them ring",
+  },
+  { beat: 13, label: "Hold", detail: "Let the open G ring" },
+  { beat: 14, label: "Hold", detail: "Let the open G ring" },
+  { beat: 15, label: "Hold", detail: "Let the open G ring" },
+];
+
+/** Eight original, short arrangements. Variations change the music rather than a score. */
 export const MUSICAL_MILESTONES: MusicalMilestone[] = [
   {
     instrument: "guitar",
@@ -245,6 +264,31 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
             detail: "Release pressure and chop",
             muted: true,
             chord: ["G", "C", "D"][Math.floor(cue.beat / 4)],
+          }
+        : cue,
+    ),
+  },
+  {
+    instrument: "banjo",
+    title: "Roll home to G",
+    goal: "Roll G → C → D7, one bar each, then brush a ringing open G.",
+    setup:
+      "Forward roll T–I–M–T–I–M–T–M on strings 3–2–1–5–2–1–3–1. g–D–G–B–D frets: G open, C 0–2–0–1–2, D7 0–0–2–1–2.",
+    variation: "Add a hammer-on",
+    variationHint:
+      "In bar 1, hammer the third string from open to fret 2 on the and of 1 instead of picking the second string; keep the rest of the roll the same.",
+    lessons: ["banjo-open-g", "banjo-pulse-brush", "banjo-g-to-d7"],
+    bpm: 50,
+    beats: 16,
+    shapes: ["G", "C", "D7"],
+    cues: banjo,
+    alternate: banjo.map((cue) =>
+      cue.beat === 0.5
+        ? {
+            ...cue,
+            label: "H",
+            notes: [57],
+            detail: "Hammer on to fret 2 on the 3rd string; no pick",
           }
         : cue,
     ),

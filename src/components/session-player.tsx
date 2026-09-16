@@ -4,6 +4,7 @@ import { ChevronLeft } from "lucide-react";
 import { CHORDS, fretToFreq, OPEN_FREQ } from "@/lib/spark/guitar";
 import { bassTone, comboSting, drumHit, hitSfx, pianoChord, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
 import {
+  BANJO_CHORDS,
   instrumentById,
   MANDOLIN_CHORDS,
   midiToFreq,
@@ -45,6 +46,12 @@ function mandolinShape(id: string): ChordShape | undefined {
   return { id, name: id, ...c };
 }
 
+function banjoShape(id: string): ChordShape | undefined {
+  const c = BANJO_CHORDS[id];
+  if (!c) return undefined;
+  return { id, name: id, ...c };
+}
+
 function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = instrumentById(instrument)) {
   if (instrument === "piano" || instrument === "vocals") {
     const midi = PIANO_VOICINGS[chordId];
@@ -52,8 +59,13 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
     else pianoTone(midiToFreq(60));
     return;
   }
-  if (instrument === "ukulele" || instrument === "mandolin") {
-    const c = instrument === "ukulele" ? UKE_CHORDS[chordId] : MANDOLIN_CHORDS[chordId];
+  if (instrument === "ukulele" || instrument === "mandolin" || instrument === "banjo") {
+    const c =
+      instrument === "ukulele"
+        ? UKE_CHORDS[chordId]
+        : instrument === "mandolin"
+          ? MANDOLIN_CHORDS[chordId]
+          : BANJO_CHORDS[chordId];
     if (!c) return;
     const freqs = c.frets
       .map((f, i) => (f == null ? null : inst.openFreq[i] * Math.pow(2, f / 12)))
@@ -452,6 +464,7 @@ export function SessionPlayer() {
 
   const uke = instrument === "ukulele" ? ukeShape(liveChord || item.chords[0] || "C") : undefined;
   const mandolin = instrument === "mandolin" ? mandolinShape(liveChord || item.chords[0] || "G") : undefined;
+  const banjo = instrument === "banjo" ? banjoShape(liveChord || item.chords[0] || "G") : undefined;
   const needsPick =
     (item.process === "create" && item.createOptions && item.createOptions.length >= 2 && !createPick) ||
     (item.process === "respond" && item.listenPrompt && !listenPick);
@@ -494,6 +507,8 @@ export function SessionPlayer() {
               <ChordDiagram shape={uke} />
             ) : item.chords[0] && instrument === "mandolin" ? (
               <ChordDiagram shape={mandolin} />
+            ) : item.chords[0] && instrument === "banjo" ? (
+              <ChordDiagram shape={banjo} />
             ) : item.chords[0] && instrument === "guitar" ? (
               <ChordDiagram chordId={item.chords[0]} />
             ) : (
@@ -575,6 +590,7 @@ export function SessionPlayer() {
                 {instrument === "guitar" ? <ChordDiagram chordId={liveChord || item.chords[0]} compact /> : null}
                 {instrument === "ukulele" ? <ChordDiagram shape={uke} compact /> : null}
                 {instrument === "mandolin" ? <ChordDiagram shape={mandolin} compact /> : null}
+                {instrument === "banjo" ? <ChordDiagram shape={banjo} compact /> : null}
                 <div className="flex flex-wrap justify-center gap-2 text-sm">
                   {item.chords.map((c) => (
                     <span

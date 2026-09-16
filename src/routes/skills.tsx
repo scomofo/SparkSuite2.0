@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { ChordDiagram } from "@/components/chord-diagram";
-import { instrumentById, isUnlockedFor, lessonsFor, MANDOLIN_CHORDS, tracksFor, UKE_CHORDS } from "@/lib/spark/instruments";
+import { BANJO_CHORDS, instrumentById, isUnlockedFor, lessonsFor, MANDOLIN_CHORDS, tracksFor, UKE_CHORDS } from "@/lib/spark/instruments";
 import { useSpark } from "@/store/spark";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ function SkillsPage() {
   const guitarIds = ["Em", "G", "C", "D", "Am"];
   const ukeIds = ["C", "G", "Am", "F"];
   const mandolinIds = ["G", "C", "D", "Am"];
+  const banjoIds = ["G", "C", "D7", "D"];
 
   return (
     <AppShell>
@@ -50,6 +51,19 @@ function SkillsPage() {
         <div className="flex gap-3 overflow-x-auto px-5 py-2">
           {mandolinIds.map((c) => {
             const shape = MANDOLIN_CHORDS[c];
+            if (!shape) return null;
+            return (
+              <div key={c} className="shrink-0 rounded-lg border border-border bg-surface px-2 pt-2">
+                <ChordDiagram shape={{ id: c, name: c, ...shape }} compact />
+              </div>
+            );
+          })}
+        </div>
+      ) : null}
+      {instrument === "banjo" ? (
+        <div className="flex gap-3 overflow-x-auto px-5 py-2">
+          {banjoIds.map((c) => {
+            const shape = BANJO_CHORDS[c];
             if (!shape) return null;
             return (
               <div key={c} className="shrink-0 rounded-lg border border-border bg-surface px-2 pt-2">
