@@ -10,8 +10,9 @@ import {
   usePlayhead,
   type LineHit,
 } from "@/components/labs/shared";
-import { ghostNote, pluck, strum, unlockAudio } from "@/lib/spark/audio";
-import { BANJO_CHORDS, instrumentById } from "@/lib/spark/instruments";
+import { ghostNote, pianoHold, pluck, strum, unlockAudio } from "@/lib/spark/audio";
+import { BANJO_CHORDS, banjoChordFrequencies, instrumentById } from "@/lib/spark/instruments";
+import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
 
 export type BanjoTab = "roll" | "pinch" | "hammer" | "slide" | "vamp";
 const CHORDS = ["G", "C", "D7", "D"] as const;
@@ -29,7 +30,7 @@ const COPY: Record<BanjoTab, { kicker: string; title: string; body: string; hear
   roll: {
     kicker: "T I M",
     title: "Eight notes, three fingers",
-    body: "Thumb, index, middle on strings 3–2–1–5–2–1–3–1. The order never changes; the chord shape underneath does. Even notes first, speed later.",
+    body: "Thumb, index, middle on strings 3–2–1–5–2–1–3–1. The order never changes; the chord shape underneath does. For D/D7, the diagram’s x applies to brushes; rolls still pick the open fifth string. Even notes first, speed later.",
     hear: "3 2 1 5 2 1 3 1, one note per syllable.",
   },
   pinch: {
@@ -53,7 +54,7 @@ const COPY: Record<BanjoTab, { kicker: string; title: string; body: string; hear
   vamp: {
     kicker: "Backup",
     title: "Brush, chop, brush, chop",
-    body: "Brush the chord on 1 and 3. On 2 and 4, release finger pressure and brush again so it clicks. That chop is the snare behind the singer.",
+    body: "Brush the chord on 1 and 3, skipping the short fifth string for D/D7. On 2 and 4, touch all five strings lightly with your fretting hand, then strike a click. Restore the chord for the next brush. This is an unpitched backbeat; releasing open G cannot mute it.",
     hear: "Chord, chop, chord, chop.",
   },
 };
@@ -74,7 +75,7 @@ function stringFreq(chord: string, string: number) {
   return OPEN[string] * Math.pow(2, fret / 12);
 }
 function chordFreqs(chord: string) {
-  return [0, 1, 2, 3, 4].map((string) => stringFreq(chord, string));
+  return banjoChordFrequencies(chord);
 }
 function shape(id: string) {
   const c = BANJO_CHORDS[id];
@@ -103,7 +104,7 @@ export function BanjoLab() {
     let hits: LineHit[] = [];
     if (tab === "roll") {
       hits = ROLL_STRINGS.map((string, i) => ({
-        beat: i,
+        beat: instrumentLabPattern("banjo-forward-roll").cues[i].beat,
         mark: string,
         sound: (w) => pluck(stringFreq(chord, string), w, 0.4),
       }));
@@ -128,16 +129,19 @@ export function BanjoLab() {
       const f = chordFreqs(chord);
       hits = Array.from({ length: 8 }, (_, i) => ({
         beat: i,
-        sound: (w) => (i % 2 === 0 ? strum(f, w) : ghostNote(w)),
+        sound: (w) => {
+          if (i % 2) ghostNote(w);
+          else f.forEach((freq) => pianoHold(freq, (60 / 84) * 0.85, w, 0.2 / Math.sqrt(f.length)));
+        },
       }));
     }
-    head.play(hits, 84, true);
+    head.play(hits, 84, true, tab === "roll" ? 4 : 8);
   };
 
   const cells = Array.from({ length: 8 }, (_, beat) => {
     if (tab === "roll")
       return {
-        beat,
+        beat: beat / 2,
         top: ROLL_FINGERS[beat] ?? "T",
         bot: String(["5", "4", "3", "2", "1"][ROLL_STRINGS[beat] ?? 2]),
       };
@@ -185,6 +189,9 @@ export function BanjoLab() {
           />
         </LabCopy>
         <BeatStrip cells={cells} cursorBeat={head.cursorBeat} />
+        <p className="mt-4 text-xs leading-relaxed text-muted">
+          Synthesized pitch and rhythm references. Practise the written hand movements on your instrument; these sounds do not demonstrate physical articulation.
+        </p>
         {showsChord ? (
           <section className="mt-6 flex flex-col items-center">
             <p className="mb-2 self-start text-[11px] uppercase tracking-[0.18em] text-dim">

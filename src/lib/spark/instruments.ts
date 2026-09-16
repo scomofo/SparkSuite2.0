@@ -1050,7 +1050,7 @@ const BANJO_LESSONS: Lesson[] = [
     trackId: "track_banjo_shapes",
     order: 3,
     type: "chord",
-    objectives: ["G string fret 2, B string fret 1, D string fret 2", "Leave the short g open"],
+    objectives: ["Third string fret 2, second string fret 1; first and fourth open", "Skip the short fifth string when brushing D7"],
     chords: ["D7"],
     pattern: "D",
     bars: 8,
@@ -1121,7 +1121,7 @@ const BANJO_LESSONS: Lesson[] = [
     trackId: "track_banjo_rolls",
     order: 7,
     type: "rhythm",
-    objectives: ["Thumb, index, middle in order", "Eight even notes per bar"],
+    objectives: ["Strings 3–2–1–5–2–1–3–1 with T–I–M–T–I–M–T–M", "Eight even notes per bar"],
     chords: ["G", "D7"],
     pattern: "DDDDDDDD",
     bars: 8,
@@ -1210,7 +1210,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     trackId: "track_violin_songs",
     order: 4,
     type: "song",
-    objectives: ["D E F♯ E, one bow each", "Rest on beat 4"],
+    objectives: ["D E F♯ on the D string: open, first finger, second finger", "Rest on beat 4; keep alternating bows across bars"],
     chords: [],
     pattern: "DUD-",
     bars: 16,
@@ -1418,19 +1418,25 @@ export const MANDOLIN_CHORDS: Record<string, { frets: (number | null)[]; fingers
 
 /**
  * Frets in g–D–G–B–D order for a five-string banjo in open G. The short fifth
- * string (first entry) starts at fret 5 and is never fretted here. It is shown
- * open where it belongs to the chord and muted (null) for D and D7, where the
- * high g rubs against the third when the chord is brushed. Rolls still play it
- * open: the roll helper treats a muted fifth string as open.
+ * string (first entry) starts at fret 5. D and D7 brushes skip it (null);
+ * rolls still pick the open high-G drone. D7 omits F♯ and leaves string 1 open.
  */
 export const BANJO_CHORDS: Record<string, { frets: (number | null)[]; fingers: (number | null)[]; notes: string[] }> = {
   G: { frets: [0, 0, 0, 0, 0], fingers: [0, 0, 0, 0, 0], notes: ["g", "D", "G", "B", "D"] },
   C: { frets: [0, 2, 0, 1, 2], fingers: [0, 2, 0, 1, 3], notes: ["g", "E", "G", "C", "E"] },
-  D7: { frets: [null, 0, 2, 1, 2], fingers: [null, 0, 2, 1, 3], notes: ["D", "A", "C", "E"] },
+  D7: { frets: [null, 0, 2, 1, 0], fingers: [null, 0, 2, 1, 0], notes: ["D", "A", "C", "D"] },
   D: { frets: [null, 0, 2, 3, 4], fingers: [null, 0, 1, 2, 3], notes: ["D", "A", "D", "F♯"] },
   Em: { frets: [0, 2, 0, 0, 2], fingers: [0, 1, 0, 0, 2], notes: ["g", "E", "G", "B", "E"] },
   Am: { frets: [0, 2, 2, 1, 2], fingers: [0, 2, 3, 1, 4], notes: ["g", "E", "A", "C", "E"] },
 };
+
+/** Brushed chords omit muted strings; roll helpers separately restore the drone. */
+export function banjoChordFrequencies(chord: string): number[] {
+  const open = instrumentById("banjo").openFreq;
+  return BANJO_CHORDS[chord]?.frets.flatMap((fret, index) =>
+    fret === null ? [] : [open[index] * Math.pow(2, fret / 12)],
+  ) ?? [];
+}
 
 export const PIANO_VOICINGS: Record<string, number[]> = {
   C: [60, 64, 67],

@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { CURRICULUM, learningLesson, learningPath } from "./curriculum.ts";
 import { INSTRUMENTS } from "./instruments.ts";
+import { BANJO_CHORDS, banjoChordFrequencies, lessonsFor, type InstrumentId } from "./instruments.ts";
+import { buildTimeline, isPluckDrill } from "./practice.ts";
+import { dailyInstrumentCues, instrumentLabPattern } from "./instrument-patterns.ts";
+import { musicalMilestone } from "./milestones.ts";
+import type { PlanItem } from "./types.ts";
 import {
   beginLearning,
   advanceLearning,
@@ -559,5 +564,95 @@ describe("recoverable guided practice", () => {
     assert.equal(data.records[id].completedOn, finished.completedOn);
     assert.equal(data.records[id].reviewOn, finished.reviewOn);
     assert.equal(data.records[id].reviews, 0);
+  });
+});
+
+describe("instrument musical accuracy regressions", () => {
+  function item(instrument: InstrumentId, id: string): PlanItem {
+    const lesson = lessonsFor(instrument).find((l) => l.id === id)!;
+    return { ...lesson, lessonId: id, subtitle: "", durationSec: 1, surface: "strings" };
+  }
+
+  it("teaches a two-finger D7 with the first string open in shapes, demos and rolls", () => {
+    assert.deepEqual(BANJO_CHORDS.D7.frets, [null, 0, 2, 1, 0]);
+    assert.deepEqual(BANJO_CHORDS.D7.fingers, [null, 0, 2, 1, 0]);
+    assert.deepEqual(BANJO_CHORDS.D.frets, [null, 0, 2, 3, 4]);
+    for (const [chord, midi] of [["D7", [50, 57, 60, 62]], ["D", [50, 57, 62, 66]]] as const) {
+      const frequencies = banjoChordFrequencies(chord);
+      assert.equal(frequencies.length, 4);
+      frequencies.forEach((hz, index) => assert.ok(Math.abs(hz - 440 * 2 ** ((midi[index] - 69) / 12)) < 0.1));
+    }
+    const d7 = learningLesson("banjo-g-to-d7")!;
+    assert.equal(d7.options[d7.answer], "The third and second strings");
+    assert.deepEqual(d7.demo!.notes[2], [50, 57, 60, 62]);
+    for (const cue of lessonExercise("banjo-g-to-d7")!.cues.filter((c) => c.chord === "D7"))
+      assert.deepEqual(cue.notes, [50, 57, 60, 62]);
+    const roll = lessonExercise("banjo-three-chord-loop")!.cues.filter((c) => c.chord === "D7");
+    assert.deepEqual(roll.map((c) => c.notes![0]), [57, 60, 62, 67, 60, 62, 57, 62]);
+    const piece = musicalMilestone("banjo");
+    assert.deepEqual(piece.cues.filter((c) => c.chord === "D7").map((c) => c.notes![0]), roll.map((c) => c.notes![0]));
+  });
+
+  it("puts eight roll attacks inside each four-beat bar in Today and the lab", () => {
+    const timeline = buildTimeline(item("banjo", "lesson_banjo_roll_01"));
+    const first = timeline.filter((n) => n.bar === 0);
+    assert.deepEqual(first.map((n) => n.beat), [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5]);
+    assert.deepEqual(first.map((n) => n.notes), [[55], [59], [62], [67], [59], [62], [55], [62]]);
+    assert.ok(timeline.every((n) => n.notes?.length === 1 && n.string === undefined));
+    assert.deepEqual(timeline.filter((n) => n.bar === 4).map((n) => n.notes![0]), [57, 60, 62, 67, 60, 62, 57, 62]);
+    const lab = instrumentLabPattern("banjo-forward-roll");
+    assert.equal(lab.beats, 4);
+    assert.deepEqual(lab.cues.map((c) => c.beat), first.map((n) => n.beat));
+  });
+
+  it("sounds mandolin chords on 1/3 and only muted clicks on 2/4, including C bars", () => {
+    const timeline = buildTimeline(item("mandolin", "lesson_mandolin_chop_01"));
+    for (const note of timeline) {
+      assert.equal(!!note.muted, note.beat === 1 || note.beat === 3);
+      if (note.muted) assert.equal(note.notes, undefined);
+    }
+    assert.equal(timeline.length, 32);
+    assert.deepEqual(timeline.find((n) => n.bar === 4 && n.beat === 0)!.notes, [55, 64, 72, 76]);
+    const alt = instrumentLabPattern("mandolin-down-up");
+    assert.equal(alt.beats, 4);
+    assert.deepEqual(alt.cues.map((c) => c.notes?.[0] ?? null), [62, 64, 66, 67, 66, 64, 62, null]);
+    assert.deepEqual(alt.cues.map((c) => c.beat), [0, 0.5, 1, 1.5, 2, 2.5, 3, 3.5]);
+  });
+
+  it("uses fingered violin pitches, complete rests and continuous bow alternation in Today", () => {
+    const first = item("violin", "lesson_violin_first_finger_01");
+    assert.equal(isPluckDrill(first), false);
+    const notes = buildTimeline(first).filter((n) => n.bar < 2);
+    assert.deepEqual(notes.map((n) => n.notes![0]), [62, 64, 62, 69, 71, 69]);
+    assert.deepEqual(notes.map((n) => n.kind), ["down", "up", "down", "up", "down", "up"]);
+    assert.ok(notes.every((n) => n.beat < 3 && n.string === undefined));
+    const walk = buildTimeline(item("violin", "lesson_violin_walk_01"));
+    assert.deepEqual(walk.filter((n) => n.bar === 0).map((n) => n.notes![0]), [62, 64, 66]);
+    assert.equal(walk.filter((n) => n.bar === 1)[0].kind, "up");
+  });
+
+  it("places two pitches in each violin slur group without changing bow on the second note", () => {
+    const notes = buildTimeline(item("violin", "lesson_violin_slur_01")).filter((n) => n.bar === 0);
+    assert.deepEqual(notes.map((n) => n.notes![0]), [62, 64, 66, 67, 67, 66, 64, 62]);
+    assert.deepEqual(notes.map((n) => n.kind), ["down", "down", "up", "up", "down", "down", "up", "up"]);
+    const lab = instrumentLabPattern("violin-slurs");
+    assert.equal(lab.beats, 8);
+    for (let beat = 0; beat < lab.beats; beat++) {
+      const pair = lab.cues.filter((c) => c.beat >= beat && c.beat < beat + 1);
+      assert.equal(pair.length, 2);
+      assert.equal(pair[1].beat - pair[0].beat, 0.5);
+    }
+  });
+
+  it("alternates whole bows and milestone bows without an untaught retake", () => {
+    const open = lessonExercise("violin-open-strings-and-bow")!.cues.filter((c) => c.notes);
+    assert.deepEqual(open.map((c) => c.label), ["G ⊓", "D ∨", "A ⊓", "E ∨"]);
+    assert.ok(open.every((c) => c.duration === 3.8));
+    const piece = musicalMilestone("violin");
+    const notes = piece.cues.filter((c) => c.notes);
+    assert.ok(notes.every((c, i) => c.label.includes(i % 2 ? "∨" : "⊓")));
+    assert.equal(piece.alternate.find((c) => c.beat === 12)!.label, "D ⊓");
+    const daily = dailyInstrumentCues(item("violin", "lesson_violin_open_01"))!;
+    assert.deepEqual(daily.filter((c) => c.notes).slice(0, 4).map((c) => c.label), open.map((c) => c.label));
   });
 });

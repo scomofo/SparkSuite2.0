@@ -56,11 +56,11 @@ Demos: lesson 1 `[[55], [62], [69], [76]]`; lesson 3 `[[62], [64], [69], [71]]`;
 
 ## Exercise sketches
 
-- **open-strings-and-bow** (16 beats, 50 BPM): one open string per bar, `note(bar * 4, "G ⊓", [55], "Whole down-bow", 3.8)`, rests filling beats 1 to 3 of each bar. Long `duration` values make the reference sustain.
+- **open-strings-and-bow** (16 beats, 50 BPM): one open string per bar, alternating down/up bows, with duration 3.8 and Hold cues on beats 1 to 3 of each bar. Long `duration` values make the reference sustain.
 - **bow-pulse** (16 beats): `note(0, "⊓", [62])`, `rest(1)`, `note(2, "∨", [62])`, `rest(3)`, repeated on the D string.
 - **first-finger** (16 beats): D E D rest, A B A rest, alternated.
 - **d-tetrachord** (16 beats): D E F♯ G ascending in bar 1, descending in bar 2, repeat.
-- **slurs** (16 beats, subdivision 2): each beat carries two notes, label "⊓ slur" on the number and the second note on the and without a bow change in the detail text.
+- **slurs** (16 beats, subdivision 2): each beat carries two notes, alternating "⊓ slur" and "∨ slur" on the numbers and the second note on the and without a bow change in the detail text.
 - **string-crossing** (16 beats): D on 0, A on 1, D on 2, A on 3, repeated, with `detail` noting the dynamic level per bar (soft, medium, louder, full).
 - **phrase-shaping** (project, buildBeats 8, beats 16): Build bars 1 and 2 of a D-major phrase, Choose swell or taper, Refine one bow change.
 - **performance-plan** (project, buildBeats 8, beats 17 with a landing on 16). Mirror `vocals-performance-plan` in structure.
@@ -87,3 +87,7 @@ Open, Bow, Finger, Slur, Cross. Copy `uke-lab.tsx` structure; sounds use `pianoH
 - `session-player.tsx` chooses the "Strum" label for any string instrument that is not bass. Add a "Bow" label.
 - `tuner.tsx` header shows `stringNames` joined; fine.
 - Vocals is the closest existing path in tone: sustained pitches, breath and bow both have "no extra effort" guidance. Reuse its honest-progress phrasing about not assessing intonation.
+
+## Accuracy repairs (September 2026)
+
+Whole open-string bows alternate G down, D up, A down, E up. The first-finger exercise alternates across rests rather than restarting every bar down-bow. The base milestone alternates across bars and ends up-bow; its slurred variation ends down-bow. The Slur lab plays two half-beat notes per displayed bow group. Today uses the named fingered notes and bow cues, not open-string drills. Synthesized references model pitch and rhythm, not physical bow articulation. Player review is still outstanding.

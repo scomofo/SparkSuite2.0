@@ -65,11 +65,11 @@ export function Chip({
 
 export function BeatStrip({ cells, cursorBeat }: { cells: BeatCell[]; cursorBeat: number | null }) {
   return (
-    <section className="mt-5" aria-label="Eight-beat line">
+    <section className="mt-5" aria-label="Practice line">
       <p className="mb-2 text-[11px] uppercase tracking-[0.18em] text-dim">Line</p>
       <ol className="grid grid-cols-8 gap-1">
         {cells.slice(0, 8).map((c, i) => {
-          const on = cursorBeat != null && Math.floor(cursorBeat) === c.beat;
+          const on = cursorBeat != null && cursorBeat >= c.beat && cursorBeat < (cells[i + 1]?.beat ?? Infinity);
           return (
             <li
               key={`${c.beat}-${i}`}
@@ -78,6 +78,7 @@ export function BeatStrip({ cells, cursorBeat }: { cells: BeatCell[]; cursorBeat
                 on ? "border-accent bg-accent text-accent-fg" : "border-border bg-raised text-muted",
               )}
             >
+              <span className="mb-1 text-xs tabular">{Number.isInteger(c.beat) ? (c.beat % 4) + 1 : "&"}</span>
               <span className="font-display text-sm font-semibold leading-none">{c.top}</span>
               <span className="mt-1 text-[11px] tabular leading-none">{c.bot}</span>
             </li>
@@ -122,7 +123,7 @@ export function usePlayhead() {
     setMark(null);
   };
 
-  const play = async (hits: LineHit[], bpm: number, extraKick: boolean) => {
+  const play = async (hits: LineHit[], bpm: number, extraKick: boolean, totalBeats?: number) => {
     clear();
     const ac = unlockAudio();
     if (!ac) return;
@@ -134,12 +135,13 @@ export function usePlayhead() {
     const beat = 60 / bpm;
     const origin = ac.currentTime;
     const last = hits[hits.length - 1]?.beat ?? 8;
+    const end = totalBeats ?? Math.floor(last) + 1;
     run.current = scheduleRun(() => {
       hits.forEach((ev) => ev.sound(origin + ev.beat * beat));
       // The metronome is the clock, not an echo of the hits: every integer beat
       // clicks, even beats where the line rests.
       if (lockKick) {
-        for (let b = 0; b <= Math.floor(last); b++) {
+        for (let b = 0; b < end; b++) {
           const when = origin + b * beat;
           click(b % 4 === 0, when);
           if (extraKick && b % 2 === 0) kick(when);
@@ -150,7 +152,7 @@ export function usePlayhead() {
       const delay = Math.max(0, (origin + beatIndex * beat - ac.currentTime) * 1000);
       timers.current.push(window.setTimeout(fn, delay));
     };
-    for (let b = 0; b <= Math.floor(last); b++) at(b, () => setBeatN((b % 4) + 1));
+    for (let b = 0; b < end; b++) at(b, () => setBeatN((b % 4) + 1));
     hits.forEach((ev) => {
       at(ev.beat, () => {
         setCursorBeat(ev.beat);
@@ -165,7 +167,7 @@ export function usePlayhead() {
           setMark(null);
           run.current = null;
         },
-        (last + 1) * beat * 1000 + 200,
+        end * beat * 1000 + 200,
       ),
     );
   };

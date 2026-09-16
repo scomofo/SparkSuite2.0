@@ -129,16 +129,16 @@ const banjo = [
 ];
 
 const violinBar = (beat: number) => [
-  n(beat, "D ⊓", [62]),
-  n(beat + 1, "E ∨", [64]),
-  n(beat + 2, "F♯ ⊓", [66]),
+  n(beat, beat === 4 ? "D ∨" : "D ⊓", [62]),
+  n(beat + 1, beat === 4 ? "E ⊓" : "E ∨", [64]),
+  n(beat + 2, beat === 4 ? "F♯ ∨" : "F♯ ⊓", [66]),
   quiet(beat + 3, "Rest"),
 ];
 const violin = [
   ...violinBar(0),
   ...violinBar(4),
   ...violinBar(8),
-  { ...n(12, "D ⊓", [62], 3.8), detail: "Final D on one slow whole bow" },
+  { ...n(12, "D ∨", [62], 3.8), detail: "Final D on one slow up-bow, continuing the alternation" },
   { beat: 13, label: "Hold", detail: "Keep the bow moving" },
   { beat: 14, label: "Hold", detail: "Keep the bow moving" },
   { beat: 15, label: "Release", detail: "Let the bow slow and lift" },
@@ -277,7 +277,7 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
         ? {
             beat: cue.beat,
             label: "Chop",
-            detail: "Release pressure and chop",
+            detail: "Touch all strings lightly; strike a muted click",
             muted: true,
             chord: ["G", "C", "D"][Math.floor(cue.beat / 4)],
           }
@@ -289,7 +289,7 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
     title: "Roll home to G",
     goal: "Roll G → C → D7, one bar each, then brush a ringing open G.",
     setup:
-      "Forward roll T–I–M–T–I–M–T–M on strings 3–2–1–5–2–1–3–1. g–D–G–B–D frets: G open, C 0–2–0–1–2, D7 0–0–2–1–2.",
+      "Forward roll T–I–M–T–I–M–T–M on strings 3–2–1–5–2–1–3–1. g–D–G–B–D frets: G open, C 0–2–0–1–2, rolled D7 0–0–2–1–0. Pick the fifth-string drone in rolls; the diagram’s x applies to brushes.",
     variation: "Add a hammer-on",
     variationHint:
       "In bar 1, hammer the third string from open to fret 2 on the and of 1 instead of picking the second string; keep the rest of the roll the same.",
@@ -311,13 +311,13 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
   },
   {
     instrument: "violin",
-    title: "Open strings and a first finger",
+    title: "Open D and two fingers",
     goal: "Play D, E, F♯, rest for three bars, then hold a final D on one slow bow.",
     setup:
       "Open D, first finger E, second finger F♯. Alternate the bow and let the rest on beat 4 keep its full count.",
     variation: "Slur the pairs",
     variationHint:
-      "In the first three bars, play D–E in one down-bow, then F♯ alone on an up-bow; keep the final bar as one held D.",
+      "In the first three bars, play D–E in one down-bow, then F♯ alone on an up-bow. End with one held D down-bow.",
     lessons: ["violin-open-strings-and-bow", "violin-bow-pulse", "violin-first-finger"],
     bpm: 50,
     beats: 16,
@@ -329,7 +329,9 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
           ? { ...cue, label: "E", detail: "Same bow; change the finger" }
           : cue.beat < 12 && cue.beat % 4 === 2
             ? { ...cue, label: "F♯ ∨", detail: "Up-bow alone" }
-            : cue,
+            : cue.beat === 12
+              ? { ...cue, label: "D ⊓", detail: "Final D on one slow down-bow after the last up-bow" }
+              : cue,
     ),
   },
 ];

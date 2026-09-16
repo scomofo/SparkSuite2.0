@@ -2,9 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { CHORDS, fretToFreq, OPEN_FREQ } from "@/lib/spark/guitar";
-import { bassTone, comboSting, drumHit, hitSfx, pianoChord, pianoHold, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
+import { bassTone, comboSting, drumHit, ghostNote, hitSfx, pianoChord, pianoHold, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
 import {
   BANJO_CHORDS,
+  banjoChordFrequencies,
   instrumentById,
   MANDOLIN_CHORDS,
   midiToFreq,
@@ -28,11 +29,17 @@ import { RhythmHighway } from "@/components/rhythm-highway";
 import { PitchMatch } from "@/components/tuner-panel";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
+import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
 import type { ChordShape, HitJudge, ItemResult } from "@/lib/spark/types";
 
 type Phase = "intro" | "countin" | "play" | "itemdone";
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
+
+function playMusicalEvent(note: NoteEvent, bpm: number) {
+  if (note.muted) ghostNote();
+  note.notes?.forEach((midi) => pianoHold(midiToFreq(midi), (note.duration ?? 0.4) * 60 / bpm, undefined, 0.2 / Math.sqrt(note.notes!.length)));
+}
 
 function ukeShape(id: string): ChordShape | undefined {
   const c = UKE_CHORDS[id];
@@ -73,7 +80,7 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
           ? MANDOLIN_CHORDS[chordId]
           : BANJO_CHORDS[chordId];
     if (!c) return;
-    const freqs = c.frets
+    const freqs = instrument === "banjo" ? banjoChordFrequencies(chordId) : c.frets
       .map((f, i) => (f == null ? null : inst.openFreq[i] * Math.pow(2, f / 12)))
       .filter((f): f is number => f != null);
     strum(freqs);
@@ -241,6 +248,10 @@ export function SessionPlayer() {
   const attempt = useCallback(
     (kind: "strum" | "pluck", stringIndex?: number) => {
       if (phase !== "play" || !item) return;
+      if (hasInstrumentPattern(item)) {
+        kind = "strum";
+        stringIndex = undefined;
+      }
       const t = (performance.now() - startRef.current) / 1000;
       const pending = notesRef.current.filter((_, i) => !consumed.current.has(i));
       const res = consumeHit(pending, t, item.windowMs ?? 230);
@@ -266,7 +277,10 @@ export function SessionPlayer() {
       const realIndex = notesRef.current.indexOf(res.note);
       consumed.current.add(realIndex);
       if (kind !== "pluck") {
-        if (res.note.chord) {
+        if (res.note.notes || res.note.muted) {
+          playMusicalEvent(res.note, item.bpm);
+          if (res.note.chord) setLiveChord(res.note.chord);
+        } else if (res.note.chord) {
           playInstrumentChord(instrument, res.note.chord, inst);
           setLiveChord(res.note.chord);
         } else if (instrument === "drums") {
@@ -309,7 +323,8 @@ export function SessionPlayer() {
         }
       }
       const last = notesRef.current[notesRef.current.length - 1];
-      if (last && elapsed > last.t + 0.8) {
+      const end = hasInstrumentPattern(item) ? item.bars * 4 * 60 / item.bpm : (last?.t ?? 0) + 0.8;
+      if (last && elapsed > end) {
         setItemSummary(summarizeItem(item, hitsRef.current, missesRef.current));
         setPhase("itemdone");
         return;
@@ -384,6 +399,11 @@ export function SessionPlayer() {
 
   const playModelEvent = useCallback(
     (note: NoteEvent) => {
+      if (note.notes || note.muted) {
+        playMusicalEvent(note, item?.bpm ?? 60);
+        if (note.chord) setLiveChord(note.chord);
+        return;
+      }
       if (note.kind === "pluck" && note.string !== undefined) {
         if (instrument === "drums") drumHit(note.string);
         else if (instrument === "piano" || instrument === "vocals") pianoTone(midiToFreq(note.string));
@@ -395,7 +415,7 @@ export function SessionPlayer() {
       if (note.chord) playInstrumentChord(instrument, note.chord, inst);
       else click(note.beat === 0);
     },
-    [inst, instrument],
+    [inst, instrument, item?.bpm],
   );
 
   const hearOnce = useCallback(() => {
@@ -450,6 +470,7 @@ export function SessionPlayer() {
   if (!session || !item) return null;
 
   const isWarm = isPluckDrill(item);
+  const musicalPattern = hasInstrumentPattern(item);
   const surface = item.surface ?? inst.surface;
   const useHighway = surface === "strings" && !isWarm;
   // Pluck timelines expect a specific string/pad/key. A generic strum would
@@ -466,7 +487,7 @@ export function SessionPlayer() {
             ? "Pluck"
             : instrument === "violin"
               ? "Bow"
-              : "Strum";
+              : musicalPattern ? "Tap the cue" : "Strum";
   const chordPcs = liveChord && PIANO_VOICINGS[liveChord] ? PIANO_VOICINGS[liveChord].map((m) => m % 12) : [];
   const lastItem = session.index + 1 >= session.plan.items.length;
 
@@ -526,7 +547,11 @@ export function SessionPlayer() {
             {pieceLine ? <p className="text-center text-sm text-muted">{pieceLine}</p> : null}
             <CriteriaList items={item.criteria?.length ? item.criteria : item.objectives?.length ? item.objectives : [item.subtitle]} />
             {!item.criteria?.length ? <p className="text-center text-sm text-dim">{successLine(item)}</p> : null}
-            <RhythmRead pattern={item.pattern} />
+            {musicalPattern ? (
+              <p className="text-center text-sm text-muted">
+                First bar: {buildTimeline(item).filter((note) => note.bar === 0).map((note) => note.label).join(" · ")}. Follow the cue timing; keep counting through holds and rests.
+              </p>
+            ) : <RhythmRead pattern={item.pattern} />}
             <HarmonyRead symbols={item.analysis} />
             {item.process === "create" && item.createOptions ? (
               <div className="grid w-full grid-cols-2 gap-2">
@@ -653,7 +678,7 @@ export function SessionPlayer() {
 
             <p className="text-center font-display text-sm tabular text-dim">beat {beatN}</p>
             <p className="text-center text-sm text-muted">{item.interpret ?? coachCue(item)}</p>
-            <p className="text-center text-sm text-dim">{patternInWords(item.pattern)}</p>
+            <p className="text-center text-sm text-dim">{musicalPattern ? "Tap with each note or muted click. Taps practise timing; they do not assess your instrument playing." : patternInWords(item.pattern)}</p>
             {expectsSpecific ? (
               <p className="text-center text-sm text-muted">Tap the highlighted pad, key, or string — pitch and timing both count.</p>
             ) : (
