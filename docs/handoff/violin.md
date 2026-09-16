@@ -1,6 +1,6 @@
 # Violin brief
 
-**Status: implemented.** The violin path is in the codebase with `theoryNeck: "none"`; the theory page plays a neutral keyboard reference and carries a fretless caption. Cues use ⊓ and ∨ for bow direction, the session player labels the action "Bow", the daily plan allows a chordless violin challenge, and listen prompts play sustained open-string tones. The mark at `public/instruments/violin.jpg` is a rendered drawing placeholder to replace with a photo.
+**Status: implemented.** The violin path is in the codebase with `theoryNeck: "none"`; the theory page plays a neutral keyboard reference and carries a fretless caption. Cues use ⊓ and ∨ for bow direction, the session player labels the action "Bow", the daily plan allows a chordless violin challenge, and listen prompts play sustained open-string tones. The mark at `public/instruments/violin.jpg` is still a placeholder: a vector drawing rendered to match the framing and lighting of the six product photos, not a photograph. Replace it with a photo when one is available; no code changes are needed.
 
 Violin is the outlier: no frets, no chords, and bow direction replaces pick direction. Most of the generic string code still applies, but a few branches need a decision.
 

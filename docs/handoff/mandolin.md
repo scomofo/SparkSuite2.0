@@ -1,6 +1,6 @@
 # Mandolin brief
 
-**Status: implemented.** The mandolin path is in the codebase; this brief is kept as the worked example of the checklist. The placeholder mark at `public/instruments/mandolin.jpg` is a rendered drawing, not a photo like the other six, and should be replaced.
+**Status: implemented.** The mandolin path is in the codebase; this brief is kept as the worked example of the checklist. The mark at `public/instruments/mandolin.jpg` is still a placeholder: a vector drawing rendered to match the framing and lighting of the six product photos, not a photograph. Replace it with a photo when one is available; no code changes are needed.
 
 Mandolin is the recommended first instrument to add. It has four courses tuned like a violin, standard chord shapes, and every existing four-string code path applies.
 

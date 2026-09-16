@@ -1,6 +1,6 @@
 # Banjo brief (five-string, open G)
 
-**Status: implemented.** The banjo path is in the codebase. The fifth string is listed first in the definition and kept open in every chord record; the theory neck shows only the four long strings through the new optional `theoryStrings` field on `InstrumentDef` and the `theoryNeckDef` helper. The mark at `public/instruments/banjo.jpg` is a rendered drawing placeholder to replace with a photo.
+**Status: implemented.** The banjo path is in the codebase. The fifth string is listed first in the definition and kept open in every chord record; the theory neck shows only the four long strings through the new optional `theoryStrings` field on `InstrumentDef` and the `theoryNeckDef` helper. The mark at `public/instruments/banjo.jpg` is still a placeholder: a vector drawing rendered to match the framing and lighting of the six product photos, not a photograph. Replace it with a photo when one is available; no code changes are needed.
 
 ## Decisions to make first
 
