@@ -1,4 +1,5 @@
 import { JUDGE_WINDOWS, type HitJudge, type ItemResult, type PlanItem } from "./types.ts";
+import { dailyInstrumentCues, hasInstrumentPattern } from "./instrument-patterns.ts";
 
 export type NoteEvent = {
   t: number;
@@ -7,6 +8,10 @@ export type NoteEvent = {
   chord?: string;
   bar: number;
   beat: number;
+  notes?: number[];
+  muted?: boolean;
+  duration?: number;
+  label?: string;
 };
 
 export function patternBeats(pattern: string): ("down" | "up" | "rest")[] {
@@ -27,12 +32,25 @@ export function patternBeats(pattern: string): ("down" | "up" | "rest")[] {
  * strum / play control, so they must never expect a specific string — the
  * generic control cannot satisfy one and every tap would be a miss.
  */
-export function isPluckDrill(item: Pick<PlanItem, "type" | "process">) {
+export function isPluckDrill(item: Pick<PlanItem, "type" | "process"> & { lessonId?: string }) {
+  if (hasInstrumentPattern(item)) return false;
   return (item.type === "warmup" || item.type === "skill") && item.process !== "respond" && item.process !== "create";
 }
 
 /** Build an abstract exercise timeline in seconds from bar 0. */
 export function buildTimeline(item: PlanItem): NoteEvent[] {
+  const musical = dailyInstrumentCues(item);
+  let direction: "up" | "down" = "down";
+  if (musical) return musical.filter((cue) => cue.notes?.length || cue.muted).map((cue) => {
+    if (cue.label.includes("↑") || cue.label.includes("∨")) direction = "up";
+    else if (cue.label.includes("↓") || cue.label.includes("⊓")) direction = "down";
+    return {
+    t: cue.beat * 60 / item.bpm,
+    kind: direction,
+    bar: Math.floor(cue.beat / 4), beat: cue.beat % 4,
+    notes: cue.notes, muted: cue.muted, duration: cue.duration, label: cue.label, chord: cue.chord,
+    };
+  });
   if (item.surface === "pads") return drumTimeline(item);
   const drill = isPluckDrill(item);
   if ((item.surface === "keys" || item.surface === "voice") && drill) {

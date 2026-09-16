@@ -92,11 +92,11 @@ export function RhythmHighway({ notesRef, consumedRef, nowRef, lookAhead, flash 
           ctx.arc(laneX, y, r, 0, Math.PI * 2);
           ctx.fill();
         }
-        if (n.chord && Math.abs(dt) < 0.45) {
+        if (n.label || (n.chord && Math.abs(dt) < 0.45)) {
           ctx.fillStyle = "#ede6da";
           ctx.font = "600 13px 'Plus Jakarta Sans Variable', sans-serif";
           ctx.textAlign = "left";
-          ctx.fillText(n.chord, laneX + 22, y + 4);
+          ctx.fillText(n.label ?? n.chord!, laneX + 22, y + 4);
         }
       }
 

@@ -10,8 +10,9 @@ import {
   usePlayhead,
   type LineHit,
 } from "@/components/labs/shared";
-import { ghostNote, pluck, strum, strumUp, unlockAudio } from "@/lib/spark/audio";
+import { ghostNote, pianoHold, pluck, strum, strumUp, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, MANDOLIN_CHORDS } from "@/lib/spark/instruments";
+import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
 
 export type MandolinTab = "down" | "alt" | "chop" | "tremolo" | "switch";
 const CHORDS = ["G", "C", "D", "Am"] as const;
@@ -36,12 +37,12 @@ const COPY: Record<MandolinTab, { kicker: string; title: string; body: string; h
     kicker: "Down, up",
     title: "Numbers down, ands up",
     body: "Alternate picking on the D course: D, E, F♯, G and back. The upstroke is as even as the downstroke — that evenness is the whole technique.",
-    hear: "D E F♯ G, G F♯ E D.",
+    hear: "D E F♯ G, F♯ E D, silent upstroke. One bar of eighths.",
   },
   chop: {
     kicker: "The mute",
-    title: "Release the pressure, strike the click",
-    body: "Keep the shape in place. On 2 and 4, stop pressing so the strings damp, then strike. The chop is the snare under the tune.",
+    title: "Touch every course, strike the click",
+    body: "For this unpitched backbeat, touch all four courses lightly on 2 and 4, then strike a click. Releasing only fretted notes leaves open courses ringing. Restore the shape for 1 and 3.",
     hear: "Chord, chop, chord, chop.",
   },
   tremolo: {
@@ -83,8 +84,7 @@ function shape(id: string) {
   return { id, name: id, ...c };
 }
 
-const D_COURSE_SCALE = [0, 2, 4, 5, 4, 2, 0, 2];
-const D_COURSE_NAMES = ["D", "E", "F♯", "G", "F♯", "E", "D", "E"];
+const ALT_LINE = instrumentLabPattern("mandolin-down-up");
 
 export function MandolinLab() {
   const search = useSearch({ from: "/techniques" });
@@ -107,14 +107,17 @@ export function MandolinLab() {
     if (tab === "down") {
       hits = Array.from({ length: 8 }, (_, i) => ({ beat: i, sound: (w) => strum(f, w) }));
     } else if (tab === "alt") {
-      hits = D_COURSE_SCALE.map((fret, i) => ({
-        beat: i,
-        sound: (w) => pluck(open[1] * Math.pow(2, fret / 12), w, 0.4),
+      hits = ALT_LINE.cues.map((cue) => ({
+        beat: cue.beat,
+        sound: (w) => cue.notes?.forEach((midi) => pluck(440 * 2 ** ((midi - 69) / 12), w, 0.4)),
       }));
     } else if (tab === "chop") {
       hits = Array.from({ length: 8 }, (_, i) => ({
         beat: i,
-        sound: (w) => (i % 2 === 0 ? strum(f, w) : ghostNote(w)),
+        sound: (w) => {
+          if (i % 2) ghostNote(w);
+          else f.forEach((freq) => pianoHold(freq, (60 / 84) * 0.85, w, 0.2 / Math.sqrt(f.length)));
+        },
       }));
     } else if (tab === "tremolo") {
       hits = Array.from({ length: 8 }, (_, i) => ({
@@ -136,13 +139,13 @@ export function MandolinLab() {
         sound: (w) => strum(i < 4 ? f : g, w),
       }));
     }
-    head.play(hits, 84, true);
+    head.play(hits, 84, true, tab === "alt" ? ALT_LINE.beats : 8);
   };
 
   const liveChord = tab === "switch" && (head.cursorBeat ?? 0) >= 4 ? "G" : chord;
   const cells = Array.from({ length: 8 }, (_, beat) => {
     if (tab === "alt")
-      return { beat, top: beat % 2 === 0 ? "D" : "U", bot: D_COURSE_NAMES[beat] ?? "D" };
+      return { beat: beat / 2, top: beat % 2 === 0 ? "D" : "U", bot: ALT_LINE.cues[beat].notes ? ALT_LINE.cues[beat].label.split(" ")[0] : "rest" };
     if (tab === "chop") return { beat, top: beat % 2 === 0 ? "D" : "x", bot: chord };
     if (tab === "tremolo")
       return { beat, top: beat % 4 < 2 ? "≈" : "·", bot: beat % 4 < 2 ? "A" : "rest" };
@@ -184,6 +187,9 @@ export function MandolinLab() {
           />
         </LabCopy>
         <BeatStrip cells={cells} cursorBeat={head.cursorBeat} />
+        <p className="mt-4 text-xs leading-relaxed text-muted">
+          Synthesized pitch and rhythm references. Practise the written hand movements on your instrument; these sounds do not demonstrate physical articulation.
+        </p>
         {tab !== "alt" && tab !== "tremolo" ? (
           <section className="mt-6 flex flex-col items-center">
             <p className="mb-2 self-start text-[11px] uppercase tracking-[0.18em] text-dim">

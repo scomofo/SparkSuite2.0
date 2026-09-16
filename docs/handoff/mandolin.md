@@ -64,7 +64,7 @@ Demos: lesson 1 `[[55], [62], [69], [76]]`; lesson 3 `[[55, 62, 71, 79], [], [55
 - **g-and-c** (16 beats): `chordBars("mandolin", ["G", "C", "G", "C"])`, `shapes: ["G", "C"]`.
 - **down-up** (16 beats, subdivision 2): D E F♯ G ascending on numbers and ands with ↓ and ↑ labels, then descending.
 - **chop** (16 beats): open down on 0 and 2, `muted: true` chop with `chord: "G"` on 1 and 3, `shapes: ["G"]`.
-- **tremolo** (8 beats, subdivision 4, 50 BPM): sixteen strokes on A (69) per two beats, then rest two beats, twice. Keep total beats 8 so the pattern stays readable.
+- **tremolo** (8 beats, subdivision 4, 50 BPM): eight strokes on A (69) per two beats, then rest two beats, twice. Keep total beats 8 so the pattern stays readable.
 - **melody-with-chops** (project, buildBeats 8, beats 16): Build the melody bars 1 and 2, Choose chop backing or tremolo backing for bars 3 and 4, Refine the change on beat 1 of bar 3.
 - **arrangement** (project, buildBeats 8, beats 17 with a landing on 16).
 
@@ -89,3 +89,7 @@ Down, Alt, Chop, Tremolo, Switch. Copy `uke-lab.tsx` almost unchanged: replace t
 
 - `TheoryFretboard` and `neckVoicing` work as-is with `openPc`. Confirm the E course at 659 Hz is not clipped by any audio gain choice in `strum`.
 - The tuner detection window is sized for low pitches; high E is fine.
+
+## Accuracy repairs (September 2026)
+
+The muted backbeat explicitly damps all four courses, including open strings, then restores the chord. Learn and the Alt lab use D–E–F♯–G–F♯–E–D–rest at eighth-note spacing. Today now includes the muted attacks on beats 2 and 4. Player review is still outstanding.

@@ -10,6 +10,7 @@ import {
 } from "@/components/labs/shared";
 import { pianoHold, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, midiToFreq } from "@/lib/spark/instruments";
+import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
 
 export type ViolinTab = "open" | "bow" | "finger" | "slur" | "cross";
 
@@ -25,7 +26,7 @@ const COPY: Record<ViolinTab, { kicker: string; title: string; body: string; hea
   open: {
     kicker: "G D A E",
     title: "One string, one straight bow",
-    body: "Between the bridge and the fingerboard, parallel to the bridge, frog to tip. Speed and weight make the sound; the arm stays soft.",
+    body: "Start G at the frog, then alternate: G down, D up, A down, E up. Each stroke starts where the last ended. Change the bow level for each string; keep the arm relaxed.",
     hear: "G, D, A, E. Two beats each.",
   },
   bow: {
@@ -95,9 +96,9 @@ export function ViolinLab() {
         midi === null ? [] : [{ beat, sound: hold(midiToFreq(midi), beatSec * 0.9) }],
       );
     } else if (tab === "slur") {
-      hits = [62, 64, 66, 67, 67, 66, 64, 62].map((midi, beat) => ({
-        beat,
-        sound: hold(midiToFreq(midi), beatSec * 0.95),
+      hits = instrumentLabPattern("violin-slurs").cues.map((cue) => ({
+        beat: cue.beat,
+        sound: hold(midiToFreq(cue.notes![0]), beatSec * (cue.duration ?? 0.45)),
       }));
     } else {
       hits = [62, 69, 62, 69, 62, 69, 62, 69].map((midi, beat) => ({
@@ -105,14 +106,14 @@ export function ViolinLab() {
         sound: hold(midiToFreq(midi), beatSec * 0.9, 0.12 + beat * 0.02),
       }));
     }
-    head.play(hits, 84, true);
+    head.play(hits, 84, true, 8);
   };
 
   const cells = Array.from({ length: 8 }, (_, beat) => {
     if (tab === "open")
       return {
         beat,
-        top: beat % 2 === 0 ? "⊓" : "·",
+        top: beat % 2 === 0 ? (beat % 4 === 0 ? "⊓" : "∨") : "·",
         bot: ["G", "G", "D", "D", "A", "A", "E", "E"][beat] ?? "G",
       };
     if (tab === "bow")
@@ -124,7 +125,7 @@ export function ViolinLab() {
     if (tab === "finger")
       return {
         beat,
-        top: beat % 4 === 3 ? "·" : beat % 2 === 0 ? "⊓" : "∨",
+        top: ["⊓", "∨", "⊓", "·", "∨", "⊓", "∨", "·"][beat],
         bot: ["D", "E", "D", "rest", "A", "B", "A", "rest"][beat] ?? "D",
       };
     if (tab === "slur")

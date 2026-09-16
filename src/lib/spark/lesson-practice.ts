@@ -256,7 +256,7 @@ function banjoString(chord: string, string: number) {
   return OPEN_MIDI.banjo[string] + (BANJO_CHORDS[chord].frets[string] ?? 0);
 }
 /** A forward roll (T I M T I M T M on strings 3 2 1 5 2 1 3 1) over one bar of a chord. */
-function banjoRollBar(beat: number, chord: string) {
+export function banjoRollBar(beat: number, chord: string) {
   const order: [number, string][] = [
     [2, "T"],
     [3, "I"],
@@ -1742,16 +1742,16 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Hold G for four bars: strum on 1 and 3, chop on 2 and 4.",
     setup:
-      "Keep the G shape in place. On 2 and 4, release finger pressure so the strum clicks instead of ringing.",
-    hint: "Practise only the pressure release with the guide stopped. Then try one bar at 40 BPM.",
+      "On 2 and 4, lay the fretting fingers lightly across all four courses, including the open ones, and strike a click. Restore G on 1 and 3.",
+    hint: "With the guide stopped, move from G to a light touch across all four courses and back. Then try one bar at 40 BPM.",
     takeaway: "The chop is a rhythm job. Short on 2 and 4, ringing on 1 and 3.",
     shapes: ["G"],
     cues: repeat(
       [
         strum(0, "mandolin", "G"),
-        { beat: 1, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+        { beat: 1, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
         strum(2, "mandolin", "G"),
-        { beat: 3, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+        { beat: 3, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
       ],
       4,
     ),
@@ -1792,9 +1792,9 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     title: "Two bars of melody, two bars of chops",
     bpm: 60,
     beats: 16,
-    goal: "Play D–E–F♯–G, A–G–F♯–D, then back G and D with chops on 2 and 4.",
+    goal: "Play two melody bars, then G with muted backbeats. In the last bar play D on 1, mute on 2, return to G on 3 and hold through 4.",
     setup:
-      "Melody on the D and A courses with alternate picking. Backing: G is 0–0–2–3, D is 2–0–0–2.",
+      "Melody on D and A: alternate strokes on these slower quarter notes. Backing: G 0–0–2–3, D 2–0–0–2. Touch all courses lightly for each muted click.",
     hint: "Play only the two melody bars at 40 BPM, then only the two backing bars. Join them last.",
     retryLabel: "The switch from melody to chords loses beat 1",
     takeaway: "The pulse carried through both roles. Melody and backing share one count.",
@@ -1833,11 +1833,11 @@ export const LESSON_EXERCISES: LessonExercise[] = [
         note(4 + beat, ["A ↓", "G ↑", "F♯ ↓", "D ↑"][beat], [midi], "Melody, A then D course"),
       ),
       strum(8, "mandolin", "G"),
-      { beat: 9, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      { beat: 9, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
       strum(10, "mandolin", "G"),
-      { beat: 11, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      { beat: 11, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
       strum(12, "mandolin", "D"),
-      { beat: 13, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "D" },
+      { beat: 13, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "D" },
       { ...strum(14, "mandolin", "G"), duration: 1.8, detail: "G: downstroke, let it ring" },
       { beat: 15, label: "Hold", detail: "Let G continue to the end" },
     ],
@@ -1876,7 +1876,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
       [
         {
           label: "Ring and stop",
-          detail: "One downstroke on the final G, let it ring, then lift on the last count.",
+          detail: "One downstroke on the final G, let it ring, then touch all courses lightly on the last count.",
         },
         {
           label: "Tremolo ending",
@@ -1913,7 +1913,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 12,
     goal: "Pick D, G, B, D, then the short g, then brush all five open strings.",
     setup:
-      "Thumb on the fourth string, index on the second, middle on the first. The short fifth string is always played open.",
+      "Thumb on the fourth string, index on the second, middle on the first. Keep the short fifth string open in these exercises.",
     hint: "Name one string at a time with the guide stopped. Find the short g string with the thumb.",
     takeaway:
       "The open strings already sound G major. The fifth string is the high g on top of the chord.",
@@ -1959,7 +1959,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Alternate open G and D7 for four bars, brushing only on each beat 1.",
     setup:
-      "G is all five strings open. D7 is 0–0–2–1–2 in g–D–G–B–D order. Use beats 3 and 4 to place the shape.",
+      "G is all five strings open. D7 is 0–0–2–1–0 in g–D–G–B–D order. Use beats 3 and 4 to place the shape.",
     hint: "Put the guide on hold and place D7 from open strings three times. Then try two bars at 40 BPM.",
     takeaway:
       "You gave each change a place in the bar. Keep the same small goal on your next attempt.",
@@ -1987,7 +1987,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Roll through G, C, D7, and G, one bar each, changing shape on beat 1.",
     setup:
-      "C is 0–2–0–1–2 and D7 is 0–0–2–1–2. Keep the roll going; only the fretting hand changes.",
+      "C is 0–2–0–1–2 and D7 is 0–0–2–1–0. Keep the roll going; only the fretting hand changes.",
     hint: "Roll one bar of C into one bar of D7 at 40 BPM. The B-string finger stays at fret 1 for both.",
     retryLabel: "The roll stops while the shape changes",
     takeaway:
@@ -2026,8 +2026,8 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Vamp two bars of G and D7, then roll two bars of the same chords.",
     setup:
-      "Vamp: brush the chord on 1 and 3, chop it short on 2 and 4. Roll: the forward roll under the same shapes.",
-    hint: "Play only the two vamp bars at 40 BPM. Release finger pressure for the chop without lifting off.",
+      "Brush on 1 and 3. For the unpitched backbeat on 2 and 4, touch all five strings lightly, then restore the shape. Next, roll the same chords.",
+    hint: "Play only the two vamp bars at 40 BPM. Touch all five strings lightly for the click, then restore the shape for the ringing brush.",
     retryLabel: "The switch from vamp to roll loses beat 1",
     takeaway:
       "Backup and lead share one pulse. The chord shapes did not change; the right hand did.",
@@ -2067,7 +2067,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
         {
           beat: bar * 4 + 1,
           label: "Chop",
-          detail: "Release pressure and chop",
+          detail: "Touch all strings lightly; strike a muted click",
           muted: true,
           chord,
         },
@@ -2075,7 +2075,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
         {
           beat: bar * 4 + 3,
           label: "Chop",
-          detail: "Release pressure and chop",
+          detail: "Touch all strings lightly; strike a muted click",
           muted: true,
           chord,
         },
@@ -2149,23 +2149,23 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     title: "Four strings, one straight bow",
     bpm: 50,
     beats: 16,
-    goal: "Bow each open string for one whole bar: G, D, A, then E, one full down-bow each.",
+    goal: "Bow each open string for one whole bar: G down, D up, A down, then E up.",
     setup:
-      "Bow between the bridge and the fingerboard, straight across the string. Start each bar at the frog and use the whole bow.",
+      "Start G at the frog. Alternate down and up across the four bars, changing string level between strokes. Each bow starts where the last ended.",
     hint: "Try only the open D with the guide stopped. Watch that the bow stays parallel to the bridge for the whole stroke.",
     takeaway:
       "One string, one straight bow. Speed and weight decide the sound; the finger is not needed yet.",
     cues: [55, 62, 69, 76].flatMap((midi, bar) => [
       note(
         bar * 4,
-        ["G", "D", "A", "E"][bar] + " ⊓",
+        ["G", "D", "A", "E"][bar] + (bar % 2 ? " ∨" : " ⊓"),
         [midi],
-        "Whole down-bow on open " + ["G", "D", "A", "E"][bar],
+        "Whole " + (bar % 2 ? "up-bow" : "down-bow") + " on open " + ["G", "D", "A", "E"][bar],
         3.8,
       ),
       { beat: bar * 4 + 1, label: "Hold", detail: "Keep the bow moving slowly" },
       { beat: bar * 4 + 2, label: "Hold", detail: "Keep the bow moving slowly" },
-      { beat: bar * 4 + 3, label: "Hold", detail: "Reach the tip and stop" },
+      { beat: bar * 4 + 3, label: "Hold", detail: bar % 2 ? "Reach the frog; prepare the next down-bow" : "Reach the tip; prepare the next up-bow" },
     ]),
   },
   {
@@ -2177,7 +2177,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     setup:
       "The bow stops on the string during each rest. Keep counting; the rest is part of the bar.",
     hint: "Say the four counts out loud with the bow resting on the string, then add the two strokes at 40 BPM.",
-    takeaway: "A stopped bow is not a stopped count. Down and up both landed on their beats.",
+    takeaway: "A stopped bow is not a stopped count. Notice whether both strokes begin on their beats.",
     cues: repeat(
       [
         note(0, "⊓", [62], "Down-bow, open D", 0.85),
@@ -2206,9 +2206,9 @@ export const LESSON_EXERCISES: LessonExercise[] = [
         note(1, "E ∨", [64], "First finger on D, up-bow"),
         note(2, "D ⊓", [62], "Open D, down-bow"),
         rest(3, "Rest; keep counting"),
-        note(4, "A ⊓", [69], "Open A, down-bow"),
-        note(5, "B ∨", [71], "First finger on A, up-bow"),
-        note(6, "A ⊓", [69], "Open A, down-bow"),
+        note(4, "A ∨", [69], "Open A, up-bow from where the last down-bow ended"),
+        note(5, "B ⊓", [71], "First finger on A, down-bow"),
+        note(6, "A ∨", [69], "Open A, up-bow"),
         rest(7, "Rest; keep counting"),
       ],
       2,

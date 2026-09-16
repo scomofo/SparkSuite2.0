@@ -1242,23 +1242,23 @@ const mandolin = path("mandolin", [
     title: "The chop on two and four",
     outcome: "Alternate a ringing downstroke with a short muted chop.",
     explanation:
-      "A chop is a chord struck while the fretting fingers release pressure, so the strings click instead of ringing. Placed on beats 2 and 4 it works like a snare drum under a melody. The chord shape stays in place; only the pressure changes. Keep the stroke short and let beats 1 and 3 ring fully.",
+      "Start with an unpitched muted backbeat on beats 2 and 4. Open G has open courses, so releasing the two fretted fingers alone will not silence it. Lay your fretting fingers lightly across all four courses, without pressing them to the frets, then strike a short click. Restore G for the ringing strokes on 1 and 3. This prepares a chop rhythm; a pitched chop with a closed shape comes later.",
     example:
-      "Hold G. Beat 1: strum and let it ring. Beat 2: release pressure and chop. Repeat on 3 and 4.",
+      "Beat 1: strum G. Beat 2: touch all four courses lightly and strike a muted click. Restore G on 3; mute all courses on 4.",
     practice: [
-      "Hold G and practise releasing pressure without lifting the fingers off the strings.",
+      "Move slowly from G to a light touch across all four courses, then restore G.",
       "Strum on 1, chop on 2, strum on 3, chop on 4 for one slow bar.",
       "Repeat for four bars and listen for a clear difference between ring and click.",
     ],
     question: "What makes a chop sound short?",
     options: [
-      "Releasing finger pressure so the strings cannot ring",
+      "Touching all sounding courses lightly so none can ring",
       "Picking much harder than usual",
       "Lifting the pick away before it touches the strings",
     ],
     answer: 0,
     feedback:
-      "The fingers stay on the strings but stop pressing, so the strings are damped. Force and pick height do not create the muted click.",
+      "Light contact across every course damps the open strings too. Releasing only the fretted notes leaves open courses ringing; force and pick height do not mute them.",
   },
   {
     slug: "tremolo",
@@ -1283,7 +1283,7 @@ const mandolin = path("mandolin", [
     answer: 1,
     feedback:
       "Evenness is what the ear hears as one continuous sound. Volume and pitch changes do not create the effect.",
-    demo: { label: "Tremolo on A, then rest", notes: [[69], [69], [], []] },
+    demo: { label: "A pitch to use for tremolo; repeated strokes are in the guided exercise", notes: [[69], [69], [], []] },
   },
   {
     slug: "melody-with-chops",
@@ -1397,7 +1397,7 @@ const banjo = path("banjo", [
     title: "The first change",
     outcome: "Move between open G and D7 without rushing beat 1.",
     explanation:
-      "Open G needs no fingers. D7 in g–D–G–B–D fret order is 0–0–2–1–2: the third string at fret 2, the second at fret 1, the first at fret 2. This beginner D7 leaves out the chord's third, which is why it sounds open. The short fifth string stays open. Place the shape during beats 3 and 4 so it is ready on beat 1.",
+      "Open G needs no fingers. D7 in g–D–G–B–D fret order is 0–0–2–1–0: the third string at fret 2 and the second at fret 1; the first and fourth stay open. The four long strings give D–A–C–D, leaving out F♯, the chord's third. The short fifth string adds a high G drone; it is not a D7 chord tone. Place the shape during beats 3 and 4 so it is ready on beat 1.",
     example: "One bar of open G, one bar of D7. Brush on beat 1 only; place the shape on 3 and 4.",
     practice: [
       "Place D7 and pick each string slowly to find a clear sound.",
@@ -1406,14 +1406,14 @@ const banjo = path("banjo", [
     ],
     question: "Which strings are fretted for the beginner D7 shape?",
     options: [
-      "The third, second, and first strings",
+      "The third and second strings",
       "The short fifth string only",
       "All five strings",
     ],
     answer: 0,
     feedback:
-      "D7 is 0–0–2–1–2: the third string at fret 2, second at fret 1, first at fret 2. The fifth and fourth strings stay open.",
-    demo: { label: "Open G then D7", notes: [[67, 50, 55, 59, 62], [], [67, 50, 57, 60, 64], []] },
+      "D7 is 0–0–2–1–0: the third string at fret 2 and second at fret 1. The first and fourth strings stay open; the short fifth adds the high G drone.",
+    demo: { label: "Open G then D7", notes: [[67, 50, 55, 59, 62], [], [67, 50, 57, 60, 62], []] },
   },
   {
     slug: "forward-roll",
@@ -1471,7 +1471,7 @@ const banjo = path("banjo", [
         [],
         [67, 52, 55, 60, 64],
         [],
-        [67, 50, 57, 60, 64],
+        [67, 50, 57, 60, 62],
         [],
         [67, 50, 55, 59, 62],
         [],
@@ -1509,10 +1509,10 @@ const banjo = path("banjo", [
     title: "Two jobs in one tune",
     outcome: "Play backup under a chord loop and switch to a rolled break.",
     explanation:
-      "In a group the banjo either plays backup, a rhythmic vamp behind a singer or another instrument, or takes a break, a rolled melody pass. A vamp brushes the chord on 1 and 3 and chops it short on 2 and 4 by releasing finger pressure. The break rolls the same shapes. Practising both over one progression makes the switch dependable.",
+      "Backup supports a singer or another instrument; a break presents a melody. Here you practise a change of texture: brushed chords with a muted backbeat, then a roll over the same shapes. For the unpitched clicks on 2 and 4, touch all five strings lightly with the fretting hand; releasing a shape alone cannot mute open strings. Restore the chord for 1 and 3. A pitched vamp with closed shapes and a melody break can come later.",
     example: "Two bars of vamp on G and D7, then two bars of forward roll on G and D7.",
     practice: [
-      "Vamp G and D7 for two bars, releasing pressure for the chops.",
+      "Brush G and D7 for two bars, touching all five strings lightly for the muted backbeats.",
       "Roll G and D7 for two bars with the forward roll.",
       "Join them and keep the count steady across the switch on beat 1 of bar 3.",
     ],
@@ -1560,11 +1560,11 @@ const violin = path("violin", [
     outcome: "Name G–D–A–E and draw one straight bow on each open string.",
     explanation:
       "A violin has four strings tuned G–D–A–E, from lowest to highest, a fifth apart. The bow makes the sound: hold it with a relaxed, rounded hand and draw it across one string between the bridge and the fingerboard. A straight bow stays parallel to the bridge for the whole stroke. Speed and weight, not force, shape the tone.",
-    example: "One whole down-bow on open G, then D, then A, then E, each lasting a slow bar.",
+    example: "One bar per string: G down-bow, D up-bow, A down-bow, E up-bow. Each stroke starts where the last one ended.",
     practice: [
       "Rest the violin on your shoulder and place the bow on the D string near the frog.",
       "Draw one slow, straight bow to the tip and stop; listen for one even sound.",
-      "Repeat on G, A, and E, naming each string.",
+      "Return the bow silently to the frog, then play G down, D up, A down, E up, naming each string and changing its bow level between bars.",
     ],
     question: "What keeps a bow stroke sounding even from frog to tip?",
     options: [
@@ -1598,7 +1598,7 @@ const violin = path("violin", [
     ],
     answer: 0,
     feedback:
-      "The bow stays on the string, silent, while the beat goes on. Lifting or sounding through the rest changes the rhythm.",
+      "The bow stays on the string, silent, while the beat goes on. A silent lift is used for a retake in other exercises; here practise stopping on the string without sounding through the rest.",
     demo: { label: "Down, rest, up, rest", notes: [[62], [], [62], []] },
   },
   {
@@ -1667,7 +1667,7 @@ const violin = path("violin", [
     answer: 0,
     feedback:
       "In a slur the bow continues in one direction while the finger changes the note. A change of bow direction would separate the notes.",
-    demo: { label: "D–E slurred, F♯–G slurred", notes: [[62], [64], [], [66], [67], []] },
+    demo: { label: "D–E and F♯–G pitches; use the written bow groups to practise slurs", notes: [[62], [64], [], [66], [67], []] },
   },
   {
     slug: "string-crossing",
@@ -1716,7 +1716,7 @@ const violin = path("violin", [
     feedback:
       "A single goal note gives the listener something to follow. Uniform loudness or shifting tempo blurs the shape.",
     demo: {
-      label: "A four-bar phrase in D",
+      label: "First two bars of the phrase in D",
       notes: [[62], [64], [66], [67], [69], [67], [66], [62]],
     },
   },
