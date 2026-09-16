@@ -1,6 +1,6 @@
 import { learningLesson } from "./curriculum.ts";
 import { CHORDS } from "./guitar.ts";
-import { UKE_CHORDS, type InstrumentId } from "./instruments.ts";
+import { BANJO_CHORDS, MANDOLIN_CHORDS, UKE_CHORDS, type InstrumentId } from "./instruments.ts";
 import type { BassPos } from "./bass.ts";
 import type { ChordShape } from "./types.ts";
 
@@ -126,7 +126,13 @@ export function retryCoaching(exercise: LessonExercise) {
           ? "The notes or hand movement felt awkward"
           : instrument === "bass"
             ? "The notes or string changes felt awkward"
-            : "The notes or shapes felt awkward");
+            : instrument === "mandolin"
+              ? "The pick direction or the shapes felt awkward"
+              : instrument === "banjo"
+                ? "The roll or the shapes felt awkward"
+                : instrument === "violin"
+                  ? "The bow or the left hand felt awkward"
+                  : "The notes or shapes felt awkward");
   return [
     {
       id: "pulse" as const,
@@ -139,11 +145,25 @@ export function retryCoaching(exercise: LessonExercise) {
 
 export function practiceShape(instrument: InstrumentId, chord: string): ChordShape | undefined {
   if (instrument === "guitar") return CHORDS[chord];
-  const shape = instrument === "ukulele" ? UKE_CHORDS[chord] : undefined;
+  const shape =
+    instrument === "ukulele"
+      ? UKE_CHORDS[chord]
+      : instrument === "mandolin"
+        ? MANDOLIN_CHORDS[chord]
+        : instrument === "banjo"
+          ? BANJO_CHORDS[chord]
+          : undefined;
   return shape ? { ...shape, id: chord, name: chord } : undefined;
 }
-function chordNotes(instrument: "guitar" | "ukulele", chord: string) {
-  const open = instrument === "guitar" ? [40, 45, 50, 55, 59, 64] : [67, 60, 64, 69];
+type StrummedInstrument = "guitar" | "ukulele" | "mandolin" | "banjo";
+const OPEN_MIDI: Record<StrummedInstrument, number[]> = {
+  guitar: [40, 45, 50, 55, 59, 64],
+  ukulele: [67, 60, 64, 69],
+  mandolin: [55, 62, 69, 76],
+  banjo: [67, 50, 55, 59, 62],
+};
+function chordNotes(instrument: StrummedInstrument, chord: string) {
+  const open = OPEN_MIDI[instrument];
   return practiceShape(instrument, chord)!.frets.flatMap((fret, index) =>
     fret === null ? [] : [open[index] + fret],
   );
@@ -168,7 +188,7 @@ const drum = (beat: number, pads: number[]): PracticeCue => ({
 });
 const strum = (
   beat: number,
-  instrument: "guitar" | "ukulele",
+  instrument: StrummedInstrument,
   chord: string,
   up = false,
 ): PracticeCue => ({
@@ -190,7 +210,7 @@ function repeatEvery(cues: PracticeCue[], times: number, beats: number) {
     cues.map((cue) => ({ ...cue, beat: cue.beat + index * beats })),
   ).flat();
 }
-function chordBars(instrument: "guitar" | "ukulele", chords: string[]) {
+function chordBars(instrument: StrummedInstrument, chords: string[]) {
   return chords.flatMap((chord, bar) => [
     strum(bar * 4, instrument, chord),
     { beat: bar * 4 + 1, label: "Count", detail: "Keep counting; no new strum" },
@@ -229,6 +249,34 @@ function advancedProject(
     ],
     choices,
   };
+}
+
+/** MIDI for one banjo string under a chord shape; string 0 is the short fifth string. */
+function banjoString(chord: string, string: number) {
+  return OPEN_MIDI.banjo[string] + (BANJO_CHORDS[chord].frets[string] ?? 0);
+}
+/** A forward roll (T I M T I M T M on strings 3 2 1 5 2 1 3 1) over one bar of a chord. */
+function banjoRollBar(beat: number, chord: string) {
+  const order: [number, string][] = [
+    [2, "T"],
+    [3, "I"],
+    [4, "M"],
+    [0, "T"],
+    [3, "I"],
+    [4, "M"],
+    [2, "T"],
+    [4, "M"],
+  ];
+  return order.map(([string, finger], index) => ({
+    ...note(
+      beat + index / 2,
+      finger,
+      [banjoString(chord, string)],
+      chord + " · " + ["short g", "4th", "3rd", "2nd", "1st"][string] + " string, " + finger,
+      0.4,
+    ),
+    chord,
+  }));
 }
 
 export const LESSON_EXERCISES: LessonExercise[] = [
@@ -1606,6 +1654,752 @@ export const LESSON_EXERCISES: LessonExercise[] = [
       note(5, "light", [62], "Beat 2", 0.75),
       note(6, "on", [60], "Beat 3", 0.75),
       rest(7, "Rest on beat 4; finish comfortably"),
+    ],
+  },
+  {
+    lessonId: "mandolin-gdae",
+    title: "Meet G–D–A–E",
+    bpm: 60,
+    beats: 8,
+    goal: "Pick the four open courses in G–D–A–E order, twice.",
+    setup:
+      "Start at the thickest pair. Let the pick pass through both strings of each course in one motion.",
+    hint: "Name one course at a time with the guide stopped. Listen for one sound from each pair.",
+    takeaway: "G–D–A–E names the courses from thickest to thinnest. Each pair plays as one string.",
+    cues: repeat(
+      [
+        note(0, "G", [55], "G course, open"),
+        note(1, "D", [62], "D course, open"),
+        note(2, "A", [69], "A course, open"),
+        note(3, "E", [76], "E course, open"),
+      ],
+      2,
+    ),
+  },
+  {
+    lessonId: "mandolin-down-pulse",
+    title: "Two downstrokes, four counts",
+    bpm: 60,
+    beats: 16,
+    goal: "Pick the open D course down on beats 1 and 3 for four bars; count through 2 and 4.",
+    setup:
+      "Keep the pick moving in small strokes from the wrist. Beats 2 and 4 are silent but still counted.",
+    hint: "Tap the rhythm on your knee for one bar. Say all four numbers, including the quiet ones.",
+    takeaway:
+      "The silent beats belong to the pulse too. If you miss a stroke, join the next count.",
+    cues: repeat(
+      [
+        note(0, "D ↓", [62], "Open D course, downstroke"),
+        rest(1),
+        note(2, "D ↓", [62], "Open D course, downstroke"),
+        rest(3),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-g-and-c",
+    title: "G → C, one change at a time",
+    bpm: 60,
+    beats: 16,
+    goal: "Alternate G and C for four bars, strumming only on each beat 1.",
+    setup:
+      "G is 0–0–2–3 and C is 0–2–3–0 in G–D–A–E order. Use beats 3 and 4 to prepare the next shape.",
+    hint: "Put the guide on hold and move silently between the two shapes three times. Then try two bars at 40 BPM.",
+    takeaway:
+      "You gave each change a place in the bar. Keep the same small goal on your next attempt.",
+    shapes: ["G", "C"],
+    cues: chordBars("mandolin", ["G", "C", "G", "C"]),
+  },
+  {
+    lessonId: "mandolin-down-up",
+    title: "Down on numbers, up on ands",
+    bpm: 60,
+    beats: 16,
+    goal: "Try four bars of D–E–F♯–G up and back down with alternate picking.",
+    setup:
+      "All on the D course: open, fret 2, fret 4, fret 5. Down on the numbers, up on the ands.",
+    hint: "Pick open D down-up for one bar first. Keep the upstroke as quiet and even as the downstroke.",
+    takeaway: "Alternating direction keeps the hand relaxed. Speed can come later.",
+    cues: repeat(
+      [
+        note(0, "D ↓", [62], "Open D course", 0.4),
+        note(0.5, "E ↑", [64], "D course, fret 2", 0.4),
+        note(1, "F♯ ↓", [66], "D course, fret 4", 0.4),
+        note(1.5, "G ↑", [67], "D course, fret 5", 0.4),
+        note(2, "F♯ ↓", [66], "D course, fret 4", 0.4),
+        note(2.5, "E ↑", [64], "D course, fret 2", 0.4),
+        note(3, "D ↓", [62], "Open D course", 0.4),
+        rest(3.5, "Silent upward motion"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-chop",
+    title: "Ring on 1 and 3, chop on 2 and 4",
+    bpm: 60,
+    beats: 16,
+    goal: "Hold G for four bars: strum on 1 and 3, chop on 2 and 4.",
+    setup:
+      "Keep the G shape in place. On 2 and 4, release finger pressure so the strum clicks instead of ringing.",
+    hint: "Practise only the pressure release with the guide stopped. Then try one bar at 40 BPM.",
+    takeaway: "The chop is a rhythm job. Short on 2 and 4, ringing on 1 and 3.",
+    shapes: ["G"],
+    cues: repeat(
+      [
+        strum(0, "mandolin", "G"),
+        { beat: 1, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+        strum(2, "mandolin", "G"),
+        { beat: 3, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-tremolo",
+    title: "Four strokes per beat on open A",
+    bpm: 50,
+    beats: 8,
+    subdivision: 4,
+    goal: "Tremolo the open A course for two beats, rest for two, and repeat.",
+    setup: "Count 1-e-and-a. One small stroke on each syllable, alternating down and up.",
+    hint: "Play only beat 1 with four strokes at 40 BPM, then stop and check the wrist is loose.",
+    retryLabel: "The strokes get uneven or the wrist tightens",
+    takeaway: "Even, small strokes make one sustained tone. Rest before the sound gets rough.",
+    cues: repeatEvery(
+      [
+        ...Array.from({ length: 8 }, (_, index) =>
+          note(
+            index / 4,
+            index % 2 ? "↑" : "↓",
+            [69],
+            index % 4 === 0
+              ? "Beat " + (Math.floor(index / 4) + 1)
+              : ["e", "and", "a"][(index % 4) - 1],
+            0.2,
+          ),
+        ),
+        rest(2, "Rest; let the wrist settle"),
+        rest(3, "Rest; keep counting"),
+      ],
+      2,
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-melody-with-chops",
+    title: "Two bars of melody, two bars of chops",
+    bpm: 60,
+    beats: 16,
+    goal: "Play D–E–F♯–G, A–G–F♯–D, then back G and D with chops on 2 and 4.",
+    setup:
+      "Melody on the D and A courses with alternate picking. Backing: G is 0–0–2–3, D is 2–0–0–2.",
+    hint: "Play only the two melody bars at 40 BPM, then only the two backing bars. Join them last.",
+    retryLabel: "The switch from melody to chords loses beat 1",
+    takeaway: "The pulse carried through both roles. Melody and backing share one count.",
+    shapes: ["G", "D"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the melody",
+        instruction: "Play the two melody bars with alternate picking at a steady tempo.",
+        button: "I built the melody",
+      },
+      {
+        title: "Choose the backing",
+        instruction: "Choose one backing feel, then add the two chord bars behind the count.",
+        button: "Save my backing choice",
+      },
+      {
+        title: "Refine the switch",
+        instruction:
+          "After the four-bar reference stops, play the melody and then your chosen backing yourself, twice through. Protect beat 1 of bar 3, where the pick changes jobs, and keep the count steady.",
+        button: "I tried my refined switch",
+      },
+      [
+        { label: "Chop backing", detail: "Ring on 1 and 3, short muted chop on 2 and 4." },
+        {
+          label: "Tremolo backing",
+          detail: "Sustain each chord with small even strokes for the whole bar.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ↓", "E ↑", "F♯ ↓", "G ↑"][beat], [midi], "Melody, D course"),
+      ),
+      ...[69, 67, 66, 62].map((midi, beat) =>
+        note(4 + beat, ["A ↓", "G ↑", "F♯ ↓", "D ↑"][beat], [midi], "Melody, A then D course"),
+      ),
+      strum(8, "mandolin", "G"),
+      { beat: 9, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      strum(10, "mandolin", "G"),
+      { beat: 11, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      strum(12, "mandolin", "D"),
+      { beat: 13, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "D" },
+      { ...strum(14, "mandolin", "G"), duration: 1.8, detail: "G: downstroke, let it ring" },
+      { beat: 15, label: "Hold", detail: "Let G continue to the end" },
+    ],
+  },
+  {
+    lessonId: "mandolin-arrangement",
+    title: "Melody, chords, and one clear ending",
+    bpm: 50,
+    beats: 17,
+    goal: "Build a four-bar guide: two melody bars, G–C then D strummed, and land on a final G.",
+    setup:
+      "Melody D–E–F♯–G, A–G–F♯–D. Then strum G, C, and D on beat 1 of their counts, and let a final G ring.",
+    hint: "Loop the final melody bar into the first strummed G bar at 40 BPM and say every count.",
+    retryLabel: "The texture switch loses beat 1",
+    takeaway:
+      "Changing only the texture created contrast while the melody and harmony stayed recognizable.",
+    shapes: ["G", "C", "D"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the melody half",
+        instruction: "Play the two melody bars with alternate picking and a steady count.",
+        button: "I built the melody half",
+      },
+      {
+        title: "Choose the ending",
+        instruction: "Choose one ending, then add the strummed G, C, and D bars and the final G.",
+        button: "Save my ending choice",
+      },
+      {
+        title: "Refine the landing",
+        instruction:
+          "After the four-bar reference and final G stop, play the whole arrangement yourself twice. Protect the switch from single notes to chords between bars 2 and 3, and give the final G its full count.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        {
+          label: "Ring and stop",
+          detail: "One downstroke on the final G, let it ring, then lift on the last count.",
+        },
+        {
+          label: "Tremolo ending",
+          detail: "Sustain the final G with small even strokes through the last count.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ↓", "E ↑", "F♯ ↓", "G ↑"][beat], [midi], "Melody, D course"),
+      ),
+      ...[69, 67, 66, 62].map((midi, beat) =>
+        note(4 + beat, ["A ↓", "G ↑", "F♯ ↓", "D ↑"][beat], [midi], "Melody, A then D course"),
+      ),
+      strum(8, "mandolin", "G"),
+      { beat: 9, label: "Count", detail: "Keep counting; no new strum" },
+      strum(10, "mandolin", "C"),
+      { beat: 11, label: "Prepare", detail: "Prepare D while you count" },
+      strum(12, "mandolin", "D"),
+      { beat: 13, label: "Count", detail: "Keep counting; no new strum" },
+      { beat: 14, label: "Prepare", detail: "Prepare G for the landing" },
+      { beat: 15, label: "Prepare", detail: "Keep counting while you change shape" },
+      {
+        ...strum(16, "mandolin", "G"),
+        label: "G ↓ · land",
+        detail: "Return to G on the new beat 1 and let it ring",
+      },
+    ],
+  },
+  {
+    lessonId: "banjo-open-g",
+    title: "Four long strings, one short one",
+    bpm: 60,
+    beats: 12,
+    goal: "Pick D, G, B, D, then the short g, then brush all five open strings.",
+    setup:
+      "Thumb on the fourth string, index on the second, middle on the first. The short fifth string is always played open.",
+    hint: "Name one string at a time with the guide stopped. Find the short g string with the thumb.",
+    takeaway:
+      "The open strings already sound G major. The fifth string is the high g on top of the chord.",
+    cues: [
+      note(0, "D", [50], "4th string, open"),
+      note(1, "G", [55], "3rd string, open"),
+      note(2, "B", [59], "2nd string, open"),
+      note(3, "D", [62], "1st string, open"),
+      note(4, "g", [67], "Short 5th string, open"),
+      rest(5, "Rest; the short string rings"),
+      note(6, "G ↓", [67, 50, 55, 59, 62], "Brush all five open strings", 1.8),
+      { beat: 7, label: "Hold", detail: "Let the open G ring" },
+      note(8, "G ↓", [67, 50, 55, 59, 62], "Brush all five open strings", 3.8),
+      { beat: 9, label: "Hold", detail: "Let the open G ring" },
+      { beat: 10, label: "Hold", detail: "Let the open G ring" },
+      { beat: 11, label: "Hold", detail: "Let the open G ring to the end" },
+    ],
+  },
+  {
+    lessonId: "banjo-pulse-brush",
+    title: "Two brushes, four counts",
+    bpm: 60,
+    beats: 16,
+    goal: "Brush the muted strings on 1 and 3 for four bars; count through 2 and 4.",
+    setup:
+      "Rest your fretting hand lightly across the strings so they make a soft, unpitched sound.",
+    hint: "Tap the rhythm on your knee for one bar. Keep saying all four numbers, including the quiet ones.",
+    takeaway: "The spaces belong to the beat too. If you miss a brush, join the next count.",
+    cues: repeat(
+      [
+        { beat: 0, label: "↓", detail: "Brush muted strings down", muted: true },
+        rest(1),
+        { beat: 2, label: "↓", detail: "Brush muted strings down", muted: true },
+        rest(3),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "banjo-g-to-d7",
+    title: "G → D7, one change at a time",
+    bpm: 60,
+    beats: 16,
+    goal: "Alternate open G and D7 for four bars, brushing only on each beat 1.",
+    setup:
+      "G is all five strings open. D7 is 0–0–2–1–2 in g–D–G–B–D order. Use beats 3 and 4 to place the shape.",
+    hint: "Put the guide on hold and place D7 from open strings three times. Then try two bars at 40 BPM.",
+    takeaway:
+      "You gave each change a place in the bar. Keep the same small goal on your next attempt.",
+    shapes: ["G", "D7"],
+    cues: chordBars("banjo", ["G", "D7", "G", "D7"]),
+  },
+  {
+    lessonId: "banjo-forward-roll",
+    title: "Eight notes, three fingers",
+    bpm: 60,
+    beats: 16,
+    goal: "Try four bars of the forward roll over open G: thumb, index, middle in turn.",
+    setup: "Strings 3–2–1–5–2–1–3–1. Say 1-and-2-and-3-and-4-and; one note on each syllable.",
+    hint: "Play only 3–2–1 with T, I, M at 40 BPM until the three notes are even, then add the thumb on the short g.",
+    retryLabel: "The fingers lose their order",
+    takeaway:
+      "The roll is a pattern of fingers, not of notes. The same motion works under any shape.",
+    shapes: ["G"],
+    cues: repeat(banjoRollBar(0, "G"), 4),
+  },
+  {
+    lessonId: "banjo-three-chord-loop",
+    title: "G, C, D7, and home",
+    bpm: 50,
+    beats: 16,
+    goal: "Roll through G, C, D7, and G, one bar each, changing shape on beat 1.",
+    setup:
+      "C is 0–2–0–1–2 and D7 is 0–0–2–1–2. Keep the roll going; only the fretting hand changes.",
+    hint: "Roll one bar of C into one bar of D7 at 40 BPM. The B-string finger stays at fret 1 for both.",
+    retryLabel: "The roll stops while the shape changes",
+    takeaway:
+      "The right hand kept rolling while the left hand moved. That is how a tune keeps its pulse.",
+    shapes: ["G", "C", "D7"],
+    cues: ["G", "C", "D7", "G"].flatMap((chord, bar) => banjoRollBar(bar * 4, chord)),
+  },
+  {
+    lessonId: "banjo-hammer-and-slide",
+    title: "Notes that move after the pick",
+    bpm: 50,
+    beats: 16,
+    goal: "Hammer on and slide on the third string, then let the open G answer, for four bars.",
+    setup:
+      "Pick the open 3rd string, hammer a finger onto fret 2. Pick fret 2, slide it to fret 4. Then pick open again.",
+    hint: "Try only the hammer-on with the guide stopped: pick open G, then land the finger firmly at fret 2 without picking.",
+    retryLabel: "The hammered or slid note does not sound",
+    takeaway:
+      "One pick can carry two notes. Firm landing and steady pressure make the second note speak.",
+    cues: repeat(
+      [
+        note(0, "G", [55], "3rd string, open, picked"),
+        note(0.5, "H", [57], "Hammer on to fret 2; no pick", 0.4),
+        note(1, "A", [57], "3rd string, fret 2, picked"),
+        note(1.5, "S", [59], "Slide to fret 4; no pick", 0.4),
+        note(2, "G", [55], "3rd string, open, picked"),
+        rest(3, "Rest; keep counting"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "banjo-backup-and-break",
+    title: "Two jobs in one tune",
+    bpm: 50,
+    beats: 16,
+    goal: "Vamp two bars of G and D7, then roll two bars of the same chords.",
+    setup:
+      "Vamp: brush the chord on 1 and 3, chop it short on 2 and 4. Roll: the forward roll under the same shapes.",
+    hint: "Play only the two vamp bars at 40 BPM. Release finger pressure for the chop without lifting off.",
+    retryLabel: "The switch from vamp to roll loses beat 1",
+    takeaway:
+      "Backup and lead share one pulse. The chord shapes did not change; the right hand did.",
+    shapes: ["G", "D7"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the vamp",
+        instruction: "Brush G and D7 on 1 and 3 with a short chop on 2 and 4, one bar each.",
+        button: "I built the vamp",
+      },
+      {
+        title: "Choose your break",
+        instruction: "Choose how the last two bars move, then add them after the vamp.",
+        button: "Save my break choice",
+      },
+      {
+        title: "Refine the switch",
+        instruction:
+          "After the four-bar reference stops, play the vamp and then your chosen break yourself, twice through. Protect beat 1 of bar 3, where the right hand changes jobs, and keep the count steady.",
+        button: "I tried my refined switch",
+      },
+      [
+        {
+          label: "Roll through",
+          detail: "Forward roll under G, then D7, eight even notes per bar.",
+        },
+        {
+          label: "Pinch and ring",
+          detail: "Thumb and middle together on 1 and 3, let the chord ring between.",
+        },
+      ],
+    ),
+    cues: [
+      ...["G", "D7"].flatMap((chord, bar) => [
+        strum(bar * 4, "banjo", chord),
+        {
+          beat: bar * 4 + 1,
+          label: "Chop",
+          detail: "Release pressure and chop",
+          muted: true,
+          chord,
+        },
+        strum(bar * 4 + 2, "banjo", chord),
+        {
+          beat: bar * 4 + 3,
+          label: "Chop",
+          detail: "Release pressure and chop",
+          muted: true,
+          chord,
+        },
+      ]),
+      ...banjoRollBar(8, "G"),
+      ...banjoRollBar(12, "D7"),
+    ],
+  },
+  {
+    lessonId: "banjo-arrangement",
+    title: "Roll it, brush it, end it",
+    bpm: 50,
+    beats: 17,
+    goal: "Build a four-bar guide: roll G and C, brush D7 and G, and land on a final open-G brush.",
+    setup:
+      "Bars 1–2: forward roll on G, then C. Bars 3–4: brush D7 on 1 and 3, then G on 1. Land on a full open-G brush.",
+    hint: "Loop the final rolled C bar into the first brushed D7 bar at 40 BPM and say every count.",
+    retryLabel: "The texture switch loses beat 1",
+    takeaway:
+      "Changing only the right hand created contrast while the three-chord harmony stayed recognizable.",
+    shapes: ["G", "C", "D7"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the rolled half",
+        instruction: "Roll one bar of G and one bar of C with the same finger order.",
+        button: "I built the rolled half",
+      },
+      {
+        title: "Choose the ending",
+        instruction: "Choose one ending, then add the brushed D7 and G bars and the final brush.",
+        button: "Save my ending choice",
+      },
+      {
+        title: "Refine the landing",
+        instruction:
+          "After the four-bar reference and final brush stop, play the whole arrangement yourself twice. Protect the switch from rolling to brushing between bars 2 and 3, and give the final G its full count.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        {
+          label: "Tag ending",
+          detail: "Pinch the open G twice on the final beat 1 and 2, then stop.",
+        },
+        {
+          label: "Ring out",
+          detail: "One brush across all five strings on the final beat 1, and let it ring.",
+        },
+      ],
+    ),
+    cues: [
+      ...banjoRollBar(0, "G"),
+      ...banjoRollBar(4, "C"),
+      strum(8, "banjo", "D7"),
+      { beat: 9, label: "Count", detail: "Keep counting; no new brush" },
+      strum(10, "banjo", "D7"),
+      { beat: 11, label: "Prepare", detail: "Lift to open G while you count" },
+      strum(12, "banjo", "G"),
+      { beat: 13, label: "Count", detail: "Keep counting; no new brush" },
+      { beat: 14, label: "Count", detail: "Keep counting; no new brush" },
+      { beat: 15, label: "Prepare", detail: "Get ready for the landing" },
+      {
+        ...strum(16, "banjo", "G"),
+        label: "G ↓ · land",
+        detail: "Brush all five open strings on the new beat 1 and let them ring",
+      },
+    ],
+  },
+  {
+    lessonId: "violin-open-strings-and-bow",
+    title: "Four strings, one straight bow",
+    bpm: 50,
+    beats: 16,
+    goal: "Bow each open string for one whole bar: G, D, A, then E, one full down-bow each.",
+    setup:
+      "Bow between the bridge and the fingerboard, straight across the string. Start each bar at the frog and use the whole bow.",
+    hint: "Try only the open D with the guide stopped. Watch that the bow stays parallel to the bridge for the whole stroke.",
+    takeaway:
+      "One string, one straight bow. Speed and weight decide the sound; the finger is not needed yet.",
+    cues: [55, 62, 69, 76].flatMap((midi, bar) => [
+      note(
+        bar * 4,
+        ["G", "D", "A", "E"][bar] + " ⊓",
+        [midi],
+        "Whole down-bow on open " + ["G", "D", "A", "E"][bar],
+        3.8,
+      ),
+      { beat: bar * 4 + 1, label: "Hold", detail: "Keep the bow moving slowly" },
+      { beat: bar * 4 + 2, label: "Hold", detail: "Keep the bow moving slowly" },
+      { beat: bar * 4 + 3, label: "Hold", detail: "Reach the tip and stop" },
+    ]),
+  },
+  {
+    lessonId: "violin-bow-pulse",
+    title: "Down-bow on one, up-bow on three",
+    bpm: 50,
+    beats: 16,
+    goal: "On open D: down-bow on 1, rest on 2, up-bow on 3, rest on 4, for four bars.",
+    setup:
+      "The bow stops on the string during each rest. Keep counting; the rest is part of the bar.",
+    hint: "Say the four counts out loud with the bow resting on the string, then add the two strokes at 40 BPM.",
+    takeaway: "A stopped bow is not a stopped count. Down and up both landed on their beats.",
+    cues: repeat(
+      [
+        note(0, "⊓", [62], "Down-bow, open D", 0.85),
+        rest(1, "Bow stops on the string; keep counting"),
+        note(2, "∨", [62], "Up-bow, open D", 0.85),
+        rest(3, "Bow stops on the string; keep counting"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "violin-first-finger",
+    title: "One finger, one whole step",
+    bpm: 50,
+    beats: 16,
+    goal: "Play D–E–D on the D string, then A–B–A on the A string, with a rest on beat 4, twice.",
+    setup:
+      "First finger lands a whole step above the open string. Keep the wrist relaxed and the thumb opposite the first finger.",
+    hint: "Play only open D and first-finger E with the guide stopped, listening for the same step every time.",
+    retryLabel: "The first-finger note sounds too high or too low",
+    takeaway:
+      "The first finger gives one step up on any string. The bow did not change; the left hand did.",
+    cues: repeatEvery(
+      [
+        note(0, "D ⊓", [62], "Open D, down-bow"),
+        note(1, "E ∨", [64], "First finger on D, up-bow"),
+        note(2, "D ⊓", [62], "Open D, down-bow"),
+        rest(3, "Rest; keep counting"),
+        note(4, "A ⊓", [69], "Open A, down-bow"),
+        note(5, "B ∨", [71], "First finger on A, up-bow"),
+        note(6, "A ⊓", [69], "Open A, down-bow"),
+        rest(7, "Rest; keep counting"),
+      ],
+      2,
+      8,
+    ),
+  },
+  {
+    lessonId: "violin-d-tetrachord",
+    title: "Four notes on one string",
+    bpm: 50,
+    beats: 16,
+    goal: "Play D–E–F♯–G up and back down on the D string, one note per beat, twice.",
+    setup:
+      "Fingers 0, 1, 2, 3. The step from F♯ to G is a half step, so fingers 2 and 3 touch. Alternate the bow.",
+    hint: "Place fingers 1, 2, 3 one at a time without bowing, keeping each earlier finger down. Then bow the four notes at 40 BPM.",
+    retryLabel: "The half step between F♯ and G is too wide",
+    takeaway:
+      "Fingers 2 and 3 close together give the half step. The rest of the hand stayed still.",
+    cues: repeatEvery(
+      [
+        note(0, "D ⊓", [62], "Open D"),
+        note(1, "E ∨", [64], "First finger"),
+        note(2, "F♯ ⊓", [66], "Second finger"),
+        note(3, "G ∨", [67], "Third finger, close to second"),
+        note(4, "G ⊓", [67], "Third finger"),
+        note(5, "F♯ ∨", [66], "Second finger"),
+        note(6, "E ⊓", [64], "First finger"),
+        note(7, "D ∨", [62], "Open D"),
+      ],
+      2,
+      8,
+    ),
+  },
+  {
+    lessonId: "violin-slurs",
+    title: "Two notes in one bow",
+    bpm: 50,
+    beats: 16,
+    goal: "Slur D–E, F♯–G, G–F♯, E–D: two notes in each bow, for four bars.",
+    setup:
+      "One bow stroke carries two notes. The finger changes halfway; the bow keeps moving in the same direction.",
+    hint: "Slur only D–E in one down-bow with the guide stopped. Change the finger without stopping the bow.",
+    retryLabel: "The bow stops or bumps when the finger changes",
+    takeaway: "The bow kept moving while the finger changed. That is a slur.",
+    cues: repeat(
+      [
+        note(0, "D ⊓ slur", [62], "Down-bow starts; first note", 0.45),
+        note(0.5, "E", [64], "Same bow; change the finger", 0.45),
+        note(1, "F♯ ∨ slur", [66], "Up-bow starts; first note", 0.45),
+        note(1.5, "G", [67], "Same bow; change the finger", 0.45),
+        note(2, "G ⊓ slur", [67], "Down-bow starts; first note", 0.45),
+        note(2.5, "F♯", [66], "Same bow; change the finger", 0.45),
+        note(3, "E ∨ slur", [64], "Up-bow starts; first note", 0.45),
+        note(3.5, "D", [62], "Same bow; change the finger", 0.45),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "violin-string-crossing",
+    title: "Crossing without a bump",
+    bpm: 50,
+    beats: 16,
+    goal: "Alternate open D and open A on the pulse, growing from soft to full over four bars.",
+    setup:
+      "Roll the elbow to reach the next string; the bow arm moves as one unit. Each bar is a little louder than the last.",
+    hint: "Rest the bow on D, then tilt to A without sounding. Feel the level change before adding the stroke.",
+    retryLabel: "The crossing catches both strings or bumps",
+    takeaway:
+      "The crossing came from the arm, not the wrist. The volume grew because the bow speed grew.",
+    cues: ["soft", "medium", "louder", "full"].flatMap((level, bar) => [
+      note(bar * 4, "D ⊓", [62], "Open D, " + level),
+      note(bar * 4 + 1, "A ∨", [69], "Cross to open A, " + level),
+      note(bar * 4 + 2, "D ⊓", [62], "Back to open D, " + level),
+      note(bar * 4 + 3, "A ∨", [69], "Cross to open A, " + level),
+    ]),
+  },
+  {
+    lessonId: "violin-phrase-shaping",
+    title: "Give the phrase a direction",
+    bpm: 50,
+    beats: 16,
+    goal: "Build a four-bar D-major phrase, then shape it toward one high point.",
+    setup:
+      "D E F♯ G | A G F♯ D | E F♯ G A | D held. Alternate the bow; plan where the loudest note falls.",
+    hint: "Play only bars 1 and 2 at 40 BPM with an even sound before adding any shape.",
+    retryLabel: "The shape makes the notes uneven",
+    takeaway:
+      "A phrase has a direction when one note is the goal. The rest of the notes lead there or away.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build the phrase",
+        instruction: "Play the first two bars with an even sound and alternating bows.",
+        button: "I built the phrase",
+      },
+      {
+        title: "Choose the high point",
+        instruction: "Choose where the phrase grows loudest, then add bars 3 and 4.",
+        button: "Save my high point",
+      },
+      {
+        title: "Refine the shape",
+        instruction:
+          "After the four-bar reference stops, play the whole phrase yourself twice with your chosen shape. Refine one thing: the bow speed into the high point, or the release into the final D.",
+        button: "I tried my refined shape",
+      },
+      [
+        {
+          label: "Swell to bar 3",
+          detail: "Grow through bars 1 and 2 so the A in bar 3 is the loudest note.",
+        },
+        {
+          label: "Taper to bar 4",
+          detail: "Start full and let each bar get softer until the final D fades.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ⊓", "E ∨", "F♯ ⊓", "G ∨"][beat], [midi], "Bar 1"),
+      ),
+      ...[69, 67, 66, 62].map((midi, beat) =>
+        note(4 + beat, ["A ⊓", "G ∨", "F♯ ⊓", "D ∨"][beat], [midi], "Bar 2"),
+      ),
+      ...[64, 66, 67, 69].map((midi, beat) =>
+        note(8 + beat, ["E ⊓", "F♯ ∨", "G ⊓", "A ∨"][beat], [midi], "Bar 3"),
+      ),
+      note(12, "D ⊓", [62], "Final D, whole bow", 3.8),
+      { beat: 13, label: "Hold", detail: "Keep the bow moving" },
+      { beat: 14, label: "Hold", detail: "Keep the bow moving" },
+      { beat: 15, label: "Release", detail: "Let the bow slow and lift" },
+    ],
+  },
+  {
+    lessonId: "violin-performance-plan",
+    title: "Plan two phrases",
+    bpm: 50,
+    beats: 17,
+    goal: "Play phrase A and phrase B with planned bowings, then land on a held D.",
+    setup:
+      "Phrase A: D E F♯ G | A rest rest rest. Phrase B: G F♯ E D | E rest rest rest. Then a final D on the new beat 1.",
+    hint: "Play only phrase A at 40 BPM. Plan the bow direction for every note before you start.",
+    retryLabel: "The bow direction gets lost between phrases",
+    takeaway:
+      "Two phrases with planned bows and planned rests. One criterion at a time is enough to revise.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build phrase A",
+        instruction: "Play D E F♯ G, then A, and rest for three counts with the bow on the string.",
+        button: "I built phrase A",
+      },
+      {
+        title: "Choose the ending",
+        instruction: "Choose how the final D ends, then add phrase B and the landing.",
+        button: "Save my ending",
+      },
+      {
+        title: "Refine one criterion",
+        instruction:
+          "After the reference and the final D stop, play both phrases yourself twice. Choose one criterion, clean bow changes, pitch of the first finger, or the rests, and revise just that.",
+        button: "I tried my refined plan",
+      },
+      [
+        {
+          label: "Long final note",
+          detail: "One slow whole bow on the final D, fading to nothing.",
+        },
+        {
+          label: "Clean release",
+          detail: "A shorter final D with a planned stop and a lift of the bow.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ⊓", "E ∨", "F♯ ⊓", "G ∨"][beat], [midi], "Phrase A"),
+      ),
+      note(4, "A ⊓", [69], "Phrase A ends", 0.85),
+      rest(5, "Rest with the bow on the string"),
+      rest(6, "Rest; keep counting"),
+      rest(7, "Rest; prepare phrase B"),
+      ...[67, 66, 64, 62].map((midi, beat) =>
+        note(8 + beat, ["G ∨", "F♯ ⊓", "E ∨", "D ⊓"][beat], [midi], "Phrase B"),
+      ),
+      note(12, "E ∨", [64], "Phrase B ends", 0.85),
+      rest(13, "Rest with the bow on the string"),
+      rest(14, "Rest; keep counting"),
+      rest(15, "Rest; prepare the landing"),
+      note(16, "D ⊓ · land", [62], "Final D on the new beat 1; let it ring", 0.9),
     ],
   },
 ];

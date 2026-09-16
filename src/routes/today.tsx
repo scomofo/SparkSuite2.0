@@ -10,7 +10,7 @@ import { InstrumentMark } from "@/components/instrument-mark";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { unlockAudio } from "@/lib/spark/audio";
 import { rankFor, sparksFor, weekPulse, xpProgress } from "@/lib/spark/game";
-import { instrumentById, lessonsFor, PIANO_VOICINGS, tracksFor, UKE_CHORDS } from "@/lib/spark/instruments";
+import { BANJO_CHORDS, instrumentById, lessonsFor, MANDOLIN_CHORDS, PIANO_VOICINGS, tracksFor, UKE_CHORDS } from "@/lib/spark/instruments";
 import { labCardFor, labSearchFor } from "@/lib/spark/labs";
 import { dayCue, streakTone } from "@/lib/spark/psychology";
 import { feelCue, newThingLine } from "@/lib/spark/udl";
@@ -47,6 +47,12 @@ function TodayPage() {
   const slower = !done ? feelCue(progress) : null;
   const uke = instrument === "ukulele" && firstChord && UKE_CHORDS[firstChord]
     ? { id: firstChord, name: firstChord, ...UKE_CHORDS[firstChord] }
+    : null;
+  const mandolin = instrument === "mandolin" && firstChord && MANDOLIN_CHORDS[firstChord]
+    ? { id: firstChord, name: firstChord, ...MANDOLIN_CHORDS[firstChord] }
+    : null;
+  const banjo = instrument === "banjo" && firstChord && BANJO_CHORDS[firstChord]
+    ? { id: firstChord, name: firstChord, ...BANJO_CHORDS[firstChord] }
     : null;
   const pianoPcs = firstChord && PIANO_VOICINGS[firstChord] ? PIANO_VOICINGS[firstChord].map((m) => m % 12) : [0];
 
@@ -104,6 +110,8 @@ function TodayPage() {
         <div className="mt-6 flex flex-col items-center gap-4">
           {instrument === "guitar" && firstChord ? <ChordDiagram chordId={firstChord} compact /> : null}
           {uke ? <ChordDiagram shape={uke} compact /> : null}
+          {mandolin ? <ChordDiagram shape={mandolin} compact /> : null}
+          {banjo ? <ChordDiagram shape={banjo} compact /> : null}
           {instrument === "piano" || instrument === "vocals" ? (
             <PianoKeyboard activeMidi={null} chordPcs={pianoPcs} onPlay={() => undefined} disabled />
           ) : null}

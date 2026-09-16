@@ -236,7 +236,7 @@ try {
   await page.goto(`${url}/progress`, { waitUntil: "networkidle" });
   assert.equal(
     await page.getByRole("region", { name: "Saved music", exact: true }).getByRole("link").count(),
-    6,
+    MUSICAL_MILESTONES.length,
   );
   await capture("collection", [1280, 390]);
   const suite = await page.evaluate(() => JSON.parse(localStorage.getItem("sparksuite.v2")));
@@ -284,7 +284,7 @@ try {
           "first-bar pause/reload/return",
           "reflection guard and note persistence",
           "snapshot and replay settings",
-          "six instruments and saved collection",
+          "nine instruments and saved collection",
           "desktop/390px/320px",
           "keyboard and focus",
           "separate practice scores",

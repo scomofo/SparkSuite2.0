@@ -2,9 +2,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { CHORDS, fretToFreq, OPEN_FREQ } from "@/lib/spark/guitar";
-import { bassTone, comboSting, drumHit, hitSfx, pianoChord, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
+import { bassTone, comboSting, drumHit, hitSfx, pianoChord, pianoHold, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
 import {
+  BANJO_CHORDS,
   instrumentById,
+  MANDOLIN_CHORDS,
   midiToFreq,
   PIANO_VOICINGS,
   UKE_CHORDS,
@@ -38,15 +40,38 @@ function ukeShape(id: string): ChordShape | undefined {
   return { id, name: id, ...c };
 }
 
+function mandolinShape(id: string): ChordShape | undefined {
+  const c = MANDOLIN_CHORDS[id];
+  if (!c) return undefined;
+  return { id, name: id, ...c };
+}
+
+function banjoShape(id: string): ChordShape | undefined {
+  const c = BANJO_CHORDS[id];
+  if (!c) return undefined;
+  return { id, name: id, ...c };
+}
+
 function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = instrumentById(instrument)) {
+  if (instrument === "violin") {
+    // Tokens are open-string names; a sustained tone stands in for the bow.
+    const string = inst.stringNames.indexOf(chordId);
+    pianoHold(string >= 0 ? inst.openFreq[string] : midiToFreq(62), 2);
+    return;
+  }
   if (instrument === "piano" || instrument === "vocals") {
     const midi = PIANO_VOICINGS[chordId];
     if (midi) pianoChord(midi.map(midiToFreq));
     else pianoTone(midiToFreq(60));
     return;
   }
-  if (instrument === "ukulele") {
-    const c = UKE_CHORDS[chordId];
+  if (instrument === "ukulele" || instrument === "mandolin" || instrument === "banjo") {
+    const c =
+      instrument === "ukulele"
+        ? UKE_CHORDS[chordId]
+        : instrument === "mandolin"
+          ? MANDOLIN_CHORDS[chordId]
+          : BANJO_CHORDS[chordId];
     if (!c) return;
     const freqs = c.frets
       .map((f, i) => (f == null ? null : inst.openFreq[i] * Math.pow(2, f / 12)))
@@ -439,11 +464,15 @@ export function SessionPlayer() {
           ? "Match"
           : instrument === "bass"
             ? "Pluck"
-            : "Strum";
+            : instrument === "violin"
+              ? "Bow"
+              : "Strum";
   const chordPcs = liveChord && PIANO_VOICINGS[liveChord] ? PIANO_VOICINGS[liveChord].map((m) => m % 12) : [];
   const lastItem = session.index + 1 >= session.plan.items.length;
 
   const uke = instrument === "ukulele" ? ukeShape(liveChord || item.chords[0] || "C") : undefined;
+  const mandolin = instrument === "mandolin" ? mandolinShape(liveChord || item.chords[0] || "G") : undefined;
+  const banjo = instrument === "banjo" ? banjoShape(liveChord || item.chords[0] || "G") : undefined;
   const needsPick =
     (item.process === "create" && item.createOptions && item.createOptions.length >= 2 && !createPick) ||
     (item.process === "respond" && item.listenPrompt && !listenPick);
@@ -484,6 +513,10 @@ export function SessionPlayer() {
               <DrumPads active={null} onHit={() => undefined} disabled />
             ) : item.chords[0] && instrument === "ukulele" ? (
               <ChordDiagram shape={uke} />
+            ) : item.chords[0] && instrument === "mandolin" ? (
+              <ChordDiagram shape={mandolin} />
+            ) : item.chords[0] && instrument === "banjo" ? (
+              <ChordDiagram shape={banjo} />
             ) : item.chords[0] && instrument === "guitar" ? (
               <ChordDiagram chordId={item.chords[0]} />
             ) : (
@@ -564,6 +597,8 @@ export function SessionPlayer() {
               <div className="flex flex-col items-center gap-3">
                 {instrument === "guitar" ? <ChordDiagram chordId={liveChord || item.chords[0]} compact /> : null}
                 {instrument === "ukulele" ? <ChordDiagram shape={uke} compact /> : null}
+                {instrument === "mandolin" ? <ChordDiagram shape={mandolin} compact /> : null}
+                {instrument === "banjo" ? <ChordDiagram shape={banjo} compact /> : null}
                 <div className="flex flex-wrap justify-center gap-2 text-sm">
                   {item.chords.map((c) => (
                     <span

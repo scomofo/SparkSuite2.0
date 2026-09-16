@@ -23,7 +23,7 @@ try {
   await page.clock.install({ time: new Date("2026-09-05T12:00:00Z") });
   await page.goto(url, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Make room for music." }).waitFor();
-  assert.equal(await page.getByRole("button", { name: /^Practise / }).count(), 6);
+  assert.equal(await page.getByRole("button", { name: /^Practise / }).count(), 9);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${output}/studio-${label}-desktop.png`, fullPage: true });
   for (const width of [390, 320]) {
@@ -38,7 +38,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("link", { name: "Progress", exact: true }).click();
   await page.getByRole("heading", { name: "Your progress" }).waitFor();
-  for (const instrument of ["piano", "ukulele", "bass", "drums", "vocals", "guitar"]) {
+  for (const instrument of ["piano", "ukulele", "mandolin", "banjo", "violin", "bass", "drums", "vocals", "guitar"]) {
     await page.getByLabel("Instrument", { exact: true }).selectOption(instrument);
     assert.equal(
       await page
@@ -121,7 +121,7 @@ try {
         errors,
         checks: [
           "desktop/mobile/320px studio",
-          "six progress instruments",
+          "nine progress instruments",
           "native keyboard action",
           "completed exercise recovery",
           "instrument switching",

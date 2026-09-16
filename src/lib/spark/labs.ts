@@ -14,6 +14,12 @@ export function labSearchFor(id: InstrumentId): LabSearch {
       return { tab: "down", chord: "C" };
     case "vocals":
       return { tab: "drone", chord: "C" };
+    case "mandolin":
+      return { tab: "down", chord: "G" };
+    case "banjo":
+      return { tab: "roll", chord: "G" };
+    case "violin":
+      return { tab: "open", chord: "" };
     default:
       return { tab: "down", chord: "Em" };
   }
@@ -65,6 +71,27 @@ export function labCardFor(id: InstrumentId): LabCard | null {
         kicker: "Voice lab",
         title: "Breath",
         body: "Match a C, hold it four beats, step to a neighbor. Four minutes. Then stop.",
+        cta: "Four minutes",
+      };
+    case "mandolin":
+      return {
+        kicker: "Mandolin lab",
+        title: "Pick",
+        body: "Downstrokes, alternate picking, the chop, tremolo. Four minutes. Then stop.",
+        cta: "Four minutes",
+      };
+    case "banjo":
+      return {
+        kicker: "Banjo lab",
+        title: "Roll",
+        body: "Forward roll, pinch, hammer-on, slide, vamp. Four minutes. Then stop.",
+        cta: "Four minutes",
+      };
+    case "violin":
+      return {
+        kicker: "Violin lab",
+        title: "Bow",
+        body: "Open strings, bow direction, first finger, slurs, string crossing. Four minutes. Then stop.",
         cta: "Four minutes",
       };
     default:

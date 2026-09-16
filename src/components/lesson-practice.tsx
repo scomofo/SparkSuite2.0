@@ -514,9 +514,14 @@ function GuidedPractice({
                           : `Bar ${bar + 1}${sequence.beats % 4 && bar === bars - 1 ? " · landing" : ` of ${bars}`}`}
                       </h3>
                       <span className="text-xs text-muted">
-                        {lesson.instrument === "guitar" || lesson.instrument === "ukulele"
+                        {lesson.instrument === "guitar" ||
+                        lesson.instrument === "ukulele" ||
+                        lesson.instrument === "mandolin" ||
+                        lesson.instrument === "banjo"
                           ? "↓ down · ↑ up"
-                          : "Numbers are beats"}
+                          : lesson.instrument === "violin"
+                            ? "⊓ down-bow · ∨ up-bow"
+                            : "Numbers are beats"}
                         {sequence.subdivision === 4
                           ? " · e, and, a = four equal parts"
                           : sequence.subdivision === 3

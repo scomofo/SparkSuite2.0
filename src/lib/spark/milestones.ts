@@ -84,7 +84,67 @@ const voice = copy("vocals-phrase-and-rest").map((cue) =>
     : cue,
 );
 
-/** Six original, short arrangements. Variations change the music rather than a score. */
+const MANDOLIN_NOTES: Record<string, number[]> = {
+  G: [55, 62, 71, 79],
+  C: [55, 64, 72, 76],
+  D: [57, 62, 69, 78],
+};
+const mandolin = ["G", "C", "D", "G"].flatMap((chord, bar) =>
+  bar === 3
+    ? [
+        { ...n(12, "G ↓", MANDOLIN_NOTES.G, 3.8), chord, detail: "Return to G and let it ring" },
+        { beat: 13, label: "Hold", detail: "Let the final G ring" },
+        { beat: 14, label: "Hold", detail: "Let the final G ring" },
+        { beat: 15, label: "Hold", detail: "Let the final G ring" },
+      ]
+    : [
+        {
+          ...n(bar * 4, chord + " ↓", MANDOLIN_NOTES[chord]),
+          chord,
+          detail: chord + ": downstroke",
+        },
+        quiet(bar * 4 + 1, "Count"),
+        quiet(bar * 4 + 2, "Prepare"),
+        quiet(bar * 4 + 3, "Prepare"),
+      ],
+);
+
+/** One rolled bar copied from the three-chord-loop exercise (bars: G, C, D7, G). */
+const banjoRoll = (beat: number, bar: number) =>
+  lessonExercise("banjo-three-chord-loop")!
+    .cues.filter((cue) => Math.floor(cue.beat / 4) === bar)
+    .map((cue) => ({ ...cue, beat: beat + (cue.beat - bar * 4) }));
+const banjo = [
+  ...banjoRoll(0, 0),
+  ...banjoRoll(4, 1),
+  ...banjoRoll(8, 2),
+  {
+    ...n(12, "G ↓", [67, 50, 55, 59, 62], 3.8),
+    chord: "G",
+    detail: "Brush all five open strings and let them ring",
+  },
+  { beat: 13, label: "Hold", detail: "Let the open G ring" },
+  { beat: 14, label: "Hold", detail: "Let the open G ring" },
+  { beat: 15, label: "Hold", detail: "Let the open G ring" },
+];
+
+const violinBar = (beat: number) => [
+  n(beat, "D ⊓", [62]),
+  n(beat + 1, "E ∨", [64]),
+  n(beat + 2, "F♯ ⊓", [66]),
+  quiet(beat + 3, "Rest"),
+];
+const violin = [
+  ...violinBar(0),
+  ...violinBar(4),
+  ...violinBar(8),
+  { ...n(12, "D ⊓", [62], 3.8), detail: "Final D on one slow whole bow" },
+  { beat: 13, label: "Hold", detail: "Keep the bow moving" },
+  { beat: 14, label: "Hold", detail: "Keep the bow moving" },
+  { beat: 15, label: "Release", detail: "Let the bow slow and lift" },
+];
+
+/** Nine original, short arrangements. Variations change the music rather than a score. */
 export const MUSICAL_MILESTONES: MusicalMilestone[] = [
   {
     instrument: "guitar",
@@ -196,6 +256,80 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
               cue.beat < 8 ? [[60], [62], [64]][cue.beat - 4] : [[64], [62], [60]][cue.beat - 12],
           }
         : cue,
+    ),
+  },
+  {
+    instrument: "mandolin",
+    title: "Two courses and a return",
+    goal: "Play G → C → D → G, one bar each, and finish on a ringing G.",
+    setup:
+      "Strum down on beat 1 and prepare the next shape while counting. G–D–A–E frets: G 0–0–2–3, C 0–2–3–0, D 2–0–0–2.",
+    variation: "Chop on two and four",
+    variationHint:
+      "In the first three bars, add a short muted chop on beats 2 and 4; keep the final bar as one ringing G.",
+    lessons: ["mandolin-gdae", "mandolin-down-pulse", "mandolin-g-and-c"],
+    bpm: 50,
+    beats: 16,
+    shapes: ["G", "C", "D"],
+    cues: mandolin,
+    alternate: mandolin.map((cue) =>
+      cue.beat < 12 && (cue.beat % 4 === 1 || cue.beat % 4 === 3)
+        ? {
+            beat: cue.beat,
+            label: "Chop",
+            detail: "Release pressure and chop",
+            muted: true,
+            chord: ["G", "C", "D"][Math.floor(cue.beat / 4)],
+          }
+        : cue,
+    ),
+  },
+  {
+    instrument: "banjo",
+    title: "Roll home to G",
+    goal: "Roll G → C → D7, one bar each, then brush a ringing open G.",
+    setup:
+      "Forward roll T–I–M–T–I–M–T–M on strings 3–2–1–5–2–1–3–1. g–D–G–B–D frets: G open, C 0–2–0–1–2, D7 0–0–2–1–2.",
+    variation: "Add a hammer-on",
+    variationHint:
+      "In bar 1, hammer the third string from open to fret 2 on the and of 1 instead of picking the second string; keep the rest of the roll the same.",
+    lessons: ["banjo-open-g", "banjo-pulse-brush", "banjo-g-to-d7"],
+    bpm: 50,
+    beats: 16,
+    shapes: ["G", "C", "D7"],
+    cues: banjo,
+    alternate: banjo.map((cue) =>
+      cue.beat === 0.5
+        ? {
+            ...cue,
+            label: "H",
+            notes: [57],
+            detail: "Hammer on to fret 2 on the 3rd string; no pick",
+          }
+        : cue,
+    ),
+  },
+  {
+    instrument: "violin",
+    title: "Open strings and a first finger",
+    goal: "Play D, E, F♯, rest for three bars, then hold a final D on one slow bow.",
+    setup:
+      "Open D, first finger E, second finger F♯. Alternate the bow and let the rest on beat 4 keep its full count.",
+    variation: "Slur the pairs",
+    variationHint:
+      "In the first three bars, play D–E in one down-bow, then F♯ alone on an up-bow; keep the final bar as one held D.",
+    lessons: ["violin-open-strings-and-bow", "violin-bow-pulse", "violin-first-finger"],
+    bpm: 50,
+    beats: 16,
+    cues: violin,
+    alternate: violin.map((cue) =>
+      cue.beat < 12 && cue.beat % 4 === 0
+        ? { ...cue, label: "D ⊓ slur", detail: "Down-bow starts; E follows in the same bow" }
+        : cue.beat < 12 && cue.beat % 4 === 1
+          ? { ...cue, label: "E", detail: "Same bow; change the finger" }
+          : cue.beat < 12 && cue.beat % 4 === 2
+            ? { ...cue, label: "F♯ ∨", detail: "Up-bow alone" }
+            : cue,
     ),
   },
 ];

@@ -179,7 +179,7 @@ function SuiteHome() {
             <h2 id="instruments-heading" className="font-display text-2xl font-semibold">
               Your instruments
             </h2>
-            <span className="text-sm text-muted">Six ways in</span>
+            <span className="text-sm text-muted">Nine ways in</span>
           </div>
           <ul className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {INSTRUMENTS.map((inst) => {

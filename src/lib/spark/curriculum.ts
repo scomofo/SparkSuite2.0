@@ -1148,6 +1148,604 @@ const vocals = path("vocals", [
   },
 ]);
 
+const mandolin = path("mandolin", [
+  {
+    slug: "gdae",
+    level: "foundations",
+    title: "Four pairs, one pick",
+    outcome: "Name the G–D–A–E courses and sound each pair as one note.",
+    explanation:
+      "A mandolin has eight strings arranged in four pairs called courses. Each pair is tuned in unison, so it sounds like one string. From the thickest to the thinnest course the tuning is G–D–A–E, a fifth apart each time. Hold the pick lightly and let it pass through both strings of a pair.",
+    example: "Pick each open course once, thickest to thinnest: G, D, A, E.",
+    practice: [
+      "Rest the mandolin against you and find the thickest course.",
+      "Pick down through both strings of that pair; listen for one sound, not two.",
+      "Move to each next course and name it aloud, four times in a row.",
+    ],
+    question: "What is a course on a mandolin?",
+    options: [
+      "A pair of strings tuned to the same note",
+      "The distance between two frets",
+      "A lesson in a method book",
+    ],
+    answer: 0,
+    feedback:
+      "A course is a unison pair that plays as one string. Frets divide the neck, and the tuning runs G–D–A–E across the four courses.",
+    demo: { label: "Open G, D, A, then E", notes: [[55], [62], [69], [76]] },
+  },
+  {
+    slug: "down-pulse",
+    level: "foundations",
+    title: "Downstrokes on a pulse",
+    outcome: "Keep counting four while picking only on beats 1 and 3.",
+    explanation:
+      "The beat is the regular pulse. In 4/4, four beats make one bar. A downstroke moves the pick toward the floor. Playing only on beats 1 and 3 leaves 2 and 4 silent; those silent beats still take their full time, so keep counting through them.",
+    example: "Count 1–2–3–4. Pick the open D course down on 1 and 3; let 2 and 4 pass.",
+    practice: [
+      "Tap your foot and count four evenly, twice, without picking.",
+      "Pick the open D course down on 1 and 3 for one bar.",
+      "Keep counting through 2 and 4 for four bars in a row.",
+    ],
+    question: "If you miss the downstroke on beat 3, what keeps the pulse?",
+    options: [
+      "Start the bar again",
+      "Keep counting and pick on the next beat 1",
+      "Add two quick strokes on beat 4",
+    ],
+    answer: 1,
+    feedback:
+      "The pulse continues through a missed stroke. Rejoin it on the next beat; restarting or catching up changes the timing.",
+  },
+  {
+    slug: "g-and-c",
+    level: "beginner",
+    title: "Two fingers, two chords",
+    outcome: "Change between G and C without rushing beat 1.",
+    explanation:
+      "A chord sounds several notes together. In G–D–A–E fret order, a two-finger G is 0–0–2–3 and C is 0–2–3–0. Press just behind the fret on both strings of the course. Change shapes during beats 3 and 4 so the new chord is ready on beat 1.",
+    example: "One bar G, one bar C. Strum down on beat 1 only; prepare the next shape on 3 and 4.",
+    practice: [
+      "Place G and pick each course slowly until both strings of every pair ring.",
+      "Make C, then move silently back to G three times.",
+      "Count four per shape and strum only beat 1 for four bars.",
+    ],
+    question: "Which frets make the two-finger G shape in G–D–A–E order?",
+    options: ["0–2–3–0", "0–0–2–3", "2–0–0–2"],
+    answer: 1,
+    feedback:
+      "G is 0–0–2–3: the A course at fret 2 and the E course at fret 3. 0–2–3–0 is C, and 2–0–0–2 is D.",
+    demo: { label: "G then C", notes: [[55, 62, 71, 79], [], [55, 64, 72, 76], []] },
+  },
+  {
+    slug: "down-up",
+    level: "beginner",
+    title: "Down on numbers, up on ands",
+    outcome: "Alternate pick direction through straight eighth notes.",
+    explanation:
+      "Two equal eighth notes fit inside one beat. Say 1-and-2-and-3-and-4-and. Alternate picking moves the pick down on the numbers and up on the ands, so the hand never has to change direction in a hurry. Keep the motion small and let the wrist do the work.",
+    example: "On the D course: D open, E fret 2, F♯ fret 4, G fret 5. Down, up, down, up.",
+    practice: [
+      "Count the eight syllables while moving the pick down and up above the strings.",
+      "Pick open D down-up for one bar with an even sound on both directions.",
+      "Play D–E–F♯–G up and back down, one note per syllable, for four bars.",
+    ],
+    question: "In alternate picking, where do the upstrokes fall?",
+    options: ["On the ands", "On beats 1 and 3", "Only at the end of a bar"],
+    answer: 0,
+    feedback:
+      "Downstrokes take the numbers and upstrokes take the ands. That pairing keeps the hand moving evenly through the subdivision.",
+    demo: { label: "D, E, F♯, G", notes: [[62], [64], [66], [67]] },
+  },
+  {
+    slug: "chop",
+    level: "intermediate",
+    title: "The chop on two and four",
+    outcome: "Alternate a ringing downstroke with a short muted chop.",
+    explanation:
+      "A chop is a chord struck while the fretting fingers release pressure, so the strings click instead of ringing. Placed on beats 2 and 4 it works like a snare drum under a melody. The chord shape stays in place; only the pressure changes. Keep the stroke short and let beats 1 and 3 ring fully.",
+    example:
+      "Hold G. Beat 1: strum and let it ring. Beat 2: release pressure and chop. Repeat on 3 and 4.",
+    practice: [
+      "Hold G and practise releasing pressure without lifting the fingers off the strings.",
+      "Strum on 1, chop on 2, strum on 3, chop on 4 for one slow bar.",
+      "Repeat for four bars and listen for a clear difference between ring and click.",
+    ],
+    question: "What makes a chop sound short?",
+    options: [
+      "Releasing finger pressure so the strings cannot ring",
+      "Picking much harder than usual",
+      "Lifting the pick away before it touches the strings",
+    ],
+    answer: 0,
+    feedback:
+      "The fingers stay on the strings but stop pressing, so the strings are damped. Force and pick height do not create the muted click.",
+  },
+  {
+    slug: "tremolo",
+    level: "intermediate",
+    title: "Sustain from motion",
+    outcome: "Hold one note with even, rapid down-up strokes.",
+    explanation:
+      "A plucked note fades quickly. Tremolo repeats the pick stroke fast enough that the ear hears one continuous tone. Start with four even strokes per beat, counted 1-e-and-a. The wrist stays loose and the strokes stay small; speed comes from ease, not effort.",
+    example:
+      "Open A course. Count 1-e-and-a 2-e-and-a with a stroke on every syllable, then rest for two beats.",
+    practice: [
+      "Say 1-e-and-a slowly and move the pick down-up-down-up above the strings.",
+      "Play four strokes per beat on open A for two beats, then rest for two.",
+      "Repeat twice and check that the last strokes sound as even as the first.",
+    ],
+    question: "What turns repeated strokes into a sustained tone?",
+    options: [
+      "Playing as loudly as possible",
+      "Even, closely spaced strokes",
+      "Changing the note on every stroke",
+    ],
+    answer: 1,
+    feedback:
+      "Evenness is what the ear hears as one continuous sound. Volume and pitch changes do not create the effect.",
+    demo: { label: "Tremolo on A, then rest", notes: [[69], [69], [], []] },
+  },
+  {
+    slug: "melody-with-chops",
+    level: "advanced",
+    title: "Melody, then backing",
+    outcome: "Play a short melody and support it with a chop backing.",
+    explanation:
+      "The mandolin plays two roles in a group: lead melody and rhythmic backing. A melody on the D and A courses uses the alternate picking you already have. Backing under a singer or another player uses chords with a chop on 2 and 4. Practising both over the same chords makes it easier to switch roles mid-tune.",
+    example:
+      "Two bars of melody: D–E–F♯–G, then A–G–F♯–D. Two bars of backing: G with chops, then D with chops, back to G.",
+    practice: [
+      "Play the two melody bars alone with alternate picking at a slow tempo.",
+      "Play two bars of chop backing on G and D without the melody.",
+      "Join them: melody, then backing, keeping the same count throughout.",
+    ],
+    question: "What stays the same when the mandolin changes from melody to backing?",
+    options: [
+      "The pulse and the chord progression",
+      "The pick must stop moving",
+      "The fretting hand leaves the neck",
+    ],
+    answer: 0,
+    feedback:
+      "The count and the harmony carry through both roles. The picking pattern and the fretting job change, not the underlying pulse.",
+    demo: {
+      label: "Melody then a G chop",
+      notes: [[62], [64], [66], [67], [55, 62, 71, 79], [], [55, 62, 71, 79], []],
+    },
+  },
+  {
+    slug: "arrangement",
+    level: "advanced",
+    title: "Arrange a short tune",
+    outcome: "Plan, perform, and revise a four-bar arrangement with a clear ending.",
+    explanation:
+      "An arrangement decides how a melody and its chords are presented over time. Contrast can come from texture: single-note melody, then strummed chords. An ending that lands on the home chord, G, tells the listener the piece is finished. Choose one criterion to revise after each attempt; a finished lesson is a practice milestone, not a performance grade.",
+    example:
+      "Bars 1–2: melody D–E–F♯–G, A–G–F♯–D. Bars 3–4: strum G, C, then D. Land on a final G and let it ring.",
+    practice: [
+      "Play the melody bars, then the strummed bars, at one steady tempo.",
+      "Add the final G on the next beat 1 and let it ring for a full count.",
+      "Choose one thing to change, such as the ending or the texture switch, and repeat.",
+    ],
+    question: "Which review gives you a usable next step?",
+    options: [
+      "Decide the whole take was good or bad",
+      "Name one transition to place more clearly next time",
+      "Double the tempo immediately",
+    ],
+    answer: 1,
+    feedback:
+      "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+  },
+]);
+
+const banjo = path("banjo", [
+  {
+    slug: "open-g",
+    level: "foundations",
+    title: "Five strings that already agree",
+    outcome: "Name the five strings and hear that the open strings make G major.",
+    explanation:
+      "A five-string banjo in open G is tuned g–D–G–B–D. The fifth string is the short one: it starts at the fifth fret and is tuned to a high g, so the string nearest your face is not the lowest. With no fingers down, the open strings sound a G major chord.",
+    example:
+      "Pick D, G, B, D on the four long strings, then the short g with the thumb. Then brush all five.",
+    practice: [
+      "Rest the banjo against you and find the short fifth string with your thumb.",
+      "Pick each long string once, thickest to thinnest, naming D, G, B, D.",
+      "Brush all five open strings and listen for one chord.",
+    ],
+    question: "What is unusual about the fifth string on a five-string banjo?",
+    options: [
+      "It is short, starts at fret 5, and is tuned high",
+      "It is the lowest string",
+      "It must always be fretted",
+    ],
+    answer: 0,
+    feedback:
+      "The fifth string is shorter than the others and tuned to a high g. It is usually played open, never as the bass.",
+    demo: {
+      label: "Long strings, short g, then the open chord",
+      notes: [[50], [55], [59], [62], [67], [], [67, 50, 55, 59, 62], []],
+    },
+  },
+  {
+    slug: "pulse-brush",
+    level: "foundations",
+    title: "A pulse over an open chord",
+    outcome: "Keep counting while a brush or a rest happens.",
+    explanation:
+      "The beat is the regular pulse. In 4/4, four beats make one bar. A brush drags the fingers across all strings on one beat. Brushing on 1 and 3 leaves 2 and 4 silent; those beats still take their full time, so keep counting through them.",
+    example: "Count 1–2–3–4. Brush the open strings down on 1 and 3; let 2 and 4 pass.",
+    practice: [
+      "Tap your foot and count four evenly, twice.",
+      "Lightly mute the strings with your fretting hand; brush down on 1 and 3.",
+      "Keep counting through the silent beats for four bars.",
+    ],
+    question: "If you miss the brush on beat 3, what preserves the pulse?",
+    options: [
+      "Restart every time",
+      "Keep counting and join the next beat",
+      "Brush twice on beat 4",
+    ],
+    answer: 1,
+    feedback:
+      "The pulse continues through a missed sound. Rejoin it; restarting or rushing changes the timing.",
+  },
+  {
+    slug: "g-to-d7",
+    level: "beginner",
+    title: "The first change",
+    outcome: "Move between open G and D7 without rushing beat 1.",
+    explanation:
+      "Open G needs no fingers. D7 in g–D–G–B–D fret order is 0–0–2–1–2: the third string at fret 2, the second at fret 1, the first at fret 2. This beginner D7 leaves out the chord's third, which is why it sounds open. The short fifth string stays open. Place the shape during beats 3 and 4 so it is ready on beat 1.",
+    example: "One bar of open G, one bar of D7. Brush on beat 1 only; place the shape on 3 and 4.",
+    practice: [
+      "Place D7 and pick each string slowly to find a clear sound.",
+      "Lift to open G, then place D7 again, three times, without brushing.",
+      "Count four per shape and brush only beat 1 for four bars.",
+    ],
+    question: "Which strings are fretted for the beginner D7 shape?",
+    options: [
+      "The third, second, and first strings",
+      "The short fifth string only",
+      "All five strings",
+    ],
+    answer: 0,
+    feedback:
+      "D7 is 0–0–2–1–2: the third string at fret 2, second at fret 1, first at fret 2. The fifth and fourth strings stay open.",
+    demo: { label: "Open G then D7", notes: [[67, 50, 55, 59, 62], [], [67, 50, 57, 60, 64], []] },
+  },
+  {
+    slug: "forward-roll",
+    level: "beginner",
+    title: "Eight notes, three fingers",
+    outcome: "Play a forward roll as eight even eighth notes.",
+    explanation:
+      "A roll is a repeating right-hand pattern that keeps a steady stream of notes going. The forward roll uses thumb, index, and middle in order. Count 1-and-2-and-3-and-4-and; each syllable gets one note. The fingers follow a fixed string order, so the same motion works under any chord shape.",
+    example: "Strings 3–2–1–5–2–1–3–1 with T–I–M–T–I–M–T–M, one note per syllable, over open G.",
+    practice: [
+      "Say the eight syllables while tapping thumb, index, middle on your leg.",
+      "Play strings 3, 2, 1 with T, I, M slowly until the three notes are even.",
+      "Add the thumb on the short g and play the full roll for four bars.",
+    ],
+    question: "What stays the same when a roll is played under a new chord?",
+    options: [
+      "The finger and string order",
+      "The pitches of every note",
+      "The number of fingers that fret",
+    ],
+    answer: 0,
+    feedback:
+      "The roll is a right-hand pattern. The fretting hand changes the pitches, but the finger and string order repeats unchanged.",
+    demo: {
+      label: "Forward roll over open G",
+      notes: [[55], [59], [62], [67], [59], [62], [55], [62]],
+    },
+  },
+  {
+    slug: "three-chord-loop",
+    level: "intermediate",
+    title: "G, C, D7, and home",
+    outcome: "Keep a roll going through a I–IV–V7–I progression.",
+    explanation:
+      "In G major, G is I, C is IV, and D7 is V7. C in g–D–G–B–D order is 0–2–0–1–2. Notice that C and D7 both fret the second string at fret 1, so that finger can stay while the others move. Keeping the roll going while the shape changes is the main skill; the right hand must not pause for the left.",
+    example: "One bar each: G, C, D7, G. Forward roll throughout; change shapes on beat 1.",
+    practice: [
+      "Place C, then D7, three times without picking, keeping the fret-1 finger down.",
+      "Roll one bar of C into one bar of D7 at a slow tempo.",
+      "Play the four-bar loop twice, listening for the roll to stay even through each change.",
+    ],
+    question: "Which finger can stay in place between C and D7?",
+    options: [
+      "The second-string finger at fret 1",
+      "The fourth-string finger at fret 2",
+      "No finger can stay",
+    ],
+    answer: 0,
+    feedback:
+      "Both shapes fret the second string at fret 1. Keeping it down makes the change smaller and the roll steadier.",
+    demo: {
+      label: "G, C, D7, G",
+      notes: [
+        [67, 50, 55, 59, 62],
+        [],
+        [67, 52, 55, 60, 64],
+        [],
+        [67, 50, 57, 60, 64],
+        [],
+        [67, 50, 55, 59, 62],
+        [],
+      ],
+    },
+  },
+  {
+    slug: "hammer-and-slide",
+    level: "intermediate",
+    title: "Notes that move after the pick",
+    outcome: "Sound a second note with a hammer-on or a slide instead of a pick.",
+    explanation:
+      "A hammer-on lands a fretting finger firmly on a ringing string so a higher note sounds without a new pick. A slide keeps the finger pressed and moves it along the string to a new fret. Both connect notes smoothly and are part of the banjo's voice. Firm landing and steady pressure matter more than force.",
+    example:
+      "Pick the open third string, hammer onto fret 2. Pick fret 2, slide to fret 4. Pick open again.",
+    practice: [
+      "Pick the open third string, then land a finger at fret 2 without picking; listen for the new note.",
+      "Pick fret 2 and slide the same finger to fret 4, keeping pressure the whole way.",
+      "Play the example for four bars at a slow tempo, leaving beat 4 empty.",
+    ],
+    question: "What makes a hammer-on sound?",
+    options: [
+      "Landing the finger firmly on a ringing string",
+      "Picking the string twice quickly",
+      "Lifting the finger off the string",
+    ],
+    answer: 0,
+    feedback:
+      "The finger's landing sets the string vibrating at the new fret. No second pick is used; lifting off is a pull-off, a different technique.",
+    demo: { label: "Open, hammer, pick, slide, open", notes: [[55], [57], [57], [59], [55], []] },
+  },
+  {
+    slug: "backup-and-break",
+    level: "advanced",
+    title: "Two jobs in one tune",
+    outcome: "Play backup under a chord loop and switch to a rolled break.",
+    explanation:
+      "In a group the banjo either plays backup, a rhythmic vamp behind a singer or another instrument, or takes a break, a rolled melody pass. A vamp brushes the chord on 1 and 3 and chops it short on 2 and 4 by releasing finger pressure. The break rolls the same shapes. Practising both over one progression makes the switch dependable.",
+    example: "Two bars of vamp on G and D7, then two bars of forward roll on G and D7.",
+    practice: [
+      "Vamp G and D7 for two bars, releasing pressure for the chops.",
+      "Roll G and D7 for two bars with the forward roll.",
+      "Join them and keep the count steady across the switch on beat 1 of bar 3.",
+    ],
+    question: "What changes when the banjo moves from backup to a break?",
+    options: ["The right-hand pattern", "The chord progression", "The pulse"],
+    answer: 0,
+    feedback:
+      "The chords and the pulse carry through both roles. The right hand switches from vamp brushes and chops to a roll.",
+    demo: {
+      label: "Vamp, then roll, on G",
+      notes: [[67, 50, 55, 59, 62], [], [67, 50, 55, 59, 62], [], [55], [59], [62], [67]],
+    },
+  },
+  {
+    slug: "arrangement",
+    level: "advanced",
+    title: "Arrange a short tune",
+    outcome: "Plan, perform, and revise a four-bar arrangement with a clear ending.",
+    explanation:
+      "An arrangement decides how the right hand presents a progression over time. Rolling two bars and brushing the next two gives contrast without new chords. An ending that lands on the home chord, open G, tells the listener the piece is finished. Choose one criterion to revise after each attempt; a finished lesson is a practice milestone, not a performance grade.",
+    example:
+      "Bars 1–2: forward roll on G, then C. Bars 3–4: brush D7 on 1 and 3, then G on 1. Land on a full open-G brush.",
+    practice: [
+      "Play the rolled bars, then the brushed bars, at one steady tempo.",
+      "Add the final brush on the next beat 1 and let it ring for a full count.",
+      "Choose one thing to change, such as the ending or the texture switch, and repeat.",
+    ],
+    question: "Which review gives you a usable next step?",
+    options: [
+      "Decide the whole take was good or bad",
+      "Name one transition to place more clearly next time",
+      "Double the tempo immediately",
+    ],
+    answer: 1,
+    feedback:
+      "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+  },
+]);
+
+const violin = path("violin", [
+  {
+    slug: "open-strings-and-bow",
+    level: "foundations",
+    title: "Four strings and one straight bow",
+    outcome: "Name G–D–A–E and draw one straight bow on each open string.",
+    explanation:
+      "A violin has four strings tuned G–D–A–E, from lowest to highest, a fifth apart. The bow makes the sound: hold it with a relaxed, rounded hand and draw it across one string between the bridge and the fingerboard. A straight bow stays parallel to the bridge for the whole stroke. Speed and weight, not force, shape the tone.",
+    example: "One whole down-bow on open G, then D, then A, then E, each lasting a slow bar.",
+    practice: [
+      "Rest the violin on your shoulder and place the bow on the D string near the frog.",
+      "Draw one slow, straight bow to the tip and stop; listen for one even sound.",
+      "Repeat on G, A, and E, naming each string.",
+    ],
+    question: "What keeps a bow stroke sounding even from frog to tip?",
+    options: [
+      "Keeping the bow parallel to the bridge",
+      "Pressing harder as the bow moves",
+      "Moving the bow toward the scroll",
+    ],
+    answer: 0,
+    feedback:
+      "A straight bow keeps the contact point steady, so the sound stays even. Extra pressure or a drifting bow changes the tone mid-stroke.",
+    demo: { label: "Open G, D, A, then E", notes: [[55], [62], [69], [76]] },
+  },
+  {
+    slug: "bow-pulse",
+    level: "foundations",
+    title: "Down-bow on one, up-bow on three",
+    outcome: "Keep counting while the bow stops on a rest.",
+    explanation:
+      "A down-bow moves from the frog toward the tip; an up-bow moves back. The symbol ⊓ marks a down-bow and ∨ marks an up-bow. In 4/4, four beats make one bar. Bowing on 1 and 3 leaves 2 and 4 silent; the bow rests on the string but the count continues.",
+    example: "Open D. Count 1–2–3–4: ⊓ on 1, rest on 2, ∨ on 3, rest on 4.",
+    practice: [
+      "Count four evenly with the bow resting on the D string.",
+      "Play ⊓ on 1 and ∨ on 3, stopping the bow on the string for 2 and 4.",
+      "Repeat for four bars without letting the rests shorten.",
+    ],
+    question: "What does the bow do during a rest in this exercise?",
+    options: [
+      "Stops on the string while the count continues",
+      "Lifts and returns to the frog",
+      "Keeps sounding softly",
+    ],
+    answer: 0,
+    feedback:
+      "The bow stays on the string, silent, while the beat goes on. Lifting or sounding through the rest changes the rhythm.",
+    demo: { label: "Down, rest, up, rest", notes: [[62], [], [62], []] },
+  },
+  {
+    slug: "first-finger",
+    level: "beginner",
+    title: "One finger, one whole step",
+    outcome: "Place the first finger a whole step above an open string.",
+    explanation:
+      "There are no frets, so the finger's position sets the pitch. The first finger lands a whole step above the open string: E on the D string, B on the A string. Keep the thumb opposite the first finger and the wrist relaxed. Listen for the same-sized step every time; a small move changes the note.",
+    example: "Open D, first-finger E, open D. Then open A, first-finger B, open A.",
+    practice: [
+      "Place the first finger on the D string a whole step up and bow E slowly.",
+      "Lift to open D and place E again three times, checking the step by ear.",
+      "Do the same on the A string with B, then play the example with a rest on beat 4.",
+    ],
+    question: "What decides the pitch of a fingered note on the violin?",
+    options: [
+      "Where the finger stops the string",
+      "How hard the bow presses",
+      "Which direction the bow moves",
+    ],
+    answer: 0,
+    feedback:
+      "Pitch comes from the vibrating length of the string, which the finger sets. Bow weight and direction change tone and volume, not pitch.",
+    demo: { label: "D, E, D, then A, B, A", notes: [[62], [64], [62], [], [69], [71], [69], []] },
+  },
+  {
+    slug: "d-tetrachord",
+    level: "beginner",
+    title: "Four notes on one string",
+    outcome: "Play D–E–F♯–G with fingers 0, 1, 2, 3 and a half step at the top.",
+    explanation:
+      "A tetrachord is four consecutive scale notes. On the D string, D–E–F♯–G uses the open string and fingers 1, 2, and 3. The steps are whole, whole, half: fingers 2 and 3 sit close together for the half step from F♯ to G. Keep earlier fingers down as you add the next one.",
+    example: "D (open), E (1), F♯ (2), G (3, touching 2), then back down.",
+    practice: [
+      "Place fingers 1, 2, 3 one at a time without bowing, keeping each one down.",
+      "Bow the four notes up slowly, one per beat, alternating down and up.",
+      "Play up and down for four bars and listen for the small step at the top.",
+    ],
+    question: "Why do fingers 2 and 3 touch in this pattern?",
+    options: [
+      "F♯ to G is a half step",
+      "Every step on the violin is a half step",
+      "The bow needs a smaller stroke",
+    ],
+    answer: 0,
+    feedback:
+      "F♯ to G is the half step of the pattern, so the fingers sit close. The other steps are whole steps and need more space.",
+    demo: { label: "D, E, F♯, G", notes: [[62], [64], [66], [67]] },
+  },
+  {
+    slug: "slurs",
+    level: "intermediate",
+    title: "Two notes in one bow",
+    outcome: "Change the finger while the bow keeps moving in one direction.",
+    explanation:
+      "A slur joins two or more notes in a single bow stroke. The bow keeps moving; only the left-hand finger changes. Count 1-and-2-and: the first note falls on the number, the second on the and, both inside one stroke. Divide the bow evenly so the second note has as much bow as the first.",
+    example: "⊓ D–E, ∨ F♯–G, ⊓ G–F♯, ∨ E–D. Two notes per bow, one bow per beat.",
+    practice: [
+      "Bow open D slowly and place the first finger halfway through the stroke without stopping.",
+      "Play D–E in one down-bow and F♯–G in one up-bow at a slow tempo.",
+      "Play the four-slur example for four bars, keeping each stroke the same length.",
+    ],
+    question: "What changes during a slur?",
+    options: ["The left-hand finger", "The bow direction", "The string tension"],
+    answer: 0,
+    feedback:
+      "In a slur the bow continues in one direction while the finger changes the note. A change of bow direction would separate the notes.",
+    demo: { label: "D–E slurred, F♯–G slurred", notes: [[62], [64], [], [66], [67], []] },
+  },
+  {
+    slug: "string-crossing",
+    level: "intermediate",
+    title: "Crossing without a bump",
+    outcome: "Move the bow between two strings on the pulse while shaping the volume.",
+    explanation:
+      "Each string sits at a different level under the bow. Crossing from D to A means rolling the whole bow arm from the elbow so the bow meets the new string cleanly. A crescendo, a gradual increase in volume, comes from faster bow speed and a little more weight, not from squeezing. Grow the sound over several bars rather than all at once.",
+    example: "Open D, open A, D, A on the four beats. Bar 1 soft, bar 4 full.",
+    practice: [
+      "Rest the bow on D, then tilt the arm to A without sounding; feel the level change.",
+      "Play D–A–D–A for one bar at a soft, even level.",
+      "Play four bars, each slightly louder than the last, keeping the crossings clean.",
+    ],
+    question: "What mainly makes a violin note louder?",
+    options: [
+      "Faster bow speed with a little more weight",
+      "Pressing the string harder",
+      "Moving closer to the scroll",
+    ],
+    answer: 0,
+    feedback:
+      "Volume comes from the bow: more speed and some added weight. Left-hand pressure and playing over the fingerboard do not add volume.",
+    demo: { label: "D and A crossing", notes: [[62], [69], [62], [69]] },
+  },
+  {
+    slug: "phrase-shaping",
+    level: "advanced",
+    title: "Give the phrase a direction",
+    outcome: "Choose a high point and shape bow speed toward it.",
+    explanation:
+      "A phrase is a musical sentence. Shaping means deciding where it grows and where it settles, usually one high point per phrase. On the violin, the shape comes from bow speed and distribution: more bow for the goal note, less as the phrase relaxes. Play the notes evenly first, then add the shape as a separate decision.",
+    example: "D E F♯ G | A G F♯ D | E F♯ G A | D held. Let the A in bar 3 be the loudest note.",
+    practice: [
+      "Play the four bars evenly with alternating bows at a slow tempo.",
+      "Choose the high point and mark which note gets the most bow.",
+      "Play again with the shape and compare the two versions by ear.",
+    ],
+    question: "What gives a phrase a clear direction?",
+    options: [
+      "One planned high point",
+      "Playing every note as loud as possible",
+      "Changing tempo on every bar",
+    ],
+    answer: 0,
+    feedback:
+      "A single goal note gives the listener something to follow. Uniform loudness or shifting tempo blurs the shape.",
+    demo: {
+      label: "A four-bar phrase in D",
+      notes: [[62], [64], [66], [67], [69], [67], [66], [62]],
+    },
+  },
+  {
+    slug: "performance-plan",
+    level: "advanced",
+    title: "Plan two phrases",
+    outcome: "Plan, perform, and revise two connected phrases with chosen bowings.",
+    explanation:
+      "A performance plan decides bow direction, rests, and the ending before you play. Two short phrases that answer each other are enough to practise the whole cycle: plan, perform, compare, revise one thing. Evaluate one criterion at a time; a completed lesson is a practice milestone, not a performance grade.",
+    example:
+      "Phrase A: D E F♯ G, then A with three counts of rest. Phrase B: G F♯ E D, then E with three counts of rest. End on a held D.",
+    practice: [
+      "Write or say the bow direction for every note in both phrases.",
+      "Perform both phrases twice, keeping the rests full and the bow on the string.",
+      "Choose one criterion, such as clean bow changes or first-finger pitch, and revise just that.",
+    ],
+    question: "Which review gives you a usable next step?",
+    options: [
+      "Decide the whole take was good or bad",
+      "Name one bow change to place more cleanly next time",
+      "Play the piece twice as fast",
+    ],
+    answer: 1,
+    feedback:
+      "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+  },
+]);
+
 export const CURRICULUM: LearningLesson[] = [
   ...guitar,
   ...piano,
@@ -1155,6 +1753,9 @@ export const CURRICULUM: LearningLesson[] = [
   ...bass,
   ...drums,
   ...vocals,
+  ...mandolin,
+  ...banjo,
+  ...violin,
 ];
 export const learningPath = (instrument: InstrumentId) =>
   CURRICULUM.filter((lesson) => lesson.instrument === instrument);

@@ -442,9 +442,14 @@ function MilestoneStudio({ instrument }: { instrument: InstrumentId }) {
               <p className="mt-2 text-xs text-muted">
                 {instrument === "drums"
                   ? "K = kick · S = snare · T = tom · and = halfway between counts"
-                  : instrument === "guitar" || instrument === "ukulele"
+                  : instrument === "guitar" ||
+                      instrument === "ukulele" ||
+                      instrument === "mandolin" ||
+                      instrument === "banjo"
                     ? "↓ = downstroke · Numbers are beats"
-                    : "Numbers are beats"}
+                    : instrument === "violin"
+                      ? "⊓ = down-bow · ∨ = up-bow · Numbers are beats"
+                      : "Numbers are beats"}
               </p>
               <Button
                 className="mt-5 w-full"

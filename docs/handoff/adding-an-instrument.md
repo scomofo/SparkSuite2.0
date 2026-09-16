@@ -15,7 +15,7 @@ File: `src/lib/spark/instruments.ts`
 
 - Add the id to the `InstrumentId` union.
 - Add an `InstrumentDef` to `INSTRUMENTS`. Fields: `id`, `name`, `kicker` (tuning or a two-word tag), `promise` (one sentence about the first session), `family: "strings"`, `surface: "strings"`, `stringNames` (low to high in playing order), `openFreq` (Hz, same order), `openPc` (pitch class 0 to 11, same order), `firstChords`, `theoryNeck`.
-- `theoryNeck` options: `"guitar"` uses six-string CAGED voicings and is guitar only. `"four"` builds a voicing from `openPc` and works for any string count. `"piano"` shows a keyboard. `"none"` hides the neck. See each brief for the recommendation.
+- `theoryNeck` options: `"guitar"` uses six-string CAGED voicings and is guitar only. `"four"` builds a voicing from `openPc` and works for any string count. `"piano"` shows a keyboard. `"none"` hides the neck. Optional `theoryStrings` lists the string indexes the theory neck shows, for instruments with a short string (banjo uses `[1, 2, 3, 4]`). See each brief for the recommendation.
 
 Typecheck now fails at every `Record<InstrumentId, ...>`. That is the list of steps 2 and 3.
 
@@ -72,8 +72,9 @@ No content change. `coach.ts` reads the instrument name from `INSTRUMENTS`. Conf
 
 ## 9. Unit tests
 
-- `src/lib/spark/learning.test.ts`: `CURRICULUM.length` 48 becomes 72 (or `INSTRUMENTS.length * 8`).
-- `src/lib/spark/lesson-practice.test.ts`: `LESSON_EXERCISES.length` and the set-size assertion 48 become 72; `projects.length` 12 becomes 18; the trailing `CURRICULUM.length` check too.
+- `src/lib/spark/learning.test.ts`: the curriculum count derives from `INSTRUMENTS.length * 8`; bump the explicit `INSTRUMENTS.length` assertion.
+- `src/lib/spark/lesson-practice.test.ts`: `LESSON_EXERCISES.length`, the set-size assertion, and the trailing `CURRICULUM.length` check add 8 per instrument; `projects.length` adds 2.
+- `src/lib/spark/personalized-learning.test.ts`: the milestone counts derive from `INSTRUMENTS.length`; bump the explicit assertion.
 - `src/lib/spark/spark.test.ts`: the hard-coded `ids` list of six instruments gains the new ids.
 - Add one milestone assertion per new instrument in `personalized-learning.test.ts` if the file asserts on specific pieces (it currently checks guitar by name).
 
@@ -81,7 +82,7 @@ No content change. `coach.ts` reads the instrument name from `INSTRUMENTS`. Conf
 
 Files: `scripts/learning-browser.mjs`, `scripts/studio-browser.mjs`, `scripts/personalized-browser.mjs`, `scripts/lesson-practice-browser.mjs`.
 
-- The literal six-instrument arrays in the learning and studio scripts need the new ids, or switch them to import `INSTRUMENTS`.
+- The literal instrument arrays in the learning and studio scripts need the new ids, the studio script counts `Practise` buttons, and the lesson-practice script asserts the exercise total in two places.
 - The personalized script iterates `MUSICAL_MILESTONES`, so the new piece runs automatically. It clicks `Bar N` where N is `ceil(beats / 4)`, so keep `beats` a multiple of 4 or confirm the landing label.
 - The lesson-practice script iterates `LESSON_EXERCISES`, so all new exercise links run automatically.
 - Run locally before pushing (Chromium is preinstalled in CI and in the remote environment):
