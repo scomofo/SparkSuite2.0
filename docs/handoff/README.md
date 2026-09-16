@@ -26,6 +26,11 @@ Around that content sit the instrument definition (tuning, surface, chords), the
 
 Do one instrument end to end before starting the next. All three instruments are done and serve as worked examples: four strings, standard chord shapes, and the theory neck already handles four-string tunings. Banjo needs a decision about the short fifth string. Violin has no chord shapes and no neck view; see its brief for how that was handled.
 
+## Open items
+
+- **Instrument marks are placeholders.** `public/instruments/mandolin.jpg`, `banjo.jpg`, and `violin.jpg` are vector drawings rendered at 512×512 to match the framing, tilt, and warm spotlight of the six product photos. They are not photographs. Swap in real photos at the same paths when available; the mark component needs no change.
+- **Musical content needs a player's review.** The mandolin and banjo chord voicings and the violin first-position notes are standard beginner material but have not been checked by someone who plays.
+
 ## What this handoff does not decide
 
 - Count assertions in the unit tests now derive from `INSTRUMENTS.length`; the browser scripts still carry literal counts (9 instruments, 72 exercises) that move with each addition.
