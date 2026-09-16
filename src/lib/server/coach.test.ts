@@ -224,7 +224,7 @@ describe("private coach request boundary", () => {
       null,
       [],
       {},
-      { ...payload(), instrument: "violin" },
+      { ...payload(), instrument: "harp" },
       { ...payload(), minutes: 99 },
       { ...payload(), model: "untrusted-model" },
       { ...payload(), question: "q".repeat(601) },

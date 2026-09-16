@@ -447,7 +447,9 @@ function MilestoneStudio({ instrument }: { instrument: InstrumentId }) {
                       instrument === "mandolin" ||
                       instrument === "banjo"
                     ? "↓ = downstroke · Numbers are beats"
-                    : "Numbers are beats"}
+                    : instrument === "violin"
+                      ? "⊓ = down-bow · ∨ = up-bow · Numbers are beats"
+                      : "Numbers are beats"}
               </p>
               <Button
                 className="mt-5 w-full"

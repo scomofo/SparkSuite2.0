@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { ChevronLeft } from "lucide-react";
 import { CHORDS, fretToFreq, OPEN_FREQ } from "@/lib/spark/guitar";
-import { bassTone, comboSting, drumHit, hitSfx, pianoChord, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
+import { bassTone, comboSting, drumHit, hitSfx, pianoChord, pianoHold, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
 import {
   BANJO_CHORDS,
   instrumentById,
@@ -53,6 +53,12 @@ function banjoShape(id: string): ChordShape | undefined {
 }
 
 function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = instrumentById(instrument)) {
+  if (instrument === "violin") {
+    // Tokens are open-string names; a sustained tone stands in for the bow.
+    const string = inst.stringNames.indexOf(chordId);
+    pianoHold(string >= 0 ? inst.openFreq[string] : midiToFreq(62), 2);
+    return;
+  }
   if (instrument === "piano" || instrument === "vocals") {
     const midi = PIANO_VOICINGS[chordId];
     if (midi) pianoChord(midi.map(midiToFreq));
@@ -458,7 +464,9 @@ export function SessionPlayer() {
           ? "Match"
           : instrument === "bass"
             ? "Pluck"
-            : "Strum";
+            : instrument === "violin"
+              ? "Bow"
+              : "Strum";
   const chordPcs = liveChord && PIANO_VOICINGS[liveChord] ? PIANO_VOICINGS[liveChord].map((m) => m % 12) : [];
   const lastItem = session.index + 1 >= session.plan.items.length;
 

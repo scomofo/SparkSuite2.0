@@ -174,7 +174,7 @@ export function generateDailyPlan(
         instrument,
       ),
     );
-  } else if (feel.challenge && (next.chords.length || instrument === "drums")) {
+  } else if (feel.challenge && (next.chords.length || instrument === "drums" || instrument === "violin")) {
     items.push(
       fromLesson(
         next.id,

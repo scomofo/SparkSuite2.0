@@ -1,7 +1,7 @@
 import type { Lesson, PlanItem } from "./types.ts";
 import { LESSONS as GUITAR_LESSONS, TRACKS as GUITAR_TRACKS, FIRST_PROMISE as GUITAR_PROMISE } from "./guitar.ts";
 
-export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals" | "mandolin" | "banjo";
+export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals" | "mandolin" | "banjo" | "violin";
 
 export type InstrumentDef = {
   id: InstrumentId;
@@ -124,6 +124,19 @@ export const INSTRUMENTS: InstrumentDef[] = [
     firstChords: ["G", "D7"],
     theoryNeck: "four",
     theoryStrings: [1, 2, 3, 4],
+  },
+  {
+    id: "violin",
+    name: "Violin",
+    kicker: "GDAE",
+    promise: "One open string, one full bow. Then a first finger. The sound is in the bow speed.",
+    family: "strings",
+    surface: "strings",
+    stringNames: ["G", "D", "A", "E"],
+    openFreq: [196.0, 293.66, 440.0, 659.25],
+    openPc: [7, 2, 9, 4],
+    firstChords: [],
+    theoryNeck: "none",
   },
 ];
 
@@ -1144,6 +1157,131 @@ const BANJO_LESSONS: Lesson[] = [
   },
 ];
 
+const VIOLIN_LESSONS: Lesson[] = [
+  {
+    id: "lesson_violin_open_01",
+    title: "Open GDAE",
+    skill: "violin_open",
+    trackId: "track_violin_foundations",
+    order: 1,
+    type: "warmup",
+    objectives: ["One full bow per open string", "Bow between bridge and fingerboard"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: [],
+    masteryRequired: 0.7,
+  },
+  {
+    id: "lesson_violin_bow_pulse_01",
+    title: "Down on one, up on three",
+    skill: "violin_bow",
+    trackId: "track_violin_foundations",
+    order: 2,
+    type: "rhythm",
+    objectives: ["Down-bow on 1, up-bow on 3", "Count through the rests"],
+    chords: [],
+    pattern: "D-U-",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_violin_open_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_violin_first_finger_01",
+    title: "First finger",
+    skill: "violin_first_finger",
+    trackId: "track_violin_position",
+    order: 3,
+    type: "skill",
+    objectives: ["D to E, A to B", "One whole step, one finger"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_violin_open_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_violin_walk_01",
+    title: "Evening Walk",
+    skill: "violin_walk",
+    trackId: "track_violin_songs",
+    order: 4,
+    type: "song",
+    objectives: ["D E F♯ E, one bow each", "Rest on beat 4"],
+    chords: [],
+    pattern: "DUD-",
+    bars: 16,
+    bpm: 60,
+    prerequisites: ["lesson_violin_first_finger_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Evening Walk",
+    criteria: ["The loop finishes", "The rest keeps its full count"],
+    why: "Three notes and a rest. That is a tune.",
+    interpret: "Let each note fade into the rest.",
+  },
+  {
+    id: "lesson_violin_respond_bow_01",
+    title: "Same string or different",
+    skill: "violin_listen",
+    trackId: "track_violin_songs",
+    order: 5,
+    type: "skill",
+    objectives: ["Hear D, then A", "Name same string or different"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_violin_walk_01"],
+    masteryRequired: 0.7,
+    process: "respond",
+    repertoire: "Evening Walk",
+    listenPrompt: { a: "D", b: "A", ask: "Same string or different?", answer: "different" },
+    criteria: ["You listened first", "You named one thing"],
+    why: "Evening Walk lives on D. A is the neighbour.",
+  },
+  {
+    id: "lesson_violin_slur_01",
+    title: "Two notes, one bow",
+    skill: "violin_slur",
+    trackId: "track_violin_position",
+    order: 6,
+    type: "skill",
+    objectives: ["D–E in one down-bow", "F♯–G in one up-bow"],
+    chords: [],
+    pattern: "DU",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_violin_first_finger_01"],
+    masteryRequired: 0.75,
+    why: "The bow keeps moving while the finger changes.",
+  },
+  {
+    id: "lesson_violin_create_hang_01",
+    title: "Your hang",
+    skill: "violin_create",
+    trackId: "track_violin_songs",
+    order: 7,
+    type: "song",
+    objectives: ["Stay on D–E, or go on to F♯", "Play the one you picked"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_violin_walk_01"],
+    masteryRequired: 0.7,
+    process: "create",
+    repertoire: "Your hang",
+    createOptions: ["D–E", "D–E–F♯"],
+    criteria: ["You picked it", "You played it through"],
+    why: "You pick the idea. That's the piece.",
+    interpret: "Bow the one you picked like you meant it.",
+  },
+];
+
 const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
   guitar: [...GUITAR_TRACKS],
   piano: [
@@ -1181,6 +1319,11 @@ const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
     { id: "track_banjo_rolls", name: "Rolls" },
     { id: "track_banjo_songs", name: "Songs" },
   ],
+  violin: [
+    { id: "track_violin_foundations", name: "Foundations" },
+    { id: "track_violin_position", name: "First position" },
+    { id: "track_violin_songs", name: "Songs" },
+  ],
 };
 
 const ALL: Record<InstrumentId, Lesson[]> = {
@@ -1192,6 +1335,7 @@ const ALL: Record<InstrumentId, Lesson[]> = {
   vocals: VOCAL_LESSONS,
   mandolin: MANDOLIN_LESSONS,
   banjo: BANJO_LESSONS,
+  violin: VIOLIN_LESSONS,
 };
 
 export function lessonsFor(id: InstrumentId) {
@@ -1212,6 +1356,7 @@ export function foundationsFor(id: InstrumentId) {
     vocals: ["lesson_vocals_drone_01"],
     mandolin: ["lesson_mandolin_open_01"],
     banjo: ["lesson_banjo_open_01"],
+    violin: ["lesson_violin_open_01"],
   };
   return map[id];
 }
@@ -1231,6 +1376,7 @@ export function firstLessonIds(id: InstrumentId): [string, string, string] {
     vocals: ["lesson_vocals_drone_01", "lesson_vocals_match_c_01", "lesson_vocals_hold_01"],
     mandolin: ["lesson_mandolin_open_01", "lesson_mandolin_g_01", "lesson_mandolin_gc_01"],
     banjo: ["lesson_banjo_open_01", "lesson_banjo_g_01", "lesson_banjo_gd7_01"],
+    violin: ["lesson_violin_open_01", "lesson_violin_first_finger_01", "lesson_violin_walk_01"],
   };
   return map[id];
 }

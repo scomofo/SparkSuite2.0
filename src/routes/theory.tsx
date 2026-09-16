@@ -7,7 +7,15 @@ import { CircleFifths, Legend } from "@/components/circle-fifths";
 import { ChromaticStrip, TheoryFretboard } from "@/components/theory-fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { Button } from "@/components/ui/button";
-import { pianoChord, pianoTone, pluck, scheduleRun, strum, unlockAudio, type AudioRun } from "@/lib/spark/audio";
+import {
+  pianoChord,
+  pianoTone,
+  pluck,
+  scheduleRun,
+  strum,
+  unlockAudio,
+  type AudioRun,
+} from "@/lib/spark/audio";
 import { instrumentById, midiToFreq, stringFreq, theoryNeckDef } from "@/lib/spark/instruments";
 import {
   cagedShapes,
@@ -73,7 +81,12 @@ function pickerFromPc(pc: number) {
 function hearQuality(rootPc: number, qualityId: string, when?: number) {
   const inst = theoryNeckDef(instrumentById(useSpark.getState().instrument));
   unlockAudio();
-  if (inst.theoryNeck === "piano" || inst.surface === "keys" || inst.surface === "voice") {
+  if (
+    inst.theoryNeck === "piano" ||
+    inst.theoryNeck === "none" ||
+    inst.surface === "keys" ||
+    inst.surface === "voice"
+  ) {
     pianoChord(chordMidis(rootPc, qualityId).map(midiToFreq), when);
     return;
   }
@@ -124,7 +137,8 @@ function NeckFor({
       />
     );
   }
-  const four = inst.theoryNeck === "four" ? neckVoicing(inst.openPc, chordPcs(rootPc, qualityId)) : undefined;
+  const four =
+    inst.theoryNeck === "four" ? neckVoicing(inst.openPc, chordPcs(rootPc, qualityId)) : undefined;
   return (
     <TheoryFretboard
       rootPc={rootPc}
@@ -154,12 +168,15 @@ function TheoryPage() {
   return (
     <AppShell>
       <header className="px-5 pb-2 pt-8">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-dim">
-          Chord lab · {inst.name}
-        </p>
+        <p className="text-[11px] uppercase tracking-[0.22em] text-dim">Chord lab · {inst.name}</p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Theory</h1>
         <p className="mt-3 max-w-sm text-pretty text-muted">
-          Harmony is shared. {inst.theoryNeck === "none" ? "Listen; the kit doesn’t have a neck." : "The neck changes with the instrument."}
+          Harmony is shared.{" "}
+          {inst.theoryNeck !== "none"
+            ? "The neck changes with the instrument."
+            : inst.surface === "pads"
+              ? "Listen; the kit doesn’t have a neck."
+              : "Listen; there are no frets to map, so the sound is the reference."}
         </p>
       </header>
 
@@ -204,7 +221,9 @@ function Chip({
       onClick={onClick}
       className={cn(
         "h-10 min-w-10 rounded-md px-3 text-sm font-medium transition-colors duration-(--motion-quick)",
-        active ? "bg-accent text-accent-fg" : "border border-border bg-raised text-fg hover:border-ember/50",
+        active
+          ? "bg-accent text-accent-fg"
+          : "border border-border bg-raised text-fg hover:border-ember/50",
       )}
     >
       {children}
@@ -257,7 +276,9 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
     if (inst.theoryNeck === "piano" || inst.surface === "keys" || inst.surface === "voice") {
       const ac = unlockAudio();
       if (!ac) return;
-      chordMidis(rootPc, search.q).forEach((m, i) => pianoTone(midiToFreq(m), ac.currentTime + i * 0.16, 0.28));
+      chordMidis(rootPc, search.q).forEach((m, i) =>
+        pianoTone(midiToFreq(m), ac.currentTime + i * 0.16, 0.28),
+      );
       return;
     }
     if (fourShape) {
@@ -299,7 +320,9 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
 
       <section className="mt-6 rounded-xl border border-border bg-surface p-5">
         <p className="text-[11px] uppercase tracking-[0.18em] text-dim">{quality.name}</p>
-        <h2 className="mt-1 font-display text-5xl font-semibold tracking-tight">{chordLabel(rootPc, search.q, flats)}</h2>
+        <h2 className="mt-1 font-display text-5xl font-semibold tracking-tight">
+          {chordLabel(rootPc, search.q, flats)}
+        </h2>
         <div className="mt-4 flex flex-wrap gap-2">
           {quality.formula.map((iv, i) => (
             <button
@@ -311,12 +334,16 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
                 focusIv === iv ? "bg-accent text-accent-fg" : "bg-raised text-fg",
               )}
             >
-              <span className="block text-[10px] uppercase tracking-wider opacity-70">{noteName(pcs[i] ?? rootPc, flats)}</span>
+              <span className="block text-[10px] uppercase tracking-wider opacity-70">
+                {noteName(pcs[i] ?? rootPc, flats)}
+              </span>
               {iv}
             </button>
           ))}
         </div>
-        <p className="mt-4 text-pretty text-sm leading-relaxed text-muted">{info ? info.role : quality.blurb}</p>
+        <p className="mt-4 text-pretty text-sm leading-relaxed text-muted">
+          {info ? info.role : quality.blurb}
+        </p>
         {info ? (
           <p className="mt-1 text-sm text-fg">
             {info.name} · {info.semitones} semitone{info.semitones === 1 ? "" : "s"}
@@ -342,10 +369,17 @@ function BuildTab({ search, patch }: { search: Search; patch: (n: Partial<Search
       {inst.theoryNeck !== "none" ? (
         <section className="mt-6">
           <div className="mb-2 flex items-baseline justify-between gap-3">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-dim">{inst.theoryNeck === "piano" ? "Keyboard" : "Neck"}</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-dim">
+              {inst.theoryNeck === "piano" ? "Keyboard" : "Neck"}
+            </p>
             <Legend />
           </div>
-          <NeckFor rootPc={rootPc} qualityId={search.q} voicing={voicing?.frets} preferFlats={flats} />
+          <NeckFor
+            rootPc={rootPc}
+            qualityId={search.q}
+            voicing={voicing?.frets}
+            preferFlats={flats}
+          />
         </section>
       ) : null}
 
@@ -431,8 +465,12 @@ function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>)
         />
       </div>
 
-      <p className="mt-2 text-center text-sm text-muted">Scale · {scale.map((pc) => noteName(pc, flats)).join("  ")}</p>
-      <p className="mt-1 text-center text-xs text-dim">Outer ring = major keys · inner = relative minors</p>
+      <p className="mt-2 text-center text-sm text-muted">
+        Scale · {scale.map((pc) => noteName(pc, flats)).join("  ")}
+      </p>
+      <p className="mt-1 text-center text-xs text-dim">
+        Outer ring = major keys · inner = relative minors
+      </p>
 
       <ul className="mt-6 space-y-2">
         {chords.map((c, i) => (
@@ -445,7 +483,9 @@ function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>)
               }}
               className={cn(
                 "flex w-full items-center gap-3 rounded-lg border px-4 py-3 text-left transition-colors duration-(--motion-quick)",
-                sel === i ? "border-accent bg-raised" : "border-border bg-surface hover:border-ember/40",
+                sel === i
+                  ? "border-accent bg-raised"
+                  : "border-border bg-surface hover:border-ember/40",
               )}
             >
               <span className="w-14 font-display text-lg font-semibold">{c.roman}</span>
@@ -520,7 +560,9 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
   useEffect(() => stopLoop, []);
 
   useEffect(() => {
-    const ids = PROGRESSIONS.filter((p) => p.mode === "any" || p.mode === search.mode).map((p) => p.id);
+    const ids = PROGRESSIONS.filter((p) => p.mode === "any" || p.mode === search.mode).map(
+      (p) => p.id,
+    );
     setActive((cur) => (ids.includes(cur) ? cur : (ids[0] ?? "axis")));
   }, [search.mode]);
 
@@ -570,7 +612,9 @@ function ChangesTab({ search, patch }: { search: Search; patch: (n: Partial<Sear
               onClick={() => setActive(p.id)}
               className={cn(
                 "w-full rounded-lg border px-4 py-3 text-left transition-colors duration-(--motion-quick)",
-                active === p.id ? "border-accent bg-raised" : "border-border bg-surface hover:border-ember/40",
+                active === p.id
+                  ? "border-accent bg-raised"
+                  : "border-border bg-surface hover:border-ember/40",
               )}
             >
               <span className="font-display font-semibold">{p.name}</span>
@@ -631,7 +675,8 @@ function CagedTab({ search, patch }: { search: Search; patch: (n: Partial<Search
   return (
     <div className="px-5 pb-8 pt-5">
       <p className="max-w-sm text-pretty text-sm text-muted">
-        Five open-chord shapes, moved up the neck, cover every major and minor triad. Named for the open chords they come from: C, A, G, E, D.
+        Five open-chord shapes, moved up the neck, cover every major and minor triad. Named for the
+        open chords they come from: C, A, G, E, D.
       </p>
       <p className="mt-5 text-[11px] uppercase tracking-[0.18em] text-dim">Root</p>
       <div className="mt-2 flex flex-wrap gap-1.5">
@@ -671,13 +716,19 @@ function CagedTab({ search, patch }: { search: Search; patch: (n: Partial<Search
           <p className="text-[11px] uppercase tracking-[0.18em] text-dim">
             {chosen.caged} shape · {chosen.offset ? `barre ${chosen.offset}` : "open"}
           </p>
-          <h3 className="mt-1 font-display text-2xl font-semibold">{chordLabel(rootPc, q, flats)}</h3>
-          <p className="mt-3 text-pretty text-sm leading-relaxed text-muted">{cagedCopy(chosen.caged, chosen.offset)}</p>
+          <h3 className="mt-1 font-display text-2xl font-semibold">
+            {chordLabel(rootPc, q, flats)}
+          </h3>
+          <p className="mt-3 text-pretty text-sm leading-relaxed text-muted">
+            {cagedCopy(chosen.caged, chosen.offset)}
+          </p>
         </section>
       ) : null}
 
       <section className="mt-6">
-        <p className="mb-2 text-[11px] uppercase tracking-[0.18em] text-dim">All five on the neck</p>
+        <p className="mb-2 text-[11px] uppercase tracking-[0.18em] text-dim">
+          All five on the neck
+        </p>
         <Legend className="mb-2" />
         <NeckFor rootPc={rootPc} qualityId={q} voicing={chosen?.shape.frets} preferFlats={flats} />
       </section>

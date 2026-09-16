@@ -116,9 +116,9 @@ describe("personal starting points", () => {
         version: 1,
         profiles: {
           guitar: { experience: "new", minutes: 99 },
-          violin: { experience: "new", minutes: 2 },
+          harp: { experience: "new", minutes: 2 },
         },
-        skippedSetup: { piano: true, bass: "yes", violin: true },
+        skippedSetup: { piano: true, bass: "yes", harp: true },
       }),
     );
     assert.deepEqual(data.profiles, { guitar: { experience: "new", minutes: 2 } });
@@ -248,9 +248,9 @@ describe("musical milestone attempts and saved versions", () => {
         note: "x".repeat(300),
         saved: { savedOn: "2026-02-30", reflection: "comfortable" },
       },
-      violin: {},
+      harp: {},
     };
-    raw.focus = { violin: "milestone", bass: "milestone" };
+    raw.focus = { harp: "milestone", bass: "milestone" };
     const data = parseLearning(JSON.stringify(raw));
     assert.deepEqual(Object.keys(data.milestones), ["guitar"]);
     assert.equal(data.milestones.guitar?.phase, "play");
@@ -266,7 +266,7 @@ describe("musical milestone attempts and saved versions", () => {
 describe("one original piece per instrument and its musical variations", () => {
   it("uses playable notes, real preparation lessons, complete bars, and bounded durations", () => {
     assert.equal(new Set(MUSICAL_MILESTONES.map((piece) => piece.instrument)).size, INSTRUMENTS.length);
-    assert.equal(INSTRUMENTS.length, 8);
+    assert.equal(INSTRUMENTS.length, 9);
     for (const piece of MUSICAL_MILESTONES) {
       assert.ok(piece.lessons.every((id) => learningLesson(id)?.instrument === piece.instrument));
       for (const variation of [false, true]) {

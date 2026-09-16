@@ -9,6 +9,7 @@ import { PianoLab } from "@/components/labs/piano-lab";
 import { BanjoLab } from "@/components/labs/banjo-lab";
 import { MandolinLab } from "@/components/labs/mandolin-lab";
 import { UkeLab } from "@/components/labs/uke-lab";
+import { ViolinLab } from "@/components/labs/violin-lab";
 import { VoiceLab } from "@/components/labs/voice-lab";
 import { Chip, TabRow } from "@/components/labs/shared";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ function TechniquesPage() {
   if (instrument === "ukulele") return <UkeLab />;
   if (instrument === "mandolin") return <MandolinLab />;
   if (instrument === "banjo") return <BanjoLab />;
+  if (instrument === "violin") return <ViolinLab />;
   if (instrument === "vocals") return <VoiceLab />;
   if (instrument === "guitar") return <GuitarLab />;
   return <BassLab />;

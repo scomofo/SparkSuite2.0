@@ -18,6 +18,8 @@ export function labSearchFor(id: InstrumentId): LabSearch {
       return { tab: "down", chord: "G" };
     case "banjo":
       return { tab: "roll", chord: "G" };
+    case "violin":
+      return { tab: "open", chord: "" };
     default:
       return { tab: "down", chord: "Em" };
   }
@@ -83,6 +85,13 @@ export function labCardFor(id: InstrumentId): LabCard | null {
         kicker: "Banjo lab",
         title: "Roll",
         body: "Forward roll, pinch, hammer-on, slide, vamp. Four minutes. Then stop.",
+        cta: "Four minutes",
+      };
+    case "violin":
+      return {
+        kicker: "Violin lab",
+        title: "Bow",
+        body: "Open strings, bow direction, first finger, slurs, string crossing. Four minutes. Then stop.",
         cta: "Four minutes",
       };
     default:

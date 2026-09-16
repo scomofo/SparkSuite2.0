@@ -108,13 +108,15 @@ try {
   await page.getByRole("button", { name: "I tried it", exact: true }).waitFor();
 
   // Every instrument exposes advanced work without pretending the earlier lessons are mastered.
-  for (const instrument of ["piano", "ukulele", "mandolin", "banjo", "bass", "drums", "vocals", "guitar"]) {
+  for (const instrument of ["piano", "ukulele", "mandolin", "banjo", "violin", "bass", "drums", "vocals", "guitar"]) {
     await page.getByLabel("Learning instrument", { exact: true }).selectOption(instrument);
     const pathButton = page.getByRole("button", { name: "Learning path", exact: true });
-    if (await pathButton.isVisible()) await pathButton.click();
     const advanced = page
       .locator("details")
       .filter({ has: page.locator("summary", { hasText: "Create and refine" }) });
+    // The switch may land on a lesson view or the path; wait for either before deciding.
+    await pathButton.or(advanced).first().waitFor();
+    if (await pathButton.isVisible()) await pathButton.click();
     await advanced.locator("summary").click();
     await advanced.getByRole("button").last().click();
     await page.getByRole("button", { name: "Got the idea", exact: true }).waitFor();
@@ -164,7 +166,7 @@ try {
           "optional audio stop",
           "one-step and full-lesson pacing",
           "pause/reload/return",
-          "eight instruments and advanced access",
+          "nine instruments and advanced access",
           "feedback and completion guard",
           "separate practice progress",
           "review/new choice",

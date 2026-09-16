@@ -519,7 +519,9 @@ function GuidedPractice({
                         lesson.instrument === "mandolin" ||
                         lesson.instrument === "banjo"
                           ? "↓ down · ↑ up"
-                          : "Numbers are beats"}
+                          : lesson.instrument === "violin"
+                            ? "⊓ down-bow · ∨ up-bow"
+                            : "Numbers are beats"}
                         {sequence.subdivision === 4
                           ? " · e, and, a = four equal parts"
                           : sequence.subdivision === 3

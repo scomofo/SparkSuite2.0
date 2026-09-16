@@ -24,11 +24,10 @@ Around that content sit the instrument definition (tuning, surface, chords), the
 
 ## Suggested order of work
 
-Do one instrument end to end before starting the next. Mandolin and banjo are done and serve as worked examples: four strings, standard chord shapes, and the theory neck already handles four-string tunings. Banjo needs a decision about the short fifth string. Violin needs a decision about fretless display and has no chord shapes at all.
+Do one instrument end to end before starting the next. All three instruments are done and serve as worked examples: four strings, standard chord shapes, and the theory neck already handles four-string tunings. Banjo needs a decision about the short fifth string. Violin has no chord shapes and no neck view; see its brief for how that was handled.
 
 ## What this handoff does not decide
 
-- Whether violin gets a fingerboard view or stays on written and audible references only (see [violin.md](./violin.md)).
-- Count assertions in the unit tests now derive from `INSTRUMENTS.length`; the browser scripts still carry literal counts (8 instruments, 64 exercises) that move with each addition.
+- Count assertions in the unit tests now derive from `INSTRUMENTS.length`; the browser scripts still carry literal counts (9 instruments, 72 exercises) that move with each addition.
 
 All lesson text in the briefs is a starting outline, not final copy. Check the musical facts against a method book before shipping, and keep the honest-progress language described in the content guide.

@@ -130,7 +130,9 @@ export function retryCoaching(exercise: LessonExercise) {
               ? "The pick direction or the shapes felt awkward"
               : instrument === "banjo"
                 ? "The roll or the shapes felt awkward"
-                : "The notes or shapes felt awkward");
+                : instrument === "violin"
+                  ? "The bow or the left hand felt awkward"
+                  : "The notes or shapes felt awkward");
   return [
     {
       id: "pulse" as const,
@@ -2140,6 +2142,264 @@ export const LESSON_EXERCISES: LessonExercise[] = [
         label: "G ↓ · land",
         detail: "Brush all five open strings on the new beat 1 and let them ring",
       },
+    ],
+  },
+  {
+    lessonId: "violin-open-strings-and-bow",
+    title: "Four strings, one straight bow",
+    bpm: 50,
+    beats: 16,
+    goal: "Bow each open string for one whole bar: G, D, A, then E, one full down-bow each.",
+    setup:
+      "Bow between the bridge and the fingerboard, straight across the string. Start each bar at the frog and use the whole bow.",
+    hint: "Try only the open D with the guide stopped. Watch that the bow stays parallel to the bridge for the whole stroke.",
+    takeaway:
+      "One string, one straight bow. Speed and weight decide the sound; the finger is not needed yet.",
+    cues: [55, 62, 69, 76].flatMap((midi, bar) => [
+      note(
+        bar * 4,
+        ["G", "D", "A", "E"][bar] + " ⊓",
+        [midi],
+        "Whole down-bow on open " + ["G", "D", "A", "E"][bar],
+        3.8,
+      ),
+      { beat: bar * 4 + 1, label: "Hold", detail: "Keep the bow moving slowly" },
+      { beat: bar * 4 + 2, label: "Hold", detail: "Keep the bow moving slowly" },
+      { beat: bar * 4 + 3, label: "Hold", detail: "Reach the tip and stop" },
+    ]),
+  },
+  {
+    lessonId: "violin-bow-pulse",
+    title: "Down-bow on one, up-bow on three",
+    bpm: 50,
+    beats: 16,
+    goal: "On open D: down-bow on 1, rest on 2, up-bow on 3, rest on 4, for four bars.",
+    setup:
+      "The bow stops on the string during each rest. Keep counting; the rest is part of the bar.",
+    hint: "Say the four counts out loud with the bow resting on the string, then add the two strokes at 40 BPM.",
+    takeaway: "A stopped bow is not a stopped count. Down and up both landed on their beats.",
+    cues: repeat(
+      [
+        note(0, "⊓", [62], "Down-bow, open D", 0.85),
+        rest(1, "Bow stops on the string; keep counting"),
+        note(2, "∨", [62], "Up-bow, open D", 0.85),
+        rest(3, "Bow stops on the string; keep counting"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "violin-first-finger",
+    title: "One finger, one whole step",
+    bpm: 50,
+    beats: 16,
+    goal: "Play D–E–D on the D string, then A–B–A on the A string, with a rest on beat 4, twice.",
+    setup:
+      "First finger lands a whole step above the open string. Keep the wrist relaxed and the thumb opposite the first finger.",
+    hint: "Play only open D and first-finger E with the guide stopped, listening for the same step every time.",
+    retryLabel: "The first-finger note sounds too high or too low",
+    takeaway:
+      "The first finger gives one step up on any string. The bow did not change; the left hand did.",
+    cues: repeatEvery(
+      [
+        note(0, "D ⊓", [62], "Open D, down-bow"),
+        note(1, "E ∨", [64], "First finger on D, up-bow"),
+        note(2, "D ⊓", [62], "Open D, down-bow"),
+        rest(3, "Rest; keep counting"),
+        note(4, "A ⊓", [69], "Open A, down-bow"),
+        note(5, "B ∨", [71], "First finger on A, up-bow"),
+        note(6, "A ⊓", [69], "Open A, down-bow"),
+        rest(7, "Rest; keep counting"),
+      ],
+      2,
+      8,
+    ),
+  },
+  {
+    lessonId: "violin-d-tetrachord",
+    title: "Four notes on one string",
+    bpm: 50,
+    beats: 16,
+    goal: "Play D–E–F♯–G up and back down on the D string, one note per beat, twice.",
+    setup:
+      "Fingers 0, 1, 2, 3. The step from F♯ to G is a half step, so fingers 2 and 3 touch. Alternate the bow.",
+    hint: "Place fingers 1, 2, 3 one at a time without bowing, keeping each earlier finger down. Then bow the four notes at 40 BPM.",
+    retryLabel: "The half step between F♯ and G is too wide",
+    takeaway:
+      "Fingers 2 and 3 close together give the half step. The rest of the hand stayed still.",
+    cues: repeatEvery(
+      [
+        note(0, "D ⊓", [62], "Open D"),
+        note(1, "E ∨", [64], "First finger"),
+        note(2, "F♯ ⊓", [66], "Second finger"),
+        note(3, "G ∨", [67], "Third finger, close to second"),
+        note(4, "G ⊓", [67], "Third finger"),
+        note(5, "F♯ ∨", [66], "Second finger"),
+        note(6, "E ⊓", [64], "First finger"),
+        note(7, "D ∨", [62], "Open D"),
+      ],
+      2,
+      8,
+    ),
+  },
+  {
+    lessonId: "violin-slurs",
+    title: "Two notes in one bow",
+    bpm: 50,
+    beats: 16,
+    goal: "Slur D–E, F♯–G, G–F♯, E–D: two notes in each bow, for four bars.",
+    setup:
+      "One bow stroke carries two notes. The finger changes halfway; the bow keeps moving in the same direction.",
+    hint: "Slur only D–E in one down-bow with the guide stopped. Change the finger without stopping the bow.",
+    retryLabel: "The bow stops or bumps when the finger changes",
+    takeaway: "The bow kept moving while the finger changed. That is a slur.",
+    cues: repeat(
+      [
+        note(0, "D ⊓ slur", [62], "Down-bow starts; first note", 0.45),
+        note(0.5, "E", [64], "Same bow; change the finger", 0.45),
+        note(1, "F♯ ∨ slur", [66], "Up-bow starts; first note", 0.45),
+        note(1.5, "G", [67], "Same bow; change the finger", 0.45),
+        note(2, "G ⊓ slur", [67], "Down-bow starts; first note", 0.45),
+        note(2.5, "F♯", [66], "Same bow; change the finger", 0.45),
+        note(3, "E ∨ slur", [64], "Up-bow starts; first note", 0.45),
+        note(3.5, "D", [62], "Same bow; change the finger", 0.45),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "violin-string-crossing",
+    title: "Crossing without a bump",
+    bpm: 50,
+    beats: 16,
+    goal: "Alternate open D and open A on the pulse, growing from soft to full over four bars.",
+    setup:
+      "Roll the elbow to reach the next string; the bow arm moves as one unit. Each bar is a little louder than the last.",
+    hint: "Rest the bow on D, then tilt to A without sounding. Feel the level change before adding the stroke.",
+    retryLabel: "The crossing catches both strings or bumps",
+    takeaway:
+      "The crossing came from the arm, not the wrist. The volume grew because the bow speed grew.",
+    cues: ["soft", "medium", "louder", "full"].flatMap((level, bar) => [
+      note(bar * 4, "D ⊓", [62], "Open D, " + level),
+      note(bar * 4 + 1, "A ∨", [69], "Cross to open A, " + level),
+      note(bar * 4 + 2, "D ⊓", [62], "Back to open D, " + level),
+      note(bar * 4 + 3, "A ∨", [69], "Cross to open A, " + level),
+    ]),
+  },
+  {
+    lessonId: "violin-phrase-shaping",
+    title: "Give the phrase a direction",
+    bpm: 50,
+    beats: 16,
+    goal: "Build a four-bar D-major phrase, then shape it toward one high point.",
+    setup:
+      "D E F♯ G | A G F♯ D | E F♯ G A | D held. Alternate the bow; plan where the loudest note falls.",
+    hint: "Play only bars 1 and 2 at 40 BPM with an even sound before adding any shape.",
+    retryLabel: "The shape makes the notes uneven",
+    takeaway:
+      "A phrase has a direction when one note is the goal. The rest of the notes lead there or away.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build the phrase",
+        instruction: "Play the first two bars with an even sound and alternating bows.",
+        button: "I built the phrase",
+      },
+      {
+        title: "Choose the high point",
+        instruction: "Choose where the phrase grows loudest, then add bars 3 and 4.",
+        button: "Save my high point",
+      },
+      {
+        title: "Refine the shape",
+        instruction:
+          "After the four-bar reference stops, play the whole phrase yourself twice with your chosen shape. Refine one thing: the bow speed into the high point, or the release into the final D.",
+        button: "I tried my refined shape",
+      },
+      [
+        {
+          label: "Swell to bar 3",
+          detail: "Grow through bars 1 and 2 so the A in bar 3 is the loudest note.",
+        },
+        {
+          label: "Taper to bar 4",
+          detail: "Start full and let each bar get softer until the final D fades.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ⊓", "E ∨", "F♯ ⊓", "G ∨"][beat], [midi], "Bar 1"),
+      ),
+      ...[69, 67, 66, 62].map((midi, beat) =>
+        note(4 + beat, ["A ⊓", "G ∨", "F♯ ⊓", "D ∨"][beat], [midi], "Bar 2"),
+      ),
+      ...[64, 66, 67, 69].map((midi, beat) =>
+        note(8 + beat, ["E ⊓", "F♯ ∨", "G ⊓", "A ∨"][beat], [midi], "Bar 3"),
+      ),
+      note(12, "D ⊓", [62], "Final D, whole bow", 3.8),
+      { beat: 13, label: "Hold", detail: "Keep the bow moving" },
+      { beat: 14, label: "Hold", detail: "Keep the bow moving" },
+      { beat: 15, label: "Release", detail: "Let the bow slow and lift" },
+    ],
+  },
+  {
+    lessonId: "violin-performance-plan",
+    title: "Plan two phrases",
+    bpm: 50,
+    beats: 17,
+    goal: "Play phrase A and phrase B with planned bowings, then land on a held D.",
+    setup:
+      "Phrase A: D E F♯ G | A rest rest rest. Phrase B: G F♯ E D | E rest rest rest. Then a final D on the new beat 1.",
+    hint: "Play only phrase A at 40 BPM. Plan the bow direction for every note before you start.",
+    retryLabel: "The bow direction gets lost between phrases",
+    takeaway:
+      "Two phrases with planned bows and planned rests. One criterion at a time is enough to revise.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build phrase A",
+        instruction: "Play D E F♯ G, then A, and rest for three counts with the bow on the string.",
+        button: "I built phrase A",
+      },
+      {
+        title: "Choose the ending",
+        instruction: "Choose how the final D ends, then add phrase B and the landing.",
+        button: "Save my ending",
+      },
+      {
+        title: "Refine one criterion",
+        instruction:
+          "After the reference and the final D stop, play both phrases yourself twice. Choose one criterion, clean bow changes, pitch of the first finger, or the rests, and revise just that.",
+        button: "I tried my refined plan",
+      },
+      [
+        {
+          label: "Long final note",
+          detail: "One slow whole bow on the final D, fading to nothing.",
+        },
+        {
+          label: "Clean release",
+          detail: "A shorter final D with a planned stop and a lift of the bow.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ⊓", "E ∨", "F♯ ⊓", "G ∨"][beat], [midi], "Phrase A"),
+      ),
+      note(4, "A ⊓", [69], "Phrase A ends", 0.85),
+      rest(5, "Rest with the bow on the string"),
+      rest(6, "Rest; keep counting"),
+      rest(7, "Rest; prepare phrase B"),
+      ...[67, 66, 64, 62].map((midi, beat) =>
+        note(8 + beat, ["G ∨", "F♯ ⊓", "E ∨", "D ⊓"][beat], [midi], "Phrase B"),
+      ),
+      note(12, "E ∨", [64], "Phrase B ends", 0.85),
+      rest(13, "Rest with the bow on the string"),
+      rest(14, "Rest; keep counting"),
+      rest(15, "Rest; prepare the landing"),
+      note(16, "D ⊓ · land", [62], "Final D on the new beat 1; let it ring", 0.9),
     ],
   },
 ];

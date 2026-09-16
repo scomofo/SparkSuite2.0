@@ -284,7 +284,7 @@ try {
           "first-bar pause/reload/return",
           "reflection guard and note persistence",
           "snapshot and replay settings",
-          "eight instruments and saved collection",
+          "nine instruments and saved collection",
           "desktop/390px/320px",
           "keyboard and focus",
           "separate practice scores",

@@ -1552,6 +1552,200 @@ const banjo = path("banjo", [
   },
 ]);
 
+const violin = path("violin", [
+  {
+    slug: "open-strings-and-bow",
+    level: "foundations",
+    title: "Four strings and one straight bow",
+    outcome: "Name G–D–A–E and draw one straight bow on each open string.",
+    explanation:
+      "A violin has four strings tuned G–D–A–E, from lowest to highest, a fifth apart. The bow makes the sound: hold it with a relaxed, rounded hand and draw it across one string between the bridge and the fingerboard. A straight bow stays parallel to the bridge for the whole stroke. Speed and weight, not force, shape the tone.",
+    example: "One whole down-bow on open G, then D, then A, then E, each lasting a slow bar.",
+    practice: [
+      "Rest the violin on your shoulder and place the bow on the D string near the frog.",
+      "Draw one slow, straight bow to the tip and stop; listen for one even sound.",
+      "Repeat on G, A, and E, naming each string.",
+    ],
+    question: "What keeps a bow stroke sounding even from frog to tip?",
+    options: [
+      "Keeping the bow parallel to the bridge",
+      "Pressing harder as the bow moves",
+      "Moving the bow toward the scroll",
+    ],
+    answer: 0,
+    feedback:
+      "A straight bow keeps the contact point steady, so the sound stays even. Extra pressure or a drifting bow changes the tone mid-stroke.",
+    demo: { label: "Open G, D, A, then E", notes: [[55], [62], [69], [76]] },
+  },
+  {
+    slug: "bow-pulse",
+    level: "foundations",
+    title: "Down-bow on one, up-bow on three",
+    outcome: "Keep counting while the bow stops on a rest.",
+    explanation:
+      "A down-bow moves from the frog toward the tip; an up-bow moves back. The symbol ⊓ marks a down-bow and ∨ marks an up-bow. In 4/4, four beats make one bar. Bowing on 1 and 3 leaves 2 and 4 silent; the bow rests on the string but the count continues.",
+    example: "Open D. Count 1–2–3–4: ⊓ on 1, rest on 2, ∨ on 3, rest on 4.",
+    practice: [
+      "Count four evenly with the bow resting on the D string.",
+      "Play ⊓ on 1 and ∨ on 3, stopping the bow on the string for 2 and 4.",
+      "Repeat for four bars without letting the rests shorten.",
+    ],
+    question: "What does the bow do during a rest in this exercise?",
+    options: [
+      "Stops on the string while the count continues",
+      "Lifts and returns to the frog",
+      "Keeps sounding softly",
+    ],
+    answer: 0,
+    feedback:
+      "The bow stays on the string, silent, while the beat goes on. Lifting or sounding through the rest changes the rhythm.",
+    demo: { label: "Down, rest, up, rest", notes: [[62], [], [62], []] },
+  },
+  {
+    slug: "first-finger",
+    level: "beginner",
+    title: "One finger, one whole step",
+    outcome: "Place the first finger a whole step above an open string.",
+    explanation:
+      "There are no frets, so the finger's position sets the pitch. The first finger lands a whole step above the open string: E on the D string, B on the A string. Keep the thumb opposite the first finger and the wrist relaxed. Listen for the same-sized step every time; a small move changes the note.",
+    example: "Open D, first-finger E, open D. Then open A, first-finger B, open A.",
+    practice: [
+      "Place the first finger on the D string a whole step up and bow E slowly.",
+      "Lift to open D and place E again three times, checking the step by ear.",
+      "Do the same on the A string with B, then play the example with a rest on beat 4.",
+    ],
+    question: "What decides the pitch of a fingered note on the violin?",
+    options: [
+      "Where the finger stops the string",
+      "How hard the bow presses",
+      "Which direction the bow moves",
+    ],
+    answer: 0,
+    feedback:
+      "Pitch comes from the vibrating length of the string, which the finger sets. Bow weight and direction change tone and volume, not pitch.",
+    demo: { label: "D, E, D, then A, B, A", notes: [[62], [64], [62], [], [69], [71], [69], []] },
+  },
+  {
+    slug: "d-tetrachord",
+    level: "beginner",
+    title: "Four notes on one string",
+    outcome: "Play D–E–F♯–G with fingers 0, 1, 2, 3 and a half step at the top.",
+    explanation:
+      "A tetrachord is four consecutive scale notes. On the D string, D–E–F♯–G uses the open string and fingers 1, 2, and 3. The steps are whole, whole, half: fingers 2 and 3 sit close together for the half step from F♯ to G. Keep earlier fingers down as you add the next one.",
+    example: "D (open), E (1), F♯ (2), G (3, touching 2), then back down.",
+    practice: [
+      "Place fingers 1, 2, 3 one at a time without bowing, keeping each one down.",
+      "Bow the four notes up slowly, one per beat, alternating down and up.",
+      "Play up and down for four bars and listen for the small step at the top.",
+    ],
+    question: "Why do fingers 2 and 3 touch in this pattern?",
+    options: [
+      "F♯ to G is a half step",
+      "Every step on the violin is a half step",
+      "The bow needs a smaller stroke",
+    ],
+    answer: 0,
+    feedback:
+      "F♯ to G is the half step of the pattern, so the fingers sit close. The other steps are whole steps and need more space.",
+    demo: { label: "D, E, F♯, G", notes: [[62], [64], [66], [67]] },
+  },
+  {
+    slug: "slurs",
+    level: "intermediate",
+    title: "Two notes in one bow",
+    outcome: "Change the finger while the bow keeps moving in one direction.",
+    explanation:
+      "A slur joins two or more notes in a single bow stroke. The bow keeps moving; only the left-hand finger changes. Count 1-and-2-and: the first note falls on the number, the second on the and, both inside one stroke. Divide the bow evenly so the second note has as much bow as the first.",
+    example: "⊓ D–E, ∨ F♯–G, ⊓ G–F♯, ∨ E–D. Two notes per bow, one bow per beat.",
+    practice: [
+      "Bow open D slowly and place the first finger halfway through the stroke without stopping.",
+      "Play D–E in one down-bow and F♯–G in one up-bow at a slow tempo.",
+      "Play the four-slur example for four bars, keeping each stroke the same length.",
+    ],
+    question: "What changes during a slur?",
+    options: ["The left-hand finger", "The bow direction", "The string tension"],
+    answer: 0,
+    feedback:
+      "In a slur the bow continues in one direction while the finger changes the note. A change of bow direction would separate the notes.",
+    demo: { label: "D–E slurred, F♯–G slurred", notes: [[62], [64], [], [66], [67], []] },
+  },
+  {
+    slug: "string-crossing",
+    level: "intermediate",
+    title: "Crossing without a bump",
+    outcome: "Move the bow between two strings on the pulse while shaping the volume.",
+    explanation:
+      "Each string sits at a different level under the bow. Crossing from D to A means rolling the whole bow arm from the elbow so the bow meets the new string cleanly. A crescendo, a gradual increase in volume, comes from faster bow speed and a little more weight, not from squeezing. Grow the sound over several bars rather than all at once.",
+    example: "Open D, open A, D, A on the four beats. Bar 1 soft, bar 4 full.",
+    practice: [
+      "Rest the bow on D, then tilt the arm to A without sounding; feel the level change.",
+      "Play D–A–D–A for one bar at a soft, even level.",
+      "Play four bars, each slightly louder than the last, keeping the crossings clean.",
+    ],
+    question: "What mainly makes a violin note louder?",
+    options: [
+      "Faster bow speed with a little more weight",
+      "Pressing the string harder",
+      "Moving closer to the scroll",
+    ],
+    answer: 0,
+    feedback:
+      "Volume comes from the bow: more speed and some added weight. Left-hand pressure and playing over the fingerboard do not add volume.",
+    demo: { label: "D and A crossing", notes: [[62], [69], [62], [69]] },
+  },
+  {
+    slug: "phrase-shaping",
+    level: "advanced",
+    title: "Give the phrase a direction",
+    outcome: "Choose a high point and shape bow speed toward it.",
+    explanation:
+      "A phrase is a musical sentence. Shaping means deciding where it grows and where it settles, usually one high point per phrase. On the violin, the shape comes from bow speed and distribution: more bow for the goal note, less as the phrase relaxes. Play the notes evenly first, then add the shape as a separate decision.",
+    example: "D E F♯ G | A G F♯ D | E F♯ G A | D held. Let the A in bar 3 be the loudest note.",
+    practice: [
+      "Play the four bars evenly with alternating bows at a slow tempo.",
+      "Choose the high point and mark which note gets the most bow.",
+      "Play again with the shape and compare the two versions by ear.",
+    ],
+    question: "What gives a phrase a clear direction?",
+    options: [
+      "One planned high point",
+      "Playing every note as loud as possible",
+      "Changing tempo on every bar",
+    ],
+    answer: 0,
+    feedback:
+      "A single goal note gives the listener something to follow. Uniform loudness or shifting tempo blurs the shape.",
+    demo: {
+      label: "A four-bar phrase in D",
+      notes: [[62], [64], [66], [67], [69], [67], [66], [62]],
+    },
+  },
+  {
+    slug: "performance-plan",
+    level: "advanced",
+    title: "Plan two phrases",
+    outcome: "Plan, perform, and revise two connected phrases with chosen bowings.",
+    explanation:
+      "A performance plan decides bow direction, rests, and the ending before you play. Two short phrases that answer each other are enough to practise the whole cycle: plan, perform, compare, revise one thing. Evaluate one criterion at a time; a completed lesson is a practice milestone, not a performance grade.",
+    example:
+      "Phrase A: D E F♯ G, then A with three counts of rest. Phrase B: G F♯ E D, then E with three counts of rest. End on a held D.",
+    practice: [
+      "Write or say the bow direction for every note in both phrases.",
+      "Perform both phrases twice, keeping the rests full and the bow on the string.",
+      "Choose one criterion, such as clean bow changes or first-finger pitch, and revise just that.",
+    ],
+    question: "Which review gives you a usable next step?",
+    options: [
+      "Decide the whole take was good or bad",
+      "Name one bow change to place more cleanly next time",
+      "Play the piece twice as fast",
+    ],
+    answer: 1,
+    feedback:
+      "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+  },
+]);
+
 export const CURRICULUM: LearningLesson[] = [
   ...guitar,
   ...piano,
@@ -1561,6 +1755,7 @@ export const CURRICULUM: LearningLesson[] = [
   ...vocals,
   ...mandolin,
   ...banjo,
+  ...violin,
 ];
 export const learningPath = (instrument: InstrumentId) =>
   CURRICULUM.filter((lesson) => lesson.instrument === instrument);

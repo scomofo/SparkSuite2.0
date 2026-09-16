@@ -128,7 +128,23 @@ const banjo = [
   { beat: 15, label: "Hold", detail: "Let the open G ring" },
 ];
 
-/** Eight original, short arrangements. Variations change the music rather than a score. */
+const violinBar = (beat: number) => [
+  n(beat, "D ⊓", [62]),
+  n(beat + 1, "E ∨", [64]),
+  n(beat + 2, "F♯ ⊓", [66]),
+  quiet(beat + 3, "Rest"),
+];
+const violin = [
+  ...violinBar(0),
+  ...violinBar(4),
+  ...violinBar(8),
+  { ...n(12, "D ⊓", [62], 3.8), detail: "Final D on one slow whole bow" },
+  { beat: 13, label: "Hold", detail: "Keep the bow moving" },
+  { beat: 14, label: "Hold", detail: "Keep the bow moving" },
+  { beat: 15, label: "Release", detail: "Let the bow slow and lift" },
+];
+
+/** Nine original, short arrangements. Variations change the music rather than a score. */
 export const MUSICAL_MILESTONES: MusicalMilestone[] = [
   {
     instrument: "guitar",
@@ -291,6 +307,29 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
             detail: "Hammer on to fret 2 on the 3rd string; no pick",
           }
         : cue,
+    ),
+  },
+  {
+    instrument: "violin",
+    title: "Open strings and a first finger",
+    goal: "Play D, E, F♯, rest for three bars, then hold a final D on one slow bow.",
+    setup:
+      "Open D, first finger E, second finger F♯. Alternate the bow and let the rest on beat 4 keep its full count.",
+    variation: "Slur the pairs",
+    variationHint:
+      "In the first three bars, play D–E in one down-bow, then F♯ alone on an up-bow; keep the final bar as one held D.",
+    lessons: ["violin-open-strings-and-bow", "violin-bow-pulse", "violin-first-finger"],
+    bpm: 50,
+    beats: 16,
+    cues: violin,
+    alternate: violin.map((cue) =>
+      cue.beat < 12 && cue.beat % 4 === 0
+        ? { ...cue, label: "D ⊓ slur", detail: "Down-bow starts; E follows in the same bow" }
+        : cue.beat < 12 && cue.beat % 4 === 1
+          ? { ...cue, label: "E", detail: "Same bow; change the finger" }
+          : cue.beat < 12 && cue.beat % 4 === 2
+            ? { ...cue, label: "F♯ ∨", detail: "Up-bow alone" }
+            : cue,
     ),
   },
 ];
