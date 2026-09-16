@@ -14,6 +14,8 @@ export function labSearchFor(id: InstrumentId): LabSearch {
       return { tab: "down", chord: "C" };
     case "vocals":
       return { tab: "drone", chord: "C" };
+    case "mandolin":
+      return { tab: "down", chord: "G" };
     default:
       return { tab: "down", chord: "Em" };
   }
@@ -65,6 +67,13 @@ export function labCardFor(id: InstrumentId): LabCard | null {
         kicker: "Voice lab",
         title: "Breath",
         body: "Match a C, hold it four beats, step to a neighbor. Four minutes. Then stop.",
+        cta: "Four minutes",
+      };
+    case "mandolin":
+      return {
+        kicker: "Mandolin lab",
+        title: "Pick",
+        body: "Downstrokes, alternate picking, the chop, tremolo. Four minutes. Then stop.",
         cta: "Four minutes",
       };
     default:

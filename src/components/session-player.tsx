@@ -5,6 +5,7 @@ import { CHORDS, fretToFreq, OPEN_FREQ } from "@/lib/spark/guitar";
 import { bassTone, comboSting, drumHit, hitSfx, pianoChord, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
 import {
   instrumentById,
+  MANDOLIN_CHORDS,
   midiToFreq,
   PIANO_VOICINGS,
   UKE_CHORDS,
@@ -38,6 +39,12 @@ function ukeShape(id: string): ChordShape | undefined {
   return { id, name: id, ...c };
 }
 
+function mandolinShape(id: string): ChordShape | undefined {
+  const c = MANDOLIN_CHORDS[id];
+  if (!c) return undefined;
+  return { id, name: id, ...c };
+}
+
 function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = instrumentById(instrument)) {
   if (instrument === "piano" || instrument === "vocals") {
     const midi = PIANO_VOICINGS[chordId];
@@ -45,8 +52,8 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
     else pianoTone(midiToFreq(60));
     return;
   }
-  if (instrument === "ukulele") {
-    const c = UKE_CHORDS[chordId];
+  if (instrument === "ukulele" || instrument === "mandolin") {
+    const c = instrument === "ukulele" ? UKE_CHORDS[chordId] : MANDOLIN_CHORDS[chordId];
     if (!c) return;
     const freqs = c.frets
       .map((f, i) => (f == null ? null : inst.openFreq[i] * Math.pow(2, f / 12)))
@@ -444,6 +451,7 @@ export function SessionPlayer() {
   const lastItem = session.index + 1 >= session.plan.items.length;
 
   const uke = instrument === "ukulele" ? ukeShape(liveChord || item.chords[0] || "C") : undefined;
+  const mandolin = instrument === "mandolin" ? mandolinShape(liveChord || item.chords[0] || "G") : undefined;
   const needsPick =
     (item.process === "create" && item.createOptions && item.createOptions.length >= 2 && !createPick) ||
     (item.process === "respond" && item.listenPrompt && !listenPick);
@@ -484,6 +492,8 @@ export function SessionPlayer() {
               <DrumPads active={null} onHit={() => undefined} disabled />
             ) : item.chords[0] && instrument === "ukulele" ? (
               <ChordDiagram shape={uke} />
+            ) : item.chords[0] && instrument === "mandolin" ? (
+              <ChordDiagram shape={mandolin} />
             ) : item.chords[0] && instrument === "guitar" ? (
               <ChordDiagram chordId={item.chords[0]} />
             ) : (
@@ -564,6 +574,7 @@ export function SessionPlayer() {
               <div className="flex flex-col items-center gap-3">
                 {instrument === "guitar" ? <ChordDiagram chordId={liveChord || item.chords[0]} compact /> : null}
                 {instrument === "ukulele" ? <ChordDiagram shape={uke} compact /> : null}
+                {instrument === "mandolin" ? <ChordDiagram shape={mandolin} compact /> : null}
                 <div className="flex flex-wrap justify-center gap-2 text-sm">
                   {item.chords.map((c) => (
                     <span

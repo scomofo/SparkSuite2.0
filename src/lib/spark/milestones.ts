@@ -84,7 +84,32 @@ const voice = copy("vocals-phrase-and-rest").map((cue) =>
     : cue,
 );
 
-/** Six original, short arrangements. Variations change the music rather than a score. */
+const MANDOLIN_NOTES: Record<string, number[]> = {
+  G: [55, 62, 71, 79],
+  C: [55, 64, 72, 76],
+  D: [57, 62, 69, 78],
+};
+const mandolin = ["G", "C", "D", "G"].flatMap((chord, bar) =>
+  bar === 3
+    ? [
+        { ...n(12, "G ↓", MANDOLIN_NOTES.G, 3.8), chord, detail: "Return to G and let it ring" },
+        { beat: 13, label: "Hold", detail: "Let the final G ring" },
+        { beat: 14, label: "Hold", detail: "Let the final G ring" },
+        { beat: 15, label: "Hold", detail: "Let the final G ring" },
+      ]
+    : [
+        {
+          ...n(bar * 4, chord + " ↓", MANDOLIN_NOTES[chord]),
+          chord,
+          detail: chord + ": downstroke",
+        },
+        quiet(bar * 4 + 1, "Count"),
+        quiet(bar * 4 + 2, "Prepare"),
+        quiet(bar * 4 + 3, "Prepare"),
+      ],
+);
+
+/** Seven original, short arrangements. Variations change the music rather than a score. */
 export const MUSICAL_MILESTONES: MusicalMilestone[] = [
   {
     instrument: "guitar",
@@ -194,6 +219,32 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
             ...cue,
             notes:
               cue.beat < 8 ? [[60], [62], [64]][cue.beat - 4] : [[64], [62], [60]][cue.beat - 12],
+          }
+        : cue,
+    ),
+  },
+  {
+    instrument: "mandolin",
+    title: "Two courses and a return",
+    goal: "Play G → C → D → G, one bar each, and finish on a ringing G.",
+    setup:
+      "Strum down on beat 1 and prepare the next shape while counting. G–D–A–E frets: G 0–0–2–3, C 0–2–3–0, D 2–0–0–2.",
+    variation: "Chop on two and four",
+    variationHint:
+      "In the first three bars, add a short muted chop on beats 2 and 4; keep the final bar as one ringing G.",
+    lessons: ["mandolin-gdae", "mandolin-down-pulse", "mandolin-g-and-c"],
+    bpm: 50,
+    beats: 16,
+    shapes: ["G", "C", "D"],
+    cues: mandolin,
+    alternate: mandolin.map((cue) =>
+      cue.beat < 12 && (cue.beat % 4 === 1 || cue.beat % 4 === 3)
+        ? {
+            beat: cue.beat,
+            label: "Chop",
+            detail: "Release pressure and chop",
+            muted: true,
+            chord: ["G", "C", "D"][Math.floor(cue.beat / 4)],
           }
         : cue,
     ),

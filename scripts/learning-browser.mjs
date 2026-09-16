@@ -108,7 +108,7 @@ try {
   await page.getByRole("button", { name: "I tried it", exact: true }).waitFor();
 
   // Every instrument exposes advanced work without pretending the earlier lessons are mastered.
-  for (const instrument of ["piano", "ukulele", "bass", "drums", "vocals", "guitar"]) {
+  for (const instrument of ["piano", "ukulele", "mandolin", "bass", "drums", "vocals", "guitar"]) {
     await page.getByLabel("Learning instrument", { exact: true }).selectOption(instrument);
     const pathButton = page.getByRole("button", { name: "Learning path", exact: true });
     if (await pathButton.isVisible()) await pathButton.click();
@@ -164,7 +164,7 @@ try {
           "optional audio stop",
           "one-step and full-lesson pacing",
           "pause/reload/return",
-          "six instruments and advanced access",
+          "seven instruments and advanced access",
           "feedback and completion guard",
           "separate practice progress",
           "review/new choice",

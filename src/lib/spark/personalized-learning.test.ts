@@ -75,7 +75,7 @@ describe("personal starting points", () => {
     assert.deepEqual(data.milestones, {});
     assert.equal(learningSummary(data, "guitar", "2026-09-07").reason, "review");
   });
-  it("chooses all four levels on all six instruments without awarding earlier lessons", () => {
+  it("chooses all four levels on every instrument without awarding earlier lessons", () => {
     for (const { id } of INSTRUMENTS)
       for (const [index, option] of EXPERIENCE_OPTIONS.entries()) {
         const data = configureLearning(emptyLearning(), id, { experience: option.id, minutes: 5 });
@@ -226,11 +226,11 @@ describe("musical milestone attempts and saved versions", () => {
     assert.equal(data.milestones.guitar?.phase, "play");
     assert.deepEqual(roundTrip(data), data);
   });
-  it("preserves six independent pieces across reloads and long breaks", () => {
+  it("preserves one independent piece per instrument across reloads and long breaks", () => {
     let data = emptyLearning();
     for (const { id } of INSTRUMENTS) data = savePiece(data, id);
     const restored = roundTrip(data);
-    assert.equal(Object.keys(restored.milestones).length, 6);
+    assert.equal(Object.keys(restored.milestones).length, INSTRUMENTS.length);
     assert.deepEqual(restored, data);
     for (const { id } of INSTRUMENTS) {
       assert.equal(restored.milestones[id]?.saved?.savedOn, DAY);
@@ -263,9 +263,10 @@ describe("musical milestone attempts and saved versions", () => {
   });
 });
 
-describe("six original pieces and their musical variations", () => {
+describe("one original piece per instrument and its musical variations", () => {
   it("uses playable notes, real preparation lessons, complete bars, and bounded durations", () => {
-    assert.equal(new Set(MUSICAL_MILESTONES.map((piece) => piece.instrument)).size, 6);
+    assert.equal(new Set(MUSICAL_MILESTONES.map((piece) => piece.instrument)).size, INSTRUMENTS.length);
+    assert.equal(INSTRUMENTS.length, 7);
     for (const piece of MUSICAL_MILESTONES) {
       assert.ok(piece.lessons.every((id) => learningLesson(id)?.instrument === piece.instrument));
       for (const variation of [false, true]) {

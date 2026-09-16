@@ -139,7 +139,7 @@ describe("theory spelling", () => {
 });
 
 describe("listen and make passes are playable with the generic control", () => {
-  const ids: InstrumentId[] = ["guitar", "piano", "ukulele", "bass", "drums", "vocals"];
+  const ids: InstrumentId[] = ["guitar", "piano", "ukulele", "bass", "drums", "vocals", "mandolin"];
   const items = ids.flatMap((id) =>
     lessonsFor(id)
       .filter((l) => l.process === "respond" || l.process === "create")

@@ -1,7 +1,7 @@
 import type { Lesson, PlanItem } from "./types.ts";
 import { LESSONS as GUITAR_LESSONS, TRACKS as GUITAR_TRACKS, FIRST_PROMISE as GUITAR_PROMISE } from "./guitar.ts";
 
-export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals";
+export type InstrumentId = "guitar" | "piano" | "ukulele" | "bass" | "drums" | "vocals" | "mandolin";
 
 export type InstrumentDef = {
   id: InstrumentId;
@@ -95,6 +95,19 @@ export const INSTRUMENTS: InstrumentDef[] = [
     openPc: [0],
     firstChords: ["C"],
     theoryNeck: "piano",
+  },
+  {
+    id: "mandolin",
+    name: "Mandolin",
+    kicker: "GDAE",
+    promise: "Two-finger G and C, then a chop on two and four. The pulse lives in your wrist.",
+    family: "strings",
+    surface: "strings",
+    stringNames: ["G", "D", "A", "E"],
+    openFreq: [196.0, 293.66, 440.0, 659.25],
+    openPc: [7, 2, 9, 4],
+    firstChords: ["G", "C"],
+    theoryNeck: "four",
   },
 ];
 
@@ -813,6 +826,151 @@ const VOCAL_LESSONS: Lesson[] = [
   },
 ];
 
+const MANDOLIN_LESSONS: Lesson[] = [
+  {
+    id: "lesson_mandolin_open_01",
+    title: "Open GDAE",
+    skill: "mandolin_open",
+    trackId: "track_mandolin_foundations",
+    order: 1,
+    type: "warmup",
+    objectives: ["Pick G D A E in order", "One clean note per course"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: [],
+    masteryRequired: 0.7,
+  },
+  {
+    id: "lesson_mandolin_g_01",
+    title: "Two-finger G",
+    skill: "mandolin_g",
+    trackId: "track_mandolin_chords",
+    order: 2,
+    type: "chord",
+    objectives: ["A course fret 2, E course fret 3", "Both strings of each pair"],
+    chords: ["G"],
+    pattern: "D",
+    bars: 8,
+    bpm: 72,
+    prerequisites: ["lesson_mandolin_open_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_mandolin_c_01",
+    title: "C shape",
+    skill: "mandolin_c",
+    trackId: "track_mandolin_chords",
+    order: 3,
+    type: "chord",
+    objectives: ["D course fret 2, A course fret 3", "Keep G and E open"],
+    chords: ["C"],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: ["lesson_mandolin_g_01"],
+    masteryRequired: 0.75,
+  },
+  {
+    id: "lesson_mandolin_gc_01",
+    title: "Porch Light",
+    skill: "mandolin_gc",
+    trackId: "track_mandolin_songs",
+    order: 4,
+    type: "song",
+    objectives: ["Change on beat 1", "Keep the wrist loose"],
+    chords: ["G", "C"],
+    pattern: "D",
+    bars: 16,
+    bpm: 76,
+    prerequisites: ["lesson_mandolin_c_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Porch Light",
+    criteria: ["The loop finishes", "The change lands on one"],
+    why: "Two shapes, one steady down-pick. That is a tune.",
+    interpret: "Let each downstroke ring into the next.",
+  },
+  {
+    id: "lesson_mandolin_respond_gc_01",
+    title: "Same chord or different",
+    skill: "mandolin_listen",
+    trackId: "track_mandolin_songs",
+    order: 5,
+    type: "skill",
+    objectives: ["Hear G, then C", "Name same chord or different"],
+    chords: ["G", "C"],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: ["lesson_mandolin_gc_01"],
+    masteryRequired: 0.7,
+    process: "respond",
+    repertoire: "Porch Light",
+    listenPrompt: { a: "G", b: "C", ask: "Same chord or different?", answer: "different" },
+    criteria: ["You listened first", "You named one thing"],
+    why: "Porch Light uses both. Name the difference.",
+  },
+  {
+    id: "lesson_mandolin_d_01",
+    title: "D shape",
+    skill: "mandolin_d",
+    trackId: "track_mandolin_chords",
+    order: 6,
+    type: "chord",
+    objectives: ["G course fret 2, E course fret 2", "Open D and A in the middle"],
+    chords: ["D"],
+    pattern: "D",
+    bars: 8,
+    bpm: 70,
+    prerequisites: ["lesson_mandolin_c_01"],
+    masteryRequired: 0.75,
+    why: "The V that pulls back to G.",
+  },
+  {
+    id: "lesson_mandolin_chop_01",
+    title: "The chop",
+    skill: "mandolin_chop",
+    trackId: "track_mandolin_songs",
+    order: 7,
+    type: "rhythm",
+    objectives: ["Open down on 1 and 3", "Muted chop on 2 and 4"],
+    chords: ["G", "C"],
+    pattern: "D-D-",
+    bars: 8,
+    bpm: 80,
+    prerequisites: ["lesson_mandolin_gc_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Chop",
+    criteria: ["The chop lands on 2 and 4", "The open strokes still ring"],
+    why: "Porch Light with a backbeat.",
+    interpret: "Make the chop short, like a snare.",
+  },
+  {
+    id: "lesson_mandolin_create_hang_01",
+    title: "Your hang",
+    skill: "mandolin_create",
+    trackId: "track_mandolin_songs",
+    order: 8,
+    type: "song",
+    objectives: ["Stay on G, or switch to C", "Play the one you picked"],
+    chords: ["G", "C"],
+    pattern: "D",
+    bars: 8,
+    bpm: 72,
+    prerequisites: ["lesson_mandolin_gc_01"],
+    masteryRequired: 0.7,
+    process: "create",
+    repertoire: "Your hang",
+    createOptions: ["G", "G–C"],
+    criteria: ["You picked it", "You played it through"],
+    why: "You pick the idea. That's the piece.",
+    interpret: "Play the one you picked like you meant it.",
+  },
+];
+
 const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
   guitar: [...GUITAR_TRACKS],
   piano: [
@@ -839,6 +997,11 @@ const TRACKS: Record<InstrumentId, { id: string; name: string }[]> = {
     { id: "track_vocals_foundations", name: "Foundations" },
     { id: "track_vocals_pitch", name: "Pitch" },
   ],
+  mandolin: [
+    { id: "track_mandolin_foundations", name: "Foundations" },
+    { id: "track_mandolin_chords", name: "Chords" },
+    { id: "track_mandolin_songs", name: "Songs" },
+  ],
 };
 
 const ALL: Record<InstrumentId, Lesson[]> = {
@@ -848,6 +1011,7 @@ const ALL: Record<InstrumentId, Lesson[]> = {
   bass: BASS_LESSONS,
   drums: DRUM_LESSONS,
   vocals: VOCAL_LESSONS,
+  mandolin: MANDOLIN_LESSONS,
 };
 
 export function lessonsFor(id: InstrumentId) {
@@ -866,6 +1030,7 @@ export function foundationsFor(id: InstrumentId) {
     bass: ["lesson_bass_e_pulse_01"],
     drums: ["lesson_drums_kick_01"],
     vocals: ["lesson_vocals_drone_01"],
+    mandolin: ["lesson_mandolin_open_01"],
   };
   return map[id];
 }
@@ -883,6 +1048,7 @@ export function firstLessonIds(id: InstrumentId): [string, string, string] {
     bass: ["lesson_bass_e_pulse_01", "lesson_bass_em_root_01", "lesson_bass_em_g_01"],
     drums: ["lesson_drums_kick_01", "lesson_drums_backbeat_01", "lesson_drums_four_01"],
     vocals: ["lesson_vocals_drone_01", "lesson_vocals_match_c_01", "lesson_vocals_hold_01"],
+    mandolin: ["lesson_mandolin_open_01", "lesson_mandolin_g_01", "lesson_mandolin_gc_01"],
   };
   return map[id];
 }
@@ -911,6 +1077,15 @@ export const UKE_CHORDS: Record<string, { frets: (number | null)[]; fingers: (nu
   Am: { frets: [2, 0, 0, 0], fingers: [2, 0, 0, 0], notes: ["A", "C", "E", "A"] },
   F: { frets: [2, 0, 1, 0], fingers: [2, 0, 1, 0], notes: ["A", "C", "F", "A"] },
   D: { frets: [2, 2, 2, 0], fingers: [1, 2, 3, 0], notes: ["A", "D", "F♯", "A"] },
+};
+
+/** Frets in G–D–A–E course order. Each course is a unison pair, treated as one string. */
+export const MANDOLIN_CHORDS: Record<string, { frets: (number | null)[]; fingers: (number | null)[]; notes: string[] }> = {
+  G: { frets: [0, 0, 2, 3], fingers: [0, 0, 1, 2], notes: ["G", "D", "B", "G"] },
+  C: { frets: [0, 2, 3, 0], fingers: [0, 1, 2, 0], notes: ["G", "E", "C", "E"] },
+  D: { frets: [2, 0, 0, 2], fingers: [1, 0, 0, 2], notes: ["A", "D", "A", "F♯"] },
+  Am: { frets: [2, 2, 3, 0], fingers: [1, 2, 3, 0], notes: ["A", "E", "C", "E"] },
+  Em: { frets: [0, 2, 2, 0], fingers: [0, 1, 2, 0], notes: ["G", "E", "B", "E"] },
 };
 
 export const PIANO_VOICINGS: Record<string, number[]> = {

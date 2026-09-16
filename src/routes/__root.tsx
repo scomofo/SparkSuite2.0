@@ -13,7 +13,7 @@ export const Route = createRootRoute({
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: APP_NAME },
       { name: "theme-color", content: "#12100E" },
-      { name: "description", content: "SparkSuite — guitar, piano, ukulele, bass, drums, and vocals. Daily loops, a chord lab, and a bass techniques lab." },
+      { name: "description", content: "SparkSuite — guitar, piano, ukulele, mandolin, bass, drums, and vocals. Daily loops, a chord lab, and a bass techniques lab." },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },

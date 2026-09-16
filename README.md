@@ -1,6 +1,6 @@
 # SparkSuite
 
-A daily music-practice studio for guitar, piano, ukulele, bass, drums, and vocals. Short guided loops connect warmups, new skills, review, and musical challenges with technique labs, theory tools, and a tuner.
+A daily music-practice studio for guitar, piano, ukulele, mandolin, bass, drums, and vocals. Short guided loops connect warmups, new skills, review, and musical challenges with technique labs, theory tools, and a tuner.
 
 ## Development
 
@@ -23,7 +23,7 @@ Progress and checkpoints stay in this browser. Checkpoints expire at the next lo
 
 ## Guided learning
 
-**Learn** adds 48 original lessons: eight each for guitar, piano, ukulele, bass, drums, and vocals. Every path has two lessons at each stage: foundations, beginner, intermediate, and advanced. Lessons progress from first sounds and a steady pulse to instrument-specific harmony, rhythmic control, interpretation, and an independent arrangement or performance project. These are a practical learning path, not a certification or a complete substitute for instrumental instruction.
+**Learn** adds 56 original lessons: eight each for guitar, piano, ukulele, mandolin, bass, drums, and vocals. Every path has two lessons at each stage: foundations, beginner, intermediate, and advanced. Lessons progress from first sounds and a steady pulse to instrument-specific harmony, rhythmic control, interpretation, and an independent arrangement or performance project. These are a practical learning path, not a certification or a complete substitute for instrumental instruction.
 
 Each lesson has an explanation, a concrete example, a three-part practice attempt, and an understanding check with feedback. Selected lessons include optional synthesized pitch references. All levels are available; prerequisites are suggestions for learners who need the earlier concepts.
 
@@ -35,12 +35,12 @@ Each lesson has an explanation, a concrete example, a three-part practice attemp
 
 ### Matching lesson practice
 
-The first four lessons for each instrument now open one of **24 guided exercises** from the lesson's **Try it** step. The existing technique route accepts `?lesson=<curriculum-id>` and selects the matching instrument, notes, rhythm, chord diagrams, and short practice goal. For example, `?lesson=guitar-em-to-g` opens four bars of Em → G with a strum on each beat 1 and preparation counts between changes. General technique-lab links continue to work.
+Every lesson opens one of **56 guided exercises** from the lesson's **Try it** step; the final two per instrument are three-stage projects. The existing technique route accepts `?lesson=<curriculum-id>` and selects the matching instrument, notes, rhythm, chord diagrams, and short practice goal. For example, `?lesson=guitar-em-to-g` opens four bars of Em → G with a strum on each beat 1 and preparation counts between changes. General technique-lab links continue to work.
 
 - Choose 40–100 BPM and notes with a click, click only, or a visual-only guide. Each pass has a four-count lead-in and stops automatically. Stop, Escape, leaving the page, and hiding the tab cancel playback. Returning never starts it automatically.
 - Tempo, guide choice, and the practice check-in save with the lesson across reloads, days, and instrument changes. Studio and Today resume an unfinished guided exercise directly. Playback position is intentionally restarted from the count-in after a pause.
 - The learner explicitly records an attempt and chooses a reflection. Either reflection allows continuing to the lesson's understanding check; retry advice is specific to the exercise. Playback alone does not record an attempt, complete a lesson, award XP, or alter review dates.
-- Synthesized pitch/rhythm guides and reusable chord diagrams, keyboards, bass necks, and drum pads support practice with an instrument. No microphone is requested and no instrumental accuracy is inferred. Written practice remains available for all 48 lessons; later lessons do not yet have matched interactive exercises.
+- Synthesized pitch/rhythm guides and reusable chord diagrams, keyboards, bass necks, and drum pads support practice with an instrument. No microphone is requested and no instrumental accuracy is inferred. Written practice remains available for all 56 lessons.
 
 ### Personal starting points and first pieces
 
@@ -55,6 +55,7 @@ Each learning path also opens one original short piece at `/milestone?instrument
 | Guitar     | Em to G, then home           | Add a second strum in the first three bars        |
 | Piano      | A little question and answer | Hold the last C through the final count           |
 | Ukulele    | Three chords and a return    | Add a downstroke on beat 3                        |
+| Mandolin   | Two courses and a return     | Chop on beats 2 and 4 in the first three bars     |
 | Bass       | Roots that come back home    | Leave space on beats 2 and 4                      |
 | Drums      | A groove with a landing      | Put a tom in the final fill                       |
 | Vocals     | Here we go, back at home     | Raise the second phrase and descend to the ending |
@@ -75,9 +76,9 @@ npm run typecheck
 
 CI runs these checks on pull requests and main. Node 24 also checks desktop, 390px mobile, and 320px layouts, keyboard interaction, exercise recovery through reloads and instrument switching, and single session finalization against development and production builds. Screenshots and verdicts are attached as the `browser-evidence` workflow artifact.
 
-The browser checks require Playwright Chromium. `scripts/browser-smoke.mjs`, `scripts/studio-browser.mjs`, `scripts/learning-browser.mjs`, `scripts/lesson-practice-browser.mjs`, `scripts/personalized-browser.mjs`, and `scripts/coach-browser.mjs` save their evidence under `/workspace/screenshots` as required by the project's QA workflow. The learning checks cover pacing, feedback, exact-step recovery, all six instruments, advanced access, review scheduling, and failed saves on both development and production builds. Guided-practice checks also cover all 48 exercise links, bounded playback, tempo and reflection recovery, the return to the understanding check, and legacy/invalid technique links.
+The browser checks require Playwright Chromium. `scripts/browser-smoke.mjs`, `scripts/studio-browser.mjs`, `scripts/learning-browser.mjs`, `scripts/lesson-practice-browser.mjs`, `scripts/personalized-browser.mjs`, and `scripts/coach-browser.mjs` save their evidence under `/workspace/screenshots` as required by the project's QA workflow. The learning checks cover pacing, feedback, exact-step recovery, all seven instruments, advanced access, review scheduling, and failed saves on both development and production builds. Guided-practice checks also cover all 56 exercise links, bounded playback, tempo and reflection recovery, the return to the understanding check, and legacy/invalid technique links.
 
-Personalized-learning checks cover all four starting levels on all six instruments, 2/5/10 minute scopes, existing-save compatibility, unfinished-work precedence, first-bar and reflection guards, independent saved versions, replay settings and notes, mobile layouts, and failed saves.
+Personalized-learning checks cover all four starting levels on all seven instruments, 2/5/10 minute scopes, existing-save compatibility, unfinished-work precedence, first-bar and reflection guards, independent saved versions, replay settings and notes, mobile layouts, and failed saves.
 
 ## Progress-aware coach
 

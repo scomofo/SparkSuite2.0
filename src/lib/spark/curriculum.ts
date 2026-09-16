@@ -1148,6 +1148,197 @@ const vocals = path("vocals", [
   },
 ]);
 
+const mandolin = path("mandolin", [
+  {
+    slug: "gdae",
+    level: "foundations",
+    title: "Four pairs, one pick",
+    outcome: "Name the G–D–A–E courses and sound each pair as one note.",
+    explanation:
+      "A mandolin has eight strings arranged in four pairs called courses. Each pair is tuned in unison, so it sounds like one string. From the thickest to the thinnest course the tuning is G–D–A–E, a fifth apart each time. Hold the pick lightly and let it pass through both strings of a pair.",
+    example: "Pick each open course once, thickest to thinnest: G, D, A, E.",
+    practice: [
+      "Rest the mandolin against you and find the thickest course.",
+      "Pick down through both strings of that pair; listen for one sound, not two.",
+      "Move to each next course and name it aloud, four times in a row.",
+    ],
+    question: "What is a course on a mandolin?",
+    options: [
+      "A pair of strings tuned to the same note",
+      "The distance between two frets",
+      "A lesson in a method book",
+    ],
+    answer: 0,
+    feedback:
+      "A course is a unison pair that plays as one string. Frets divide the neck, and the tuning runs G–D–A–E across the four courses.",
+    demo: { label: "Open G, D, A, then E", notes: [[55], [62], [69], [76]] },
+  },
+  {
+    slug: "down-pulse",
+    level: "foundations",
+    title: "Downstrokes on a pulse",
+    outcome: "Keep counting four while picking only on beats 1 and 3.",
+    explanation:
+      "The beat is the regular pulse. In 4/4, four beats make one bar. A downstroke moves the pick toward the floor. Playing only on beats 1 and 3 leaves 2 and 4 silent; those silent beats still take their full time, so keep counting through them.",
+    example: "Count 1–2–3–4. Pick the open D course down on 1 and 3; let 2 and 4 pass.",
+    practice: [
+      "Tap your foot and count four evenly, twice, without picking.",
+      "Pick the open D course down on 1 and 3 for one bar.",
+      "Keep counting through 2 and 4 for four bars in a row.",
+    ],
+    question: "If you miss the downstroke on beat 3, what keeps the pulse?",
+    options: [
+      "Start the bar again",
+      "Keep counting and pick on the next beat 1",
+      "Add two quick strokes on beat 4",
+    ],
+    answer: 1,
+    feedback:
+      "The pulse continues through a missed stroke. Rejoin it on the next beat; restarting or catching up changes the timing.",
+  },
+  {
+    slug: "g-and-c",
+    level: "beginner",
+    title: "Two fingers, two chords",
+    outcome: "Change between G and C without rushing beat 1.",
+    explanation:
+      "A chord sounds several notes together. In G–D–A–E fret order, a two-finger G is 0–0–2–3 and C is 0–2–3–0. Press just behind the fret on both strings of the course. Change shapes during beats 3 and 4 so the new chord is ready on beat 1.",
+    example: "One bar G, one bar C. Strum down on beat 1 only; prepare the next shape on 3 and 4.",
+    practice: [
+      "Place G and pick each course slowly until both strings of every pair ring.",
+      "Make C, then move silently back to G three times.",
+      "Count four per shape and strum only beat 1 for four bars.",
+    ],
+    question: "Which frets make the two-finger G shape in G–D–A–E order?",
+    options: ["0–2–3–0", "0–0–2–3", "2–0–0–2"],
+    answer: 1,
+    feedback:
+      "G is 0–0–2–3: the A course at fret 2 and the E course at fret 3. 0–2–3–0 is C, and 2–0–0–2 is D.",
+    demo: { label: "G then C", notes: [[55, 62, 71, 79], [], [55, 64, 72, 76], []] },
+  },
+  {
+    slug: "down-up",
+    level: "beginner",
+    title: "Down on numbers, up on ands",
+    outcome: "Alternate pick direction through straight eighth notes.",
+    explanation:
+      "Two equal eighth notes fit inside one beat. Say 1-and-2-and-3-and-4-and. Alternate picking moves the pick down on the numbers and up on the ands, so the hand never has to change direction in a hurry. Keep the motion small and let the wrist do the work.",
+    example: "On the D course: D open, E fret 2, F♯ fret 4, G fret 5. Down, up, down, up.",
+    practice: [
+      "Count the eight syllables while moving the pick down and up above the strings.",
+      "Pick open D down-up for one bar with an even sound on both directions.",
+      "Play D–E–F♯–G up and back down, one note per syllable, for four bars.",
+    ],
+    question: "In alternate picking, where do the upstrokes fall?",
+    options: ["On the ands", "On beats 1 and 3", "Only at the end of a bar"],
+    answer: 0,
+    feedback:
+      "Downstrokes take the numbers and upstrokes take the ands. That pairing keeps the hand moving evenly through the subdivision.",
+    demo: { label: "D, E, F♯, G", notes: [[62], [64], [66], [67]] },
+  },
+  {
+    slug: "chop",
+    level: "intermediate",
+    title: "The chop on two and four",
+    outcome: "Alternate a ringing downstroke with a short muted chop.",
+    explanation:
+      "A chop is a chord struck while the fretting fingers release pressure, so the strings click instead of ringing. Placed on beats 2 and 4 it works like a snare drum under a melody. The chord shape stays in place; only the pressure changes. Keep the stroke short and let beats 1 and 3 ring fully.",
+    example:
+      "Hold G. Beat 1: strum and let it ring. Beat 2: release pressure and chop. Repeat on 3 and 4.",
+    practice: [
+      "Hold G and practise releasing pressure without lifting the fingers off the strings.",
+      "Strum on 1, chop on 2, strum on 3, chop on 4 for one slow bar.",
+      "Repeat for four bars and listen for a clear difference between ring and click.",
+    ],
+    question: "What makes a chop sound short?",
+    options: [
+      "Releasing finger pressure so the strings cannot ring",
+      "Picking much harder than usual",
+      "Lifting the pick away before it touches the strings",
+    ],
+    answer: 0,
+    feedback:
+      "The fingers stay on the strings but stop pressing, so the strings are damped. Force and pick height do not create the muted click.",
+  },
+  {
+    slug: "tremolo",
+    level: "intermediate",
+    title: "Sustain from motion",
+    outcome: "Hold one note with even, rapid down-up strokes.",
+    explanation:
+      "A plucked note fades quickly. Tremolo repeats the pick stroke fast enough that the ear hears one continuous tone. Start with four even strokes per beat, counted 1-e-and-a. The wrist stays loose and the strokes stay small; speed comes from ease, not effort.",
+    example:
+      "Open A course. Count 1-e-and-a 2-e-and-a with a stroke on every syllable, then rest for two beats.",
+    practice: [
+      "Say 1-e-and-a slowly and move the pick down-up-down-up above the strings.",
+      "Play four strokes per beat on open A for two beats, then rest for two.",
+      "Repeat twice and check that the last strokes sound as even as the first.",
+    ],
+    question: "What turns repeated strokes into a sustained tone?",
+    options: [
+      "Playing as loudly as possible",
+      "Even, closely spaced strokes",
+      "Changing the note on every stroke",
+    ],
+    answer: 1,
+    feedback:
+      "Evenness is what the ear hears as one continuous sound. Volume and pitch changes do not create the effect.",
+    demo: { label: "Tremolo on A, then rest", notes: [[69], [69], [], []] },
+  },
+  {
+    slug: "melody-with-chops",
+    level: "advanced",
+    title: "Melody, then backing",
+    outcome: "Play a short melody and support it with a chop backing.",
+    explanation:
+      "The mandolin plays two roles in a group: lead melody and rhythmic backing. A melody on the D and A courses uses the alternate picking you already have. Backing under a singer or another player uses chords with a chop on 2 and 4. Practising both over the same chords makes it easier to switch roles mid-tune.",
+    example:
+      "Two bars of melody: D–E–F♯–G, then A–G–F♯–D. Two bars of backing: G with chops, then D with chops, back to G.",
+    practice: [
+      "Play the two melody bars alone with alternate picking at a slow tempo.",
+      "Play two bars of chop backing on G and D without the melody.",
+      "Join them: melody, then backing, keeping the same count throughout.",
+    ],
+    question: "What stays the same when the mandolin changes from melody to backing?",
+    options: [
+      "The pulse and the chord progression",
+      "The pick must stop moving",
+      "The fretting hand leaves the neck",
+    ],
+    answer: 0,
+    feedback:
+      "The count and the harmony carry through both roles. The picking pattern and the fretting job change, not the underlying pulse.",
+    demo: {
+      label: "Melody then a G chop",
+      notes: [[62], [64], [66], [67], [55, 62, 71, 79], [], [55, 62, 71, 79], []],
+    },
+  },
+  {
+    slug: "arrangement",
+    level: "advanced",
+    title: "Arrange a short tune",
+    outcome: "Plan, perform, and revise a four-bar arrangement with a clear ending.",
+    explanation:
+      "An arrangement decides how a melody and its chords are presented over time. Contrast can come from texture: single-note melody, then strummed chords. An ending that lands on the home chord, G, tells the listener the piece is finished. Choose one criterion to revise after each attempt; a finished lesson is a practice milestone, not a performance grade.",
+    example:
+      "Bars 1–2: melody D–E–F♯–G, A–G–F♯–D. Bars 3–4: strum G, C, then D. Land on a final G and let it ring.",
+    practice: [
+      "Play the melody bars, then the strummed bars, at one steady tempo.",
+      "Add the final G on the next beat 1 and let it ring for a full count.",
+      "Choose one thing to change, such as the ending or the texture switch, and repeat.",
+    ],
+    question: "Which review gives you a usable next step?",
+    options: [
+      "Decide the whole take was good or bad",
+      "Name one transition to place more clearly next time",
+      "Double the tempo immediately",
+    ],
+    answer: 1,
+    feedback:
+      "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+  },
+]);
+
 export const CURRICULUM: LearningLesson[] = [
   ...guitar,
   ...piano,
@@ -1155,6 +1346,7 @@ export const CURRICULUM: LearningLesson[] = [
   ...bass,
   ...drums,
   ...vocals,
+  ...mandolin,
 ];
 export const learningPath = (instrument: InstrumentId) =>
   CURRICULUM.filter((lesson) => lesson.instrument === instrument);

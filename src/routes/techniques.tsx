@@ -6,6 +6,7 @@ import { BassNeck, RoleLegend } from "@/components/bass-neck";
 import { DrumsLab } from "@/components/labs/drums-lab";
 import { GuitarLab } from "@/components/labs/guitar-lab";
 import { PianoLab } from "@/components/labs/piano-lab";
+import { MandolinLab } from "@/components/labs/mandolin-lab";
 import { UkeLab } from "@/components/labs/uke-lab";
 import { VoiceLab } from "@/components/labs/voice-lab";
 import { Chip, TabRow } from "@/components/labs/shared";
@@ -53,6 +54,7 @@ function TechniquesPage() {
   if (instrument === "drums") return <DrumsLab />;
   if (instrument === "piano") return <PianoLab />;
   if (instrument === "ukulele") return <UkeLab />;
+  if (instrument === "mandolin") return <MandolinLab />;
   if (instrument === "vocals") return <VoiceLab />;
   if (instrument === "guitar") return <GuitarLab />;
   return <BassLab />;

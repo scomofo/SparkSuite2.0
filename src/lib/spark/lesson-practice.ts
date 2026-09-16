@@ -1,6 +1,6 @@
 import { learningLesson } from "./curriculum.ts";
 import { CHORDS } from "./guitar.ts";
-import { UKE_CHORDS, type InstrumentId } from "./instruments.ts";
+import { MANDOLIN_CHORDS, UKE_CHORDS, type InstrumentId } from "./instruments.ts";
 import type { BassPos } from "./bass.ts";
 import type { ChordShape } from "./types.ts";
 
@@ -139,11 +139,22 @@ export function retryCoaching(exercise: LessonExercise) {
 
 export function practiceShape(instrument: InstrumentId, chord: string): ChordShape | undefined {
   if (instrument === "guitar") return CHORDS[chord];
-  const shape = instrument === "ukulele" ? UKE_CHORDS[chord] : undefined;
+  const shape =
+    instrument === "ukulele"
+      ? UKE_CHORDS[chord]
+      : instrument === "mandolin"
+        ? MANDOLIN_CHORDS[chord]
+        : undefined;
   return shape ? { ...shape, id: chord, name: chord } : undefined;
 }
-function chordNotes(instrument: "guitar" | "ukulele", chord: string) {
-  const open = instrument === "guitar" ? [40, 45, 50, 55, 59, 64] : [67, 60, 64, 69];
+type StrummedInstrument = "guitar" | "ukulele" | "mandolin";
+const OPEN_MIDI: Record<StrummedInstrument, number[]> = {
+  guitar: [40, 45, 50, 55, 59, 64],
+  ukulele: [67, 60, 64, 69],
+  mandolin: [55, 62, 69, 76],
+};
+function chordNotes(instrument: StrummedInstrument, chord: string) {
+  const open = OPEN_MIDI[instrument];
   return practiceShape(instrument, chord)!.frets.flatMap((fret, index) =>
     fret === null ? [] : [open[index] + fret],
   );
@@ -168,7 +179,7 @@ const drum = (beat: number, pads: number[]): PracticeCue => ({
 });
 const strum = (
   beat: number,
-  instrument: "guitar" | "ukulele",
+  instrument: StrummedInstrument,
   chord: string,
   up = false,
 ): PracticeCue => ({
@@ -190,7 +201,7 @@ function repeatEvery(cues: PracticeCue[], times: number, beats: number) {
     cues.map((cue) => ({ ...cue, beat: cue.beat + index * beats })),
   ).flat();
 }
-function chordBars(instrument: "guitar" | "ukulele", chords: string[]) {
+function chordBars(instrument: StrummedInstrument, chords: string[]) {
   return chords.flatMap((chord, bar) => [
     strum(bar * 4, instrument, chord),
     { beat: bar * 4 + 1, label: "Count", detail: "Keep counting; no new strum" },
@@ -1606,6 +1617,256 @@ export const LESSON_EXERCISES: LessonExercise[] = [
       note(5, "light", [62], "Beat 2", 0.75),
       note(6, "on", [60], "Beat 3", 0.75),
       rest(7, "Rest on beat 4; finish comfortably"),
+    ],
+  },
+  {
+    lessonId: "mandolin-gdae",
+    title: "Meet G–D–A–E",
+    bpm: 60,
+    beats: 8,
+    goal: "Pick the four open courses in G–D–A–E order, twice.",
+    setup:
+      "Start at the thickest pair. Let the pick pass through both strings of each course in one motion.",
+    hint: "Name one course at a time with the guide stopped. Listen for one sound from each pair.",
+    takeaway: "G–D–A–E names the courses from thickest to thinnest. Each pair plays as one string.",
+    cues: repeat(
+      [
+        note(0, "G", [55], "G course, open"),
+        note(1, "D", [62], "D course, open"),
+        note(2, "A", [69], "A course, open"),
+        note(3, "E", [76], "E course, open"),
+      ],
+      2,
+    ),
+  },
+  {
+    lessonId: "mandolin-down-pulse",
+    title: "Two downstrokes, four counts",
+    bpm: 60,
+    beats: 16,
+    goal: "Pick the open D course down on beats 1 and 3 for four bars; count through 2 and 4.",
+    setup:
+      "Keep the pick moving in small strokes from the wrist. Beats 2 and 4 are silent but still counted.",
+    hint: "Tap the rhythm on your knee for one bar. Say all four numbers, including the quiet ones.",
+    takeaway:
+      "The silent beats belong to the pulse too. If you miss a stroke, join the next count.",
+    cues: repeat(
+      [
+        note(0, "D ↓", [62], "Open D course, downstroke"),
+        rest(1),
+        note(2, "D ↓", [62], "Open D course, downstroke"),
+        rest(3),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-g-and-c",
+    title: "G → C, one change at a time",
+    bpm: 60,
+    beats: 16,
+    goal: "Alternate G and C for four bars, strumming only on each beat 1.",
+    setup:
+      "G is 0–0–2–3 and C is 0–2–3–0 in G–D–A–E order. Use beats 3 and 4 to prepare the next shape.",
+    hint: "Put the guide on hold and move silently between the two shapes three times. Then try two bars at 40 BPM.",
+    takeaway:
+      "You gave each change a place in the bar. Keep the same small goal on your next attempt.",
+    shapes: ["G", "C"],
+    cues: chordBars("mandolin", ["G", "C", "G", "C"]),
+  },
+  {
+    lessonId: "mandolin-down-up",
+    title: "Down on numbers, up on ands",
+    bpm: 60,
+    beats: 16,
+    goal: "Try four bars of D–E–F♯–G up and back down with alternate picking.",
+    setup:
+      "All on the D course: open, fret 2, fret 4, fret 5. Down on the numbers, up on the ands.",
+    hint: "Pick open D down-up for one bar first. Keep the upstroke as quiet and even as the downstroke.",
+    takeaway: "Alternating direction keeps the hand relaxed. Speed can come later.",
+    cues: repeat(
+      [
+        note(0, "D ↓", [62], "Open D course", 0.4),
+        note(0.5, "E ↑", [64], "D course, fret 2", 0.4),
+        note(1, "F♯ ↓", [66], "D course, fret 4", 0.4),
+        note(1.5, "G ↑", [67], "D course, fret 5", 0.4),
+        note(2, "F♯ ↓", [66], "D course, fret 4", 0.4),
+        note(2.5, "E ↑", [64], "D course, fret 2", 0.4),
+        note(3, "D ↓", [62], "Open D course", 0.4),
+        rest(3.5, "Silent upward motion"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-chop",
+    title: "Ring on 1 and 3, chop on 2 and 4",
+    bpm: 60,
+    beats: 16,
+    goal: "Hold G for four bars: strum on 1 and 3, chop on 2 and 4.",
+    setup:
+      "Keep the G shape in place. On 2 and 4, release finger pressure so the strum clicks instead of ringing.",
+    hint: "Practise only the pressure release with the guide stopped. Then try one bar at 40 BPM.",
+    takeaway: "The chop is a rhythm job. Short on 2 and 4, ringing on 1 and 3.",
+    shapes: ["G"],
+    cues: repeat(
+      [
+        strum(0, "mandolin", "G"),
+        { beat: 1, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+        strum(2, "mandolin", "G"),
+        { beat: 3, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-tremolo",
+    title: "Four strokes per beat on open A",
+    bpm: 50,
+    beats: 8,
+    subdivision: 4,
+    goal: "Tremolo the open A course for two beats, rest for two, and repeat.",
+    setup: "Count 1-e-and-a. One small stroke on each syllable, alternating down and up.",
+    hint: "Play only beat 1 with four strokes at 40 BPM, then stop and check the wrist is loose.",
+    retryLabel: "The strokes get uneven or the wrist tightens",
+    takeaway: "Even, small strokes make one sustained tone. Rest before the sound gets rough.",
+    cues: repeatEvery(
+      [
+        ...Array.from({ length: 8 }, (_, index) =>
+          note(
+            index / 4,
+            index % 2 ? "↑" : "↓",
+            [69],
+            index % 4 === 0
+              ? "Beat " + (Math.floor(index / 4) + 1)
+              : ["e", "and", "a"][(index % 4) - 1],
+            0.2,
+          ),
+        ),
+        rest(2, "Rest; let the wrist settle"),
+        rest(3, "Rest; keep counting"),
+      ],
+      2,
+      4,
+    ),
+  },
+  {
+    lessonId: "mandolin-melody-with-chops",
+    title: "Two bars of melody, two bars of chops",
+    bpm: 60,
+    beats: 16,
+    goal: "Play D–E–F♯–G, A–G–F♯–D, then back G and D with chops on 2 and 4.",
+    setup:
+      "Melody on the D and A courses with alternate picking. Backing: G is 0–0–2–3, D is 2–0–0–2.",
+    hint: "Play only the two melody bars at 40 BPM, then only the two backing bars. Join them last.",
+    retryLabel: "The switch from melody to chords loses beat 1",
+    takeaway: "The pulse carried through both roles. Melody and backing share one count.",
+    shapes: ["G", "D"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the melody",
+        instruction: "Play the two melody bars with alternate picking at a steady tempo.",
+        button: "I built the melody",
+      },
+      {
+        title: "Choose the backing",
+        instruction: "Choose one backing feel, then add the two chord bars behind the count.",
+        button: "Save my backing choice",
+      },
+      {
+        title: "Refine the switch",
+        instruction:
+          "After the four-bar reference stops, play the melody and then your chosen backing yourself, twice through. Protect beat 1 of bar 3, where the pick changes jobs, and keep the count steady.",
+        button: "I tried my refined switch",
+      },
+      [
+        { label: "Chop backing", detail: "Ring on 1 and 3, short muted chop on 2 and 4." },
+        {
+          label: "Tremolo backing",
+          detail: "Sustain each chord with small even strokes for the whole bar.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ↓", "E ↑", "F♯ ↓", "G ↑"][beat], [midi], "Melody, D course"),
+      ),
+      ...[69, 67, 66, 62].map((midi, beat) =>
+        note(4 + beat, ["A ↓", "G ↑", "F♯ ↓", "D ↑"][beat], [midi], "Melody, A then D course"),
+      ),
+      strum(8, "mandolin", "G"),
+      { beat: 9, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      strum(10, "mandolin", "G"),
+      { beat: 11, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "G" },
+      strum(12, "mandolin", "D"),
+      { beat: 13, label: "Chop", detail: "Release pressure and chop", muted: true, chord: "D" },
+      { ...strum(14, "mandolin", "G"), duration: 1.8, detail: "G: downstroke, let it ring" },
+      { beat: 15, label: "Hold", detail: "Let G continue to the end" },
+    ],
+  },
+  {
+    lessonId: "mandolin-arrangement",
+    title: "Melody, chords, and one clear ending",
+    bpm: 50,
+    beats: 17,
+    goal: "Build a four-bar guide: two melody bars, G–C then D strummed, and land on a final G.",
+    setup:
+      "Melody D–E–F♯–G, A–G–F♯–D. Then strum G, C, and D on beat 1 of their counts, and let a final G ring.",
+    hint: "Loop the final melody bar into the first strummed G bar at 40 BPM and say every count.",
+    retryLabel: "The texture switch loses beat 1",
+    takeaway:
+      "Changing only the texture created contrast while the melody and harmony stayed recognizable.",
+    shapes: ["G", "C", "D"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the melody half",
+        instruction: "Play the two melody bars with alternate picking and a steady count.",
+        button: "I built the melody half",
+      },
+      {
+        title: "Choose the ending",
+        instruction: "Choose one ending, then add the strummed G, C, and D bars and the final G.",
+        button: "Save my ending choice",
+      },
+      {
+        title: "Refine the landing",
+        instruction:
+          "After the four-bar reference and final G stop, play the whole arrangement yourself twice. Protect the switch from single notes to chords between bars 2 and 3, and give the final G its full count.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        {
+          label: "Ring and stop",
+          detail: "One downstroke on the final G, let it ring, then lift on the last count.",
+        },
+        {
+          label: "Tremolo ending",
+          detail: "Sustain the final G with small even strokes through the last count.",
+        },
+      ],
+    ),
+    cues: [
+      ...[62, 64, 66, 67].map((midi, beat) =>
+        note(beat, ["D ↓", "E ↑", "F♯ ↓", "G ↑"][beat], [midi], "Melody, D course"),
+      ),
+      ...[69, 67, 66, 62].map((midi, beat) =>
+        note(4 + beat, ["A ↓", "G ↑", "F♯ ↓", "D ↑"][beat], [midi], "Melody, A then D course"),
+      ),
+      strum(8, "mandolin", "G"),
+      { beat: 9, label: "Count", detail: "Keep counting; no new strum" },
+      strum(10, "mandolin", "C"),
+      { beat: 11, label: "Prepare", detail: "Prepare D while you count" },
+      strum(12, "mandolin", "D"),
+      { beat: 13, label: "Count", detail: "Keep counting; no new strum" },
+      { beat: 14, label: "Prepare", detail: "Prepare G for the landing" },
+      { beat: 15, label: "Prepare", detail: "Keep counting while you change shape" },
+      {
+        ...strum(16, "mandolin", "G"),
+        label: "G ↓ · land",
+        detail: "Return to G on the new beat 1 and let it ring",
+      },
     ],
   },
 ];

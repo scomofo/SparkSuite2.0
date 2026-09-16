@@ -1,1 +1,0 @@
-import{Ft as e,Lt as t,et as n}from"./spark-BPSYc0SN.js";var r=t(e(),1);function i(e){let t=n();return r.useCallback(n=>t.navigate({...n,from:n.from??e?.from}),[e?.from,t])}export{i as t};
