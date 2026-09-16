@@ -1397,7 +1397,7 @@ const banjo = path("banjo", [
     title: "The first change",
     outcome: "Move between open G and D7 without rushing beat 1.",
     explanation:
-      "Open G needs no fingers. D7 in g–D–G–B–D fret order is 0–0–2–1–2: the third string at fret 2, the second at fret 1, the first at fret 2. This beginner D7 leaves out the chord's third, which is why it sounds open. The short fifth string stays open. Place the shape during beats 3 and 4 so it is ready on beat 1.",
+      "Open G needs no fingers. D7 in g–D–G–B–D fret order is 0–0–2–1–2: the third string at fret 2, the second at fret 1, the first at fret 2. This beginner D7 leaves out the chord's third, which is why it sounds open. Skip the short fifth string when you brush D7; its high g rubs against the shape. Rolls still use it. Place the shape during beats 3 and 4 so it is ready on beat 1.",
     example: "One bar of open G, one bar of D7. Brush on beat 1 only; place the shape on 3 and 4.",
     practice: [
       "Place D7 and pick each string slowly to find a clear sound.",
@@ -1412,7 +1412,7 @@ const banjo = path("banjo", [
     ],
     answer: 0,
     feedback:
-      "D7 is 0–0–2–1–2: the third string at fret 2, second at fret 1, first at fret 2. The fifth and fourth strings stay open.",
+      "D7 is 0–0–2–1–2 on the long strings: the third string at fret 2, second at fret 1, first at fret 2. The fourth string stays open and the fifth is skipped when brushing.",
     demo: { label: "Open G then D7", notes: [[67, 50, 55, 59, 62], [], [67, 50, 57, 60, 64], []] },
   },
   {
