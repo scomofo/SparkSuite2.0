@@ -82,45 +82,6 @@ var createLucideIcon = (iconName, iconNode) => {
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var ArrowLeft = createLucideIcon("arrow-left", [["path", {
-	d: "m12 19-7-7 7-7",
-	key: "1l729n"
-}], ["path", {
-	d: "M19 12H5",
-	key: "x3x0zl"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var ArrowRight = createLucideIcon("arrow-right", [["path", {
-	d: "M5 12h14",
-	key: "1ays0h"
-}], ["path", {
-	d: "m12 5 7 7-7 7",
-	key: "xquz4c"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var ArrowUpRight = createLucideIcon("arrow-up-right", [["path", {
-	d: "M7 7h10v10",
-	key: "1tivn9"
-}], ["path", {
-	d: "M7 17 17 7",
-	key: "1vkiza"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var AudioLines = createLucideIcon("audio-lines", [
 	["path", {
 		d: "M2 10v3",
@@ -153,116 +114,10 @@ var AudioLines = createLucideIcon("audio-lines", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var BookOpen = createLucideIcon("book-open", [["path", {
-	d: "M12 7v14",
-	key: "1akyts"
-}], ["path", {
-	d: "M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z",
-	key: "ruj8y"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var ChartNoAxesColumnIncreasing = createLucideIcon("chart-no-axes-column-increasing", [
-	["line", {
-		x1: "12",
-		x2: "12",
-		y1: "20",
-		y2: "10",
-		key: "1vz5eb"
-	}],
-	["line", {
-		x1: "18",
-		x2: "18",
-		y1: "20",
-		y2: "4",
-		key: "cun8e5"
-	}],
-	["line", {
-		x1: "6",
-		x2: "6",
-		y1: "20",
-		y2: "16",
-		key: "hq0ia6"
-	}]
-]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Check = createLucideIcon("check", [["path", {
-	d: "M20 6 9 17l-5-5",
-	key: "1gmf2c"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var ChevronLeft = createLucideIcon("chevron-left", [["path", {
 	d: "m15 18-6-6 6-6",
 	key: "1wnfg3"
 }]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var CircleCheck = createLucideIcon("circle-check", [["circle", {
-	cx: "12",
-	cy: "12",
-	r: "10",
-	key: "1mglay"
-}], ["path", {
-	d: "m9 12 2 2 4-4",
-	key: "dzmm74"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Clock = createLucideIcon("clock", [["circle", {
-	cx: "12",
-	cy: "12",
-	r: "10",
-	key: "1mglay"
-}], ["polyline", {
-	points: "12 6 12 12 16 14",
-	key: "68esgv"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Coffee = createLucideIcon("coffee", [
-	["path", {
-		d: "M10 2v2",
-		key: "7u0qdc"
-	}],
-	["path", {
-		d: "M14 2v2",
-		key: "6buw04"
-	}],
-	["path", {
-		d: "M16 8a1 1 0 0 1 1 1v8a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V9a1 1 0 0 1 1-1h14a4 4 0 1 1 0 8h-1",
-		key: "pwadti"
-	}],
-	["path", {
-		d: "M6 2v2",
-		key: "colzsn"
-	}]
-]);
 /**
 * @license lucide-react v0.510.0 - ISC
 *
@@ -298,22 +153,6 @@ var House = createLucideIcon("house", [["path", {
 }], ["path", {
 	d: "M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z",
 	key: "1d0kgt"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var KeyRound = createLucideIcon("key-round", [["path", {
-	d: "M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z",
-	key: "1s6t7t"
-}], ["circle", {
-	cx: "16.5",
-	cy: "7.5",
-	r: ".5",
-	fill: "currentColor",
-	key: "w0ekpg"
 }]]);
 /**
 * @license lucide-react v0.510.0 - ISC
@@ -389,26 +228,6 @@ var ListMusic = createLucideIcon("list-music", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var LoaderCircle = createLucideIcon("loader-circle", [["path", {
-	d: "M21 12a9 9 0 1 1-6.219-8.56",
-	key: "13zald"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var MessageCircle = createLucideIcon("message-circle", [["path", {
-	d: "M7.9 20A9 9 0 1 0 4 16.1L2 22Z",
-	key: "vv11sd"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var Music2 = createLucideIcon("music-2", [["circle", {
 	cx: "8",
 	cy: "18",
@@ -458,48 +277,6 @@ var Repeat = createLucideIcon("repeat", [
 * This source code is licensed under the ISC license.
 * See the LICENSE file in the root directory of this source tree.
 */
-var RotateCcw = createLucideIcon("rotate-ccw", [["path", {
-	d: "M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8",
-	key: "1357e3"
-}], ["path", {
-	d: "M3 3v5h5",
-	key: "1xhq8a"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Settings = createLucideIcon("settings", [["path", {
-	d: "M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z",
-	key: "1qme2f"
-}], ["circle", {
-	cx: "12",
-	cy: "12",
-	r: "3",
-	key: "1v7zrd"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
-var Square = createLucideIcon("square", [["rect", {
-	width: "18",
-	height: "18",
-	x: "3",
-	y: "3",
-	rx: "2",
-	key: "afitv7"
-}]]);
-/**
-* @license lucide-react v0.510.0 - ISC
-*
-* This source code is licensed under the ISC license.
-* See the LICENSE file in the root directory of this source tree.
-*/
 var TriangleAlert = createLucideIcon("triangle-alert", [
 	["path", {
 		d: "m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3",
@@ -515,4 +292,4 @@ var TriangleAlert = createLucideIcon("triangle-alert", [
 	}]
 ]);
 //#endregion
-export { AudioLines as C, ArrowLeft as E, BookOpen as S, ArrowRight as T, Clock as _, Repeat as a, Check as b, MessageCircle as c, LayoutGrid as d, KeyRound as f, Coffee as g, Flame as h, RotateCcw as i, LoaderCircle as l, Gauge as m, Square as n, Play as o, House as p, Settings as r, Music2 as s, TriangleAlert as t, ListMusic as u, CircleCheck as v, ArrowUpRight as w, ChartNoAxesColumnIncreasing as x, ChevronLeft as y };
+export { ListMusic as a, Gauge as c, AudioLines as d, Music2 as i, Flame as l, Repeat as n, LayoutGrid as o, Play as r, House as s, TriangleAlert as t, ChevronLeft as u };

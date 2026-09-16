@@ -395,21 +395,6 @@ function createHeadInjector(ctx = {}) {
 function requestHost(event) {
 	return event.req.headers.get("x-forwarded-host") ?? event.req.headers.get("host") ?? event.url.host;
 }
-/**
-* Minimal hardening headers (review 2026-09).
-* - No `script-src`/`style-src`: TanStack Start + popup completion HTML rely on
-*   inline scripts; a strict CSP would blank the app.
-* - `frame-ancestors` allows self + Grok hosts (preview iframe + branding
-*   injector `https://grok.com/grok-app-builder/extensions.js` per AGENTS.md)
-*   while blocking third-party clickjacking. Do NOT add `X-Frame-Options` —
-*   it would override this allowlist and break the live preview.
-*/
-function applySecurityHeaders(headers) {
-	headers.set("x-content-type-options", "nosniff");
-	headers.set("referrer-policy", "strict-origin-when-cross-origin");
-	headers.set("permissions-policy", "microphone=(self), camera=(), geolocation=()");
-	headers.set("content-security-policy", "frame-ancestors 'self' https://grok.com https://*.grok.com https://*.grok-sandbox.com;");
-}
 function injectHeadStreaming(response, host) {
 	const injector = createHeadInjector({
 		host,
@@ -425,7 +410,6 @@ function injectHeadStreaming(response, host) {
 	}));
 	const headers = new Headers(response.headers);
 	headers.delete("content-length");
-	applySecurityHeaders(headers);
 	return new Response(transformed, {
 		status: response.status,
 		statusText: response.statusText,
@@ -436,25 +420,19 @@ async function grokPwaMiddleware(event, next) {
 	if ((event.req.method ?? "GET").toUpperCase() !== "GET") return next();
 	const path = event.url.pathname;
 	const urlWithQuery = path + event.url.search;
-	if (path === "/__grok/manifest.webmanifest" || path === "/__grok/manifest.json") {
-		const headers = new Headers({
-			"content-type": "application/manifest+json; charset=utf-8",
-			"cache-control": "no-cache"
-		});
-		applySecurityHeaders(headers);
-		return new Response(renderWebManifest(requestHost(event)), { headers });
-	}
+	if (path === "/__grok/manifest.webmanifest" || path === "/__grok/manifest.json") return new Response(renderWebManifest(requestHost(event)), { headers: {
+		"content-type": "application/manifest+json; charset=utf-8",
+		"cache-control": "no-cache"
+	} });
 	if (isInstallQuery(urlWithQuery) && isDocumentPath(path) && acceptsHtml(event.req.headers.get("accept"))) {
 		const html = renderInstallPageHtml(install_page_default, {
 			host: requestHost(event),
 			url: urlWithQuery
 		});
-		const headers = new Headers({
+		return new Response(html, { headers: {
 			"content-type": "text/html; charset=utf-8",
 			"cache-control": "no-cache"
-		});
-		applySecurityHeaders(headers);
-		return new Response(html, { headers });
+		} });
 	}
 	if (!isDocumentPath(path)) return next();
 	const result = await next();
@@ -483,11 +461,11 @@ var findRouteRules = /* @__PURE__ */ (() => {
 		return r;
 	};
 })();
-var _lazy_MX9M4f = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
+var _lazy_IO091Z = defineLazyEventHandler(() => import("./_chunks/ssr-renderer.mjs"));
 var findRoute = /* @__PURE__ */ (() => {
 	const data = {
 		route: "/**",
-		handler: _lazy_MX9M4f
+		handler: _lazy_IO091Z
 	};
 	return ((_m, p) => {
 		return {
