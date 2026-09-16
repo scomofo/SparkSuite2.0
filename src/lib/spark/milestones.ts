@@ -289,7 +289,7 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
     title: "Roll home to G",
     goal: "Roll G → C → D7, one bar each, then brush a ringing open G.",
     setup:
-      "Forward roll T–I–M–T–I–M–T–M on strings 3–2–1–5–2–1–3–1. g–D–G–B–D frets: G open, C 0–2–0–1–2, D7 0–0–2–1–0.",
+      "Forward roll T–I–M–T–I–M–T–M on strings 3–2–1–5–2–1–3–1. g–D–G–B–D frets: G open, C 0–2–0–1–2, rolled D7 0–0–2–1–0. Pick the fifth-string drone in rolls; the diagram’s x applies to brushes.",
     variation: "Add a hammer-on",
     variationHint:
       "In bar 1, hammer the third string from open to fret 2 on the and of 1 instead of picking the second string; keep the rest of the roll the same.",

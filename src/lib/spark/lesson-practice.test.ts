@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { CURRICULUM, learningLesson, learningPath } from "./curriculum.ts";
 import { INSTRUMENTS } from "./instruments.ts";
-import { BANJO_CHORDS, lessonsFor, type InstrumentId } from "./instruments.ts";
+import { BANJO_CHORDS, banjoChordFrequencies, lessonsFor, type InstrumentId } from "./instruments.ts";
 import { buildTimeline, isPluckDrill } from "./practice.ts";
 import { dailyInstrumentCues, instrumentLabPattern } from "./instrument-patterns.ts";
 import { musicalMilestone } from "./milestones.ts";
@@ -574,13 +574,19 @@ describe("instrument musical accuracy regressions", () => {
   }
 
   it("teaches a two-finger D7 with the first string open in shapes, demos and rolls", () => {
-    assert.deepEqual(BANJO_CHORDS.D7.frets, [0, 0, 2, 1, 0]);
-    assert.deepEqual(BANJO_CHORDS.D7.fingers, [0, 0, 2, 1, 0]);
+    assert.deepEqual(BANJO_CHORDS.D7.frets, [null, 0, 2, 1, 0]);
+    assert.deepEqual(BANJO_CHORDS.D7.fingers, [null, 0, 2, 1, 0]);
+    assert.deepEqual(BANJO_CHORDS.D.frets, [null, 0, 2, 3, 4]);
+    for (const [chord, midi] of [["D7", [50, 57, 60, 62]], ["D", [50, 57, 62, 66]]] as const) {
+      const frequencies = banjoChordFrequencies(chord);
+      assert.equal(frequencies.length, 4);
+      frequencies.forEach((hz, index) => assert.ok(Math.abs(hz - 440 * 2 ** ((midi[index] - 69) / 12)) < 0.1));
+    }
     const d7 = learningLesson("banjo-g-to-d7")!;
     assert.equal(d7.options[d7.answer], "The third and second strings");
-    assert.deepEqual(d7.demo!.notes[2], [67, 50, 57, 60, 62]);
+    assert.deepEqual(d7.demo!.notes[2], [50, 57, 60, 62]);
     for (const cue of lessonExercise("banjo-g-to-d7")!.cues.filter((c) => c.chord === "D7"))
-      assert.deepEqual(cue.notes, [67, 50, 57, 60, 62]);
+      assert.deepEqual(cue.notes, [50, 57, 60, 62]);
     const roll = lessonExercise("banjo-three-chord-loop")!.cues.filter((c) => c.chord === "D7");
     assert.deepEqual(roll.map((c) => c.notes![0]), [57, 60, 62, 67, 60, 62, 57, 62]);
     const piece = musicalMilestone("banjo");

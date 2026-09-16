@@ -1397,10 +1397,10 @@ const banjo = path("banjo", [
     title: "The first change",
     outcome: "Move between open G and D7 without rushing beat 1.",
     explanation:
-      "Open G needs no fingers. D7 in g–D–G–B–D fret order is 0–0–2–1–0: the third string at fret 2 and the second at fret 1; the first and fourth stay open. The four long strings give D–A–C–D, leaving out F♯, the chord's third. The short fifth string adds a high G drone; it is not a D7 chord tone. Place the shape during beats 3 and 4 so it is ready on beat 1.",
+      "Open G needs no fingers. D7 for brushing in g–D–G–B–D order is x–0–2–1–0 (x means skip): the third string at fret 2 and the second at fret 1; the first and fourth stay open. The four long strings give D–A–C–D, leaving out F♯, the chord's third. Skip the short fifth string for a D7 brush. Rolls still pick its open high-G drone, which is not a D7 chord tone. Place the shape during beats 3 and 4 so it is ready on beat 1.",
     example: "One bar of open G, one bar of D7. Brush on beat 1 only; place the shape on 3 and 4.",
     practice: [
-      "Place D7 and pick each string slowly to find a clear sound.",
+      "Place D7 and pick each of the four long strings slowly to find a clear sound; skip the short fifth.",
       "Lift to open G, then place D7 again, three times, without brushing.",
       "Count four per shape and brush only beat 1 for four bars.",
     ],
@@ -1412,8 +1412,8 @@ const banjo = path("banjo", [
     ],
     answer: 0,
     feedback:
-      "D7 is 0–0–2–1–0: the third string at fret 2 and second at fret 1. The first and fourth strings stay open; the short fifth adds the high G drone.",
-    demo: { label: "Open G then D7", notes: [[67, 50, 55, 59, 62], [], [67, 50, 57, 60, 62], []] },
+      "D7 for brushing is x–0–2–1–0: the third string at fret 2 and second at fret 1. The first and fourth strings stay open; skip the short fifth when brushing. Rolls still use its open high-G drone.",
+    demo: { label: "Open G then D7", notes: [[67, 50, 55, 59, 62], [], [50, 57, 60, 62], []] },
   },
   {
     slug: "forward-roll",
@@ -1471,7 +1471,7 @@ const banjo = path("banjo", [
         [],
         [67, 52, 55, 60, 64],
         [],
-        [67, 50, 57, 60, 62],
+        [50, 57, 60, 62],
         [],
         [67, 50, 55, 59, 62],
         [],

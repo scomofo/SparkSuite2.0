@@ -11,7 +11,7 @@ import {
   type LineHit,
 } from "@/components/labs/shared";
 import { ghostNote, pianoHold, pluck, strum, unlockAudio } from "@/lib/spark/audio";
-import { BANJO_CHORDS, instrumentById } from "@/lib/spark/instruments";
+import { BANJO_CHORDS, banjoChordFrequencies, instrumentById } from "@/lib/spark/instruments";
 import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
 
 export type BanjoTab = "roll" | "pinch" | "hammer" | "slide" | "vamp";
@@ -30,7 +30,7 @@ const COPY: Record<BanjoTab, { kicker: string; title: string; body: string; hear
   roll: {
     kicker: "T I M",
     title: "Eight notes, three fingers",
-    body: "Thumb, index, middle on strings 3–2–1–5–2–1–3–1. The order never changes; the chord shape underneath does. Even notes first, speed later.",
+    body: "Thumb, index, middle on strings 3–2–1–5–2–1–3–1. The order never changes; the chord shape underneath does. For D/D7, the diagram’s x applies to brushes; rolls still pick the open fifth string. Even notes first, speed later.",
     hear: "3 2 1 5 2 1 3 1, one note per syllable.",
   },
   pinch: {
@@ -54,7 +54,7 @@ const COPY: Record<BanjoTab, { kicker: string; title: string; body: string; hear
   vamp: {
     kicker: "Backup",
     title: "Brush, chop, brush, chop",
-    body: "Brush the chord on 1 and 3. On 2 and 4, touch all five strings lightly with your fretting hand, then strike a click. Restore the chord for the next brush. This is an unpitched backbeat; releasing open G cannot mute it.",
+    body: "Brush the chord on 1 and 3, skipping the short fifth string for D/D7. On 2 and 4, touch all five strings lightly with your fretting hand, then strike a click. Restore the chord for the next brush. This is an unpitched backbeat; releasing open G cannot mute it.",
     hear: "Chord, chop, chord, chop.",
   },
 };
@@ -75,7 +75,7 @@ function stringFreq(chord: string, string: number) {
   return OPEN[string] * Math.pow(2, fret / 12);
 }
 function chordFreqs(chord: string) {
-  return [0, 1, 2, 3, 4].map((string) => stringFreq(chord, string));
+  return banjoChordFrequencies(chord);
 }
 function shape(id: string) {
   const c = BANJO_CHORDS[id];

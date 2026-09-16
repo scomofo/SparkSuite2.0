@@ -1959,7 +1959,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Alternate open G and D7 for four bars, brushing only on each beat 1.",
     setup:
-      "G is all five strings open. D7 is 0–0–2–1–0 in g–D–G–B–D order. Use beats 3 and 4 to place the shape.",
+      "G is all five strings open. D7 is x–0–2–1–0 in g–D–G–B–D order: skip the short fifth string when brushing. Use beats 3 and 4 to place the shape.",
     hint: "Put the guide on hold and place D7 from open strings three times. Then try two bars at 40 BPM.",
     takeaway:
       "You gave each change a place in the bar. Keep the same small goal on your next attempt.",
@@ -1987,7 +1987,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Roll through G, C, D7, and G, one bar each, changing shape on beat 1.",
     setup:
-      "C is 0–2–0–1–2 and D7 is 0–0–2–1–0. Keep the roll going; only the fretting hand changes.",
+      "C is 0–2–0–1–2 and rolled D7 is 0–0–2–1–0. The diagram marks the fifth string x for brushes; this roll picks its open high-G drone. Keep the roll going; only the fretting hand changes.",
     hint: "Roll one bar of C into one bar of D7 at 40 BPM. The B-string finger stays at fret 1 for both.",
     retryLabel: "The roll stops while the shape changes",
     takeaway:

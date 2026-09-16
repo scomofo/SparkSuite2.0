@@ -5,6 +5,7 @@ import { CHORDS, fretToFreq, OPEN_FREQ } from "@/lib/spark/guitar";
 import { bassTone, comboSting, drumHit, ghostNote, hitSfx, pianoChord, pianoHold, pianoTone, pluck, strum, unlockAudio, click } from "@/lib/spark/audio";
 import {
   BANJO_CHORDS,
+  banjoChordFrequencies,
   instrumentById,
   MANDOLIN_CHORDS,
   midiToFreq,
@@ -79,7 +80,7 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
           ? MANDOLIN_CHORDS[chordId]
           : BANJO_CHORDS[chordId];
     if (!c) return;
-    const freqs = c.frets
+    const freqs = instrument === "banjo" ? banjoChordFrequencies(chordId) : c.frets
       .map((f, i) => (f == null ? null : inst.openFreq[i] * Math.pow(2, f / 12)))
       .filter((f): f is number => f != null);
     strum(freqs);
