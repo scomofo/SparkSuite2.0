@@ -29,8 +29,8 @@ import {
 
 describe("lesson-specific practice content", () => {
   it("covers every lesson with bounded, playable patterns", () => {
-    assert.equal(LESSON_EXERCISES.length, 72);
-    assert.equal(new Set(LESSON_EXERCISES.map((exercise) => exercise.lessonId)).size, 72);
+    assert.equal(LESSON_EXERCISES.length, 80);
+    assert.equal(new Set(LESSON_EXERCISES.map((exercise) => exercise.lessonId)).size, 80);
     assert.deepEqual(
       LESSON_EXERCISES.map((exercise) => exercise.lessonId).sort(),
       CURRICULUM.map((lesson) => lesson.id).sort(),
@@ -77,7 +77,7 @@ describe("lesson-specific practice content", () => {
     }
     assert.equal(lessonExercise("missing"), undefined);
     assert.ok(lessonExercise("guitar-arrangement"));
-    assert.equal(CURRICULUM.length, 72);
+    assert.equal(CURRICULUM.length, 80);
   });
 
   it("turns exactly the final two lessons for each instrument into three-stage projects", () => {
@@ -88,7 +88,7 @@ describe("lesson-specific practice content", () => {
     ).sort();
     const projects = LESSON_EXERCISES.filter((exercise) => exercise.project);
     assert.deepEqual(projects.map((exercise) => exercise.lessonId).sort(), expected);
-    assert.equal(projects.length, 18);
+    assert.equal(projects.length, 20);
     for (const exercise of projects) {
       const project = exercise.project!;
       assert.ok(project.buildBeats >= 4 && project.buildBeats <= exercise.beats);

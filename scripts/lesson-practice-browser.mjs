@@ -20,7 +20,7 @@ page.on("console", (message) => {
 const button = (name) => page.getByRole("button", { name, exact: true });
 const link = (name) => page.getByRole("link", { name, exact: true });
 const saved = () => page.evaluate(() => JSON.parse(localStorage.getItem("sparksuite.learning.v1")));
-assert.equal(LESSON_EXERCISES.length, 72, "Every curriculum lesson has guided practice");
+assert.equal(LESSON_EXERCISES.length, 80, "Every curriculum lesson has guided practice");
 async function noOverflow() {
   assert.equal(
     await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
@@ -329,7 +329,7 @@ try {
         ok: true,
         errors,
         checks: [
-          "72 matching exercises",
+          "80 matching exercises",
           "resumable Build / Choose / Refine projects",
           "one-variable retry coaching",
           "desktop/390px/320px",

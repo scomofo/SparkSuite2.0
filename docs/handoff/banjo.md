@@ -36,29 +36,29 @@ MIDI for open strings in the same order: 67, 50, 55, 59, 62.
 
 Frets and fingers in gDGBD order. Verify against a chord chart before shipping.
 
-| Chord | Frets     | Notes      |
-| ----- | --------- | ---------- |
-| G     | 0-0-0-0-0 | g D G B D  |
-| C     | 0-2-0-1-2 | g E G C E  |
-| D7    | x-0-2-1-0 | D A C D    |
-| D     | x-0-2-3-4 | D A D F♯   |
-| Em    | 0-2-0-0-2 | g E G B E  |
-| Am    | 0-2-2-1-2 | g E A C E  |
+| Chord | Frets     | Notes     |
+| ----- | --------- | --------- |
+| G     | 0-0-0-0-0 | g D G B D |
+| C     | 0-2-0-1-2 | g E G C E |
+| D7    | x-0-2-1-0 | D A C D   |
+| D     | x-0-2-3-4 | D A D F♯  |
+| Em    | 0-2-0-0-2 | g E G B E |
+| Am    | 0-2-2-1-2 | g E A C E |
 
 D7 uses the beginner two-finger shape: the long strings sound D–A–C–D, omitting F♯. Skip the short fifth string in D/D7 brushes (x in the diagram, null in the data). Rolls still pick its open high-G drone, not a D7 chord tone. The first string stays open. Source: [Deering, Learn 3 Easy Banjo Chords](https://blog.deeringbanjos.com/learn-3-easy-banjo-chords).
 
 ## Curriculum outline (8 lessons)
 
-| #   | Slug             | Level        | Title                           | Concept                                                                          |
-| --- | ---------------- | ------------ | ------------------------------- | -------------------------------------------------------------------------------- |
-| 1   | open-g           | foundations  | Five strings that already agree | Name gDGBD; the short fifth string; open strings sound G major.                  |
-| 2   | pulse-brush      | foundations  | A pulse over an open chord      | Brush on 1 and 3, count through 2 and 4, rests belong to the beat.               |
-| 3   | g-to-d7          | beginner     | The first change                | G (open) to D7 (x-0-2-1-0); prepare during beats 3 and 4.                        |
-| 4   | forward-roll     | beginner     | Eight notes, three fingers      | Forward roll T-I-M-T-I-M-T-M on strings 3-2-1-5-2-1-3-1; straight eighths; subdivision 2.    |
-| 5   | three-chord-loop | intermediate | G, C, D7, and home              | I-IV-V7 with rolls across changes; the roll keeps moving while the hand moves.   |
-| 6   | hammer-and-slide | intermediate | Notes that move after the pick  | Hammer-on 0 to 2 on the G string; slide 2 to 4; articulation without re-picking. |
-| 7   | backup-and-break | advanced     | Two jobs in one tune (project)  | Build a vamp behind a chord loop; choose vamp or roll; refine one bar.           |
-| 8   | arrangement      | advanced     | Arrange a short tune (project)  | Original 8-bar tune; choose an ending tag or a fade to the open G.               |
+| #   | Slug             | Level        | Title                           | Concept                                                                                   |
+| --- | ---------------- | ------------ | ------------------------------- | ----------------------------------------------------------------------------------------- |
+| 1   | open-g           | foundations  | Five strings that already agree | Name gDGBD; the short fifth string; open strings sound G major.                           |
+| 2   | pulse-brush      | foundations  | A pulse over an open chord      | Brush on 1 and 3, count through 2 and 4, rests belong to the beat.                        |
+| 3   | g-to-d7          | beginner     | The first change                | G (open) to D7 (x-0-2-1-0); prepare during beats 3 and 4.                                 |
+| 4   | forward-roll     | beginner     | Eight notes, three fingers      | Forward roll T-I-M-T-I-M-T-M on strings 3-2-1-5-2-1-3-1; straight eighths; subdivision 2. |
+| 5   | three-chord-loop | intermediate | G, C, D7, and home              | I-IV-V7 with rolls across changes; the roll keeps moving while the hand moves.            |
+| 6   | hammer-and-slide | intermediate | Notes that move after the pick  | Hammer-on 0 to 2 on the G string; slide 2 to 4; articulation without re-picking.          |
+| 7   | backup-and-break | advanced     | Two jobs in one tune (project)  | Build a vamp behind a chord loop; choose vamp or roll; refine one bar.                    |
+| 8   | arrangement      | advanced     | Arrange a short tune (project)  | Original 8-bar tune; choose an ending tag or a fade to the open G.                        |
 
 Demos: lesson 1 `[[67], [50], [55], [59], [62]]`; lesson 3 `[[55, 59, 62], [], [50, 57, 60, 62], []]`; lesson 4 the pitch sequence `[[55], [59], [62], [67], [59], [62], [55], [62]]`. The guided exercise and Roll lab place these eight attacks at half-beat intervals; the Learn demo is a pitch-only reference.
 

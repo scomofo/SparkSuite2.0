@@ -10,6 +10,7 @@ This folder is for whoever adds the next three instruments. It records how the e
 | [banjo.md](./banjo.md)                               | Brief for the five-string banjo path.                      |
 | [mandolin.md](./mandolin.md)                         | Brief for the mandolin path.                               |
 | [violin.md](./violin.md)                             | Brief for the violin path.                                 |
+| [lapsteel.md](./lapsteel.md)                         | Brief for the lap steel path, added after the first three. |
 
 ## The short version
 
@@ -28,11 +29,11 @@ Do one instrument end to end before starting the next. All three instruments are
 
 ## Open items
 
-- **Instrument marks are placeholders.** `public/instruments/mandolin.jpg`, `banjo.jpg`, and `violin.jpg` are vector drawings rendered at 512×512 to match the framing, tilt, and warm spotlight of the six product photos. They are not photographs. Swap in real photos at the same paths when available; the mark component needs no change.
-- **Musical content needs a player's review.** The mandolin and banjo chord voicings and the violin first-position notes are standard beginner material but have not been checked by someone who plays.
+- **Instrument marks are placeholders.** `public/instruments/mandolin.jpg`, `banjo.jpg`, `violin.jpg`, and `lapsteel.jpg` are vector drawings rendered at 512×512 to match the framing, tilt, and warm spotlight of the six product photos. They are not photographs. Swap in real photos at the same paths when available; the mark component needs no change.
+- **Musical content needs a player's review.** The mandolin and banjo chord voicings, the violin first-position notes, and the lap steel bar positions are standard beginner material but have not been checked by someone who plays.
 
 ## What this handoff does not decide
 
-- Count assertions in the unit tests now derive from `INSTRUMENTS.length`; the browser scripts still carry literal counts (9 instruments, 72 exercises) that move with each addition.
+- Count assertions in the unit tests now derive from `INSTRUMENTS.length`; the browser scripts still carry literal counts (10 instruments, 80 exercises) that move with each addition.
 
 All lesson text in the briefs is a starting outline, not final copy. Check the musical facts against a method book before shipping, and keep the honest-progress language described in the content guide.

@@ -7,6 +7,7 @@ import {
   BANJO_CHORDS,
   banjoChordFrequencies,
   instrumentById,
+  LAPSTEEL_CHORDS,
   MANDOLIN_CHORDS,
   midiToFreq,
   PIANO_VOICINGS,
@@ -59,6 +60,12 @@ function banjoShape(id: string): ChordShape | undefined {
   return { id, name: id, ...c };
 }
 
+function lapsteelShape(id: string): ChordShape | undefined {
+  const c = LAPSTEEL_CHORDS[id];
+  if (!c) return undefined;
+  return { id, name: id, ...c };
+}
+
 function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = instrumentById(instrument)) {
   if (instrument === "violin") {
     // Tokens are open-string names; a sustained tone stands in for the bow.
@@ -72,13 +79,15 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
     else pianoTone(midiToFreq(60));
     return;
   }
-  if (instrument === "ukulele" || instrument === "mandolin" || instrument === "banjo") {
+  if (instrument === "ukulele" || instrument === "mandolin" || instrument === "banjo" || instrument === "lapsteel") {
     const c =
       instrument === "ukulele"
         ? UKE_CHORDS[chordId]
         : instrument === "mandolin"
           ? MANDOLIN_CHORDS[chordId]
-          : BANJO_CHORDS[chordId];
+          : instrument === "banjo"
+            ? BANJO_CHORDS[chordId]
+            : LAPSTEEL_CHORDS[chordId];
     if (!c) return;
     const freqs = instrument === "banjo" ? banjoChordFrequencies(chordId) : c.frets
       .map((f, i) => (f == null ? null : inst.openFreq[i] * Math.pow(2, f / 12)))
@@ -494,6 +503,7 @@ export function SessionPlayer() {
   const uke = instrument === "ukulele" ? ukeShape(liveChord || item.chords[0] || "C") : undefined;
   const mandolin = instrument === "mandolin" ? mandolinShape(liveChord || item.chords[0] || "G") : undefined;
   const banjo = instrument === "banjo" ? banjoShape(liveChord || item.chords[0] || "G") : undefined;
+  const lapsteel = instrument === "lapsteel" ? lapsteelShape(liveChord || item.chords[0] || "C") : undefined;
   const needsPick =
     (item.process === "create" && item.createOptions && item.createOptions.length >= 2 && !createPick) ||
     (item.process === "respond" && item.listenPrompt && !listenPick);
@@ -538,6 +548,8 @@ export function SessionPlayer() {
               <ChordDiagram shape={mandolin} />
             ) : item.chords[0] && instrument === "banjo" ? (
               <ChordDiagram shape={banjo} />
+            ) : item.chords[0] && instrument === "lapsteel" ? (
+              <ChordDiagram shape={lapsteel} />
             ) : item.chords[0] && instrument === "guitar" ? (
               <ChordDiagram chordId={item.chords[0]} />
             ) : (
@@ -624,6 +636,7 @@ export function SessionPlayer() {
                 {instrument === "ukulele" ? <ChordDiagram shape={uke} compact /> : null}
                 {instrument === "mandolin" ? <ChordDiagram shape={mandolin} compact /> : null}
                 {instrument === "banjo" ? <ChordDiagram shape={banjo} compact /> : null}
+                {instrument === "lapsteel" ? <ChordDiagram shape={lapsteel} compact /> : null}
                 <div className="flex flex-wrap justify-center gap-2 text-sm">
                   {item.chords.map((c) => (
                     <span

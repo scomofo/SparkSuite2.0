@@ -1283,7 +1283,10 @@ const mandolin = path("mandolin", [
     answer: 1,
     feedback:
       "Evenness is what the ear hears as one continuous sound. Volume and pitch changes do not create the effect.",
-    demo: { label: "A pitch to use for tremolo; repeated strokes are in the guided exercise", notes: [[69], [69], [], []] },
+    demo: {
+      label: "A pitch to use for tremolo; repeated strokes are in the guided exercise",
+      notes: [[69], [69], [], []],
+    },
   },
   {
     slug: "melody-with-chops",
@@ -1405,11 +1408,7 @@ const banjo = path("banjo", [
       "Count four per shape and brush only beat 1 for four bars.",
     ],
     question: "Which strings are fretted for the beginner D7 shape?",
-    options: [
-      "The third and second strings",
-      "The short fifth string only",
-      "All five strings",
-    ],
+    options: ["The third and second strings", "The short fifth string only", "All five strings"],
     answer: 0,
     feedback:
       "D7 for brushing is x–0–2–1–0: the third string at fret 2 and second at fret 1. The first and fourth strings stay open; skip the short fifth when brushing. Rolls still use its open high-G drone.",
@@ -1560,7 +1559,8 @@ const violin = path("violin", [
     outcome: "Name G–D–A–E and draw one straight bow on each open string.",
     explanation:
       "A violin has four strings tuned G–D–A–E, from lowest to highest, a fifth apart. The bow makes the sound: hold it with a relaxed, rounded hand and draw it across one string between the bridge and the fingerboard. A straight bow stays parallel to the bridge for the whole stroke. Speed and weight, not force, shape the tone.",
-    example: "One bar per string: G down-bow, D up-bow, A down-bow, E up-bow. Each stroke starts where the last one ended.",
+    example:
+      "One bar per string: G down-bow, D up-bow, A down-bow, E up-bow. Each stroke starts where the last one ended.",
     practice: [
       "Rest the violin on your shoulder and place the bow on the D string near the frog.",
       "Draw one slow, straight bow to the tip and stop; listen for one even sound.",
@@ -1667,7 +1667,10 @@ const violin = path("violin", [
     answer: 0,
     feedback:
       "In a slur the bow continues in one direction while the finger changes the note. A change of bow direction would separate the notes.",
-    demo: { label: "D–E and F♯–G pitches; use the written bow groups to practise slurs", notes: [[62], [64], [], [66], [67], []] },
+    demo: {
+      label: "D–E and F♯–G pitches; use the written bow groups to practise slurs",
+      notes: [[62], [64], [], [66], [67], []],
+    },
   },
   {
     slug: "string-crossing",
@@ -1746,6 +1749,230 @@ const violin = path("violin", [
   },
 ]);
 
+const lapsteel = path("lapsteel", [
+  {
+    slug: "c6-and-the-bar",
+    level: "foundations",
+    title: "Six strings, one chord",
+    outcome: "Name the C6 strings and hear that the open strings make a chord.",
+    explanation:
+      "A lap steel lies flat on your lap. The strings are tuned to C6, low to high C–E–G–A–C–E, so the open strings already sound a C major chord with an added sixth. Nothing is fretted: a steel bar held in the left hand rests on the strings to change pitch, and the right hand picks with a thumb pick and finger picks.",
+    example:
+      "Pick each open string from thickest to thinnest: C, E, G, A, C, E. Then brush all six.",
+    practice: [
+      "Set the instrument flat and find the thickest string with the thumb pick.",
+      "Pick each string once, low to high, naming the notes.",
+      "Brush all six and listen for one chord.",
+    ],
+    question: "Why do the open strings sound like a chord?",
+    options: [
+      "C6 tuning sets them to the notes of a C chord with a sixth",
+      "The bar is always pressing them",
+      "All six are tuned to the same note",
+    ],
+    answer: 0,
+    feedback:
+      "The tuning itself is the chord: C, E, G, and A are the notes of C6. The bar moves that chord; it does not create it.",
+    demo: {
+      label: "C, E, G, A, C, E, then the open chord",
+      notes: [[48], [52], [55], [57], [60], [64], [], [48, 52, 55, 57, 60, 64]],
+    },
+  },
+  {
+    slug: "pick-pulse",
+    level: "foundations",
+    title: "A pulse over an open chord",
+    outcome: "Keep counting while a brush or a blocked silence happens.",
+    explanation:
+      "The beat is the regular pulse. In 4/4, four beats make one bar. Lap steel strings ring for a long time, so silence has to be made: palm blocking rests the side of the picking hand on the strings to stop them. Brush on 1 and 3, block on 2 and 4, and keep counting through the silence.",
+    example: "Count 1–2–3–4. Brush the open strings on 1 and 3; rest the palm on them for 2 and 4.",
+    practice: [
+      "Tap your foot and count four evenly, twice.",
+      "Brush the open chord on 1, then lay the palm on the strings on 2; repeat on 3 and 4.",
+      "Keep counting through the blocked beats for four bars.",
+    ],
+    question: "What does palm blocking do?",
+    options: [
+      "Stops the ringing strings so the rest is silent",
+      "Raises the pitch of the chord",
+      "Replaces the bar",
+    ],
+    answer: 0,
+    feedback:
+      "Blocking is how a lap steel makes silence. It does not change pitch, and the bar still handles positions.",
+  },
+  {
+    slug: "straight-bar",
+    level: "beginner",
+    title: "One bar, three positions",
+    outcome: "Move the straight bar between open C, fret 5, and fret 7 on beat 1.",
+    explanation:
+      "Because the open strings are a chord, laying the bar straight across all six at any fret gives the same chord at a new pitch. Above fret 5 the chord is F; above fret 7 it is G. The bar sits directly over the fret marker, not behind it, with light, even pressure. Lift it fully to return to open C.",
+    example: "One bar each: open C, bar at 5 for F, bar at 7 for G, open C. Brush on beat 1 only.",
+    practice: [
+      "Place the bar above fret 5 and pick each string to check it rings clearly.",
+      "Lift to open, then place at fret 7, three times, without brushing.",
+      "Count four per position and brush only beat 1 through C, F, G, C.",
+    ],
+    question: "Where does the bar sit for a note to be in tune?",
+    options: [
+      "Directly above the fret marker",
+      "Just behind the fret, like a finger",
+      "Anywhere between two frets",
+    ],
+    answer: 0,
+    feedback:
+      "Unlike a fretting finger, the bar itself is the stopping point, so it sits over the fret line. Behind or between frets sounds flat.",
+    demo: {
+      label: "C, F, G, then C",
+      notes: [
+        [48, 52, 55, 57, 60, 64],
+        [],
+        [53, 57, 60, 62, 65, 69],
+        [],
+        [55, 59, 62, 64, 67, 71],
+        [],
+        [48, 52, 55, 57, 60, 64],
+        [],
+      ],
+    },
+  },
+  {
+    slug: "slide-into",
+    level: "beginner",
+    title: "Slide the bar into the change",
+    outcome: "Time a slide so the bar arrives at the new position on the beat.",
+    explanation:
+      "A slide moves the bar along the strings while they ring, so the pitch glides. Timing makes it musical: start the slide on the and before the beat and arrive exactly on the beat. Keep the pressure light and even so the tone does not break, and stop the bar directly above the marker.",
+    example:
+      "Brush F at fret 5. On the and of 2, slide up; arrive at fret 7 (G) on beat 3 and brush again.",
+    practice: [
+      "Slide from fret 5 to 7 slowly with no count, listening for a smooth rise.",
+      "Count 1-and-2-and-3: leave on the and of 2, arrive on 3.",
+      "Play F, slide to G, then back to F for four bars.",
+    ],
+    question: "When does the slide leave and arrive?",
+    options: [
+      "Leaves on the and before the beat, arrives on the beat",
+      "Leaves and arrives on the same beat",
+      "Leaves on the beat, arrives whenever it gets there",
+    ],
+    answer: 0,
+    feedback:
+      "The arrival is the rhythm. Leaving on the and gives the bar time to travel and land on the count.",
+    demo: {
+      label: "F, then arriving on G",
+      notes: [[53, 57, 60, 62, 65, 69], [], [55, 59, 62, 64, 67, 71], []],
+    },
+  },
+  {
+    slug: "vibrato",
+    level: "intermediate",
+    title: "Hold a note and let it sing",
+    outcome: "Sustain a single note and add a slow, even vibrato.",
+    explanation:
+      "The lap steel's long sustain is its voice. Vibrato is a small, even rocking of the bar along the string, centred on the true pitch. It starts after the note has spoken, not with the attack. Too wide or too fast pulls the note out of tune; think of a slow wave that returns to the marker each time.",
+    example:
+      "Bar at fret 5, pick only the 1st string: A. Hold four beats, adding vibrato from beat 2.",
+    practice: [
+      "Hold the note with no vibrato and listen to how long it lasts.",
+      "Rock the bar gently along the string, returning to the marker each time.",
+      "Hold A at fret 5, then B at fret 7, four beats each, with vibrato from beat 2.",
+    ],
+    question: "What keeps vibrato in tune?",
+    options: [
+      "A small motion centred on the marker",
+      "Pressing the bar harder",
+      "Moving the bar as fast as possible",
+    ],
+    answer: 0,
+    feedback:
+      "Vibrato circles the true pitch. Pressure and speed do not fix tuning; a small centred motion does.",
+    demo: { label: "A held, then B held", notes: [[69], [69], [], [], [71], [71], [], []] },
+  },
+  {
+    slug: "single-string-melody",
+    level: "intermediate",
+    title: "A melody on one string",
+    outcome: "Play a short melody on the 1st string using three bar positions.",
+    explanation:
+      "Melody on lap steel lives on the top strings. The 1st string is E open, G at fret 3, and A at fret 5. Pick only that string and move the bar between positions, lifting it fully for the open note. Each position must land above its marker or the melody drifts out of tune.",
+    example: "E (open), G (fret 3), A (fret 5), G (fret 3). Then A, G, E, rest.",
+    practice: [
+      "Find frets 3 and 5 on the 1st string and play G and A alone.",
+      "Play E–G–A–G slowly, lifting the bar for E.",
+      "Play both phrases for four bars with a rest on the last beat.",
+    ],
+    question: "How do you play the open E in the middle of a melody?",
+    options: [
+      "Lift the bar completely off the strings",
+      "Slide the bar to fret 12",
+      "Press the bar at fret 1",
+    ],
+    answer: 0,
+    feedback:
+      "The open note needs no bar at all. Lifting cleanly is a skill of its own; fret 12 is E an octave up and fret 1 is F.",
+    demo: { label: "E, G, A, G on the first string", notes: [[64], [67], [69], [67]] },
+  },
+  {
+    slug: "harmony-in-thirds",
+    level: "advanced",
+    title: "Two strings under one bar",
+    outcome: "Harmonise a melody by picking two strings at the same bar position.",
+    explanation:
+      "Because the bar is straight, any two strings picked together move in parallel. Strings 2 and 1 (C and E) give a third; strings 3 and 1 (G and E) give a sixth. Picking a pair while playing the melody positions harmonises the line automatically. The choice of pair is the musical choice.",
+    example:
+      "The first-string melody with the 2nd string added: E+C, G+E♭, A+F. Then the same with the 3rd string for sixths.",
+    practice: [
+      "Pick strings 2 and 1 together at the open position; both should speak at once.",
+      "Play the melody positions with the pair, listening for the harmony moving with the tune.",
+      "Repeat with strings 3 and 1 and compare the two sounds.",
+    ],
+    question: "Why do two strings under a straight bar stay in harmony as it moves?",
+    options: [
+      "The bar raises both strings by the same amount",
+      "The second string is tuned to follow the first",
+      "The picking hand adjusts the pitch",
+    ],
+    answer: 0,
+    feedback:
+      "A straight bar transposes every string it touches equally, so the interval between two strings is preserved at every position.",
+    demo: {
+      label: "Melody in thirds",
+      notes: [
+        [60, 64],
+        [63, 67],
+        [65, 69],
+        [63, 67],
+      ],
+    },
+  },
+  {
+    slug: "arrangement",
+    level: "advanced",
+    title: "Arrange a short tune",
+    outcome: "Plan, perform, and revise a four-bar arrangement with a clear ending.",
+    explanation:
+      "An arrangement decides how positions, slides, and melody share time. Brushed chords, one slide, a single-string phrase, and a return to open C give contrast without new material. An ending that lands on open C tells the listener the piece is finished. Choose one criterion to revise after each attempt; a finished lesson is a practice milestone, not a performance grade.",
+    example:
+      "Bar 1: brush C twice. Bar 2: F sliding to G. Bar 3: E G A G on the 1st string. Bar 4: brush G, then land on open C.",
+    practice: [
+      "Play the chord bars, then the melody bar, at one steady tempo.",
+      "Add the final open C on the next beat 1 and let it ring for a full count.",
+      "Choose one thing to change, such as the slide timing or the lift to the melody, and repeat.",
+    ],
+    question: "Which review gives you a usable next step?",
+    options: [
+      "Decide the whole take was good or bad",
+      "Name one transition to place more clearly next time",
+      "Double the tempo immediately",
+    ],
+    answer: 1,
+    feedback:
+      "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+  },
+]);
+
 export const CURRICULUM: LearningLesson[] = [
   ...guitar,
   ...piano,
@@ -1756,6 +1983,7 @@ export const CURRICULUM: LearningLesson[] = [
   ...mandolin,
   ...banjo,
   ...violin,
+  ...lapsteel,
 ];
 export const learningPath = (instrument: InstrumentId) =>
   CURRICULUM.filter((lesson) => lesson.instrument === instrument);

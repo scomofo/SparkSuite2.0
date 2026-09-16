@@ -1,6 +1,12 @@
 import { learningLesson } from "./curriculum.ts";
 import { CHORDS } from "./guitar.ts";
-import { BANJO_CHORDS, MANDOLIN_CHORDS, UKE_CHORDS, type InstrumentId } from "./instruments.ts";
+import {
+  BANJO_CHORDS,
+  LAPSTEEL_CHORDS,
+  MANDOLIN_CHORDS,
+  UKE_CHORDS,
+  type InstrumentId,
+} from "./instruments.ts";
 import type { BassPos } from "./bass.ts";
 import type { ChordShape } from "./types.ts";
 
@@ -132,7 +138,9 @@ export function retryCoaching(exercise: LessonExercise) {
                 ? "The roll or the shapes felt awkward"
                 : instrument === "violin"
                   ? "The bow or the left hand felt awkward"
-                  : "The notes or shapes felt awkward");
+                  : instrument === "lapsteel"
+                    ? "The bar or the slide felt awkward"
+                    : "The notes or shapes felt awkward");
   return [
     {
       id: "pulse" as const,
@@ -152,15 +160,18 @@ export function practiceShape(instrument: InstrumentId, chord: string): ChordSha
         ? MANDOLIN_CHORDS[chord]
         : instrument === "banjo"
           ? BANJO_CHORDS[chord]
-          : undefined;
+          : instrument === "lapsteel"
+            ? LAPSTEEL_CHORDS[chord]
+            : undefined;
   return shape ? { ...shape, id: chord, name: chord } : undefined;
 }
-type StrummedInstrument = "guitar" | "ukulele" | "mandolin" | "banjo";
+type StrummedInstrument = "guitar" | "ukulele" | "mandolin" | "banjo" | "lapsteel";
 const OPEN_MIDI: Record<StrummedInstrument, number[]> = {
   guitar: [40, 45, 50, 55, 59, 64],
   ukulele: [67, 60, 64, 69],
   mandolin: [55, 62, 69, 76],
   banjo: [67, 50, 55, 59, 62],
+  lapsteel: [48, 52, 55, 57, 60, 64],
 };
 function chordNotes(instrument: StrummedInstrument, chord: string) {
   const open = OPEN_MIDI[instrument];
@@ -1749,9 +1760,21 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     cues: repeat(
       [
         strum(0, "mandolin", "G"),
-        { beat: 1, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
+        {
+          beat: 1,
+          label: "Chop",
+          detail: "Touch all strings lightly; strike a muted click",
+          muted: true,
+          chord: "G",
+        },
         strum(2, "mandolin", "G"),
-        { beat: 3, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
+        {
+          beat: 3,
+          label: "Chop",
+          detail: "Touch all strings lightly; strike a muted click",
+          muted: true,
+          chord: "G",
+        },
       ],
       4,
     ),
@@ -1833,11 +1856,29 @@ export const LESSON_EXERCISES: LessonExercise[] = [
         note(4 + beat, ["A ↓", "G ↑", "F♯ ↓", "D ↑"][beat], [midi], "Melody, A then D course"),
       ),
       strum(8, "mandolin", "G"),
-      { beat: 9, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
+      {
+        beat: 9,
+        label: "Chop",
+        detail: "Touch all strings lightly; strike a muted click",
+        muted: true,
+        chord: "G",
+      },
       strum(10, "mandolin", "G"),
-      { beat: 11, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "G" },
+      {
+        beat: 11,
+        label: "Chop",
+        detail: "Touch all strings lightly; strike a muted click",
+        muted: true,
+        chord: "G",
+      },
       strum(12, "mandolin", "D"),
-      { beat: 13, label: "Chop", detail: "Touch all strings lightly; strike a muted click", muted: true, chord: "D" },
+      {
+        beat: 13,
+        label: "Chop",
+        detail: "Touch all strings lightly; strike a muted click",
+        muted: true,
+        chord: "D",
+      },
       { ...strum(14, "mandolin", "G"), duration: 1.8, detail: "G: downstroke, let it ring" },
       { beat: 15, label: "Hold", detail: "Let G continue to the end" },
     ],
@@ -1876,7 +1917,8 @@ export const LESSON_EXERCISES: LessonExercise[] = [
       [
         {
           label: "Ring and stop",
-          detail: "One downstroke on the final G, let it ring, then touch all courses lightly on the last count.",
+          detail:
+            "One downstroke on the final G, let it ring, then touch all courses lightly on the last count.",
         },
         {
           label: "Tremolo ending",
@@ -2165,7 +2207,14 @@ export const LESSON_EXERCISES: LessonExercise[] = [
       ),
       { beat: bar * 4 + 1, label: "Hold", detail: "Keep the bow moving slowly" },
       { beat: bar * 4 + 2, label: "Hold", detail: "Keep the bow moving slowly" },
-      { beat: bar * 4 + 3, label: "Hold", detail: bar % 2 ? "Reach the frog; prepare the next down-bow" : "Reach the tip; prepare the next up-bow" },
+      {
+        beat: bar * 4 + 3,
+        label: "Hold",
+        detail:
+          bar % 2
+            ? "Reach the frog; prepare the next down-bow"
+            : "Reach the tip; prepare the next up-bow",
+      },
     ]),
   },
   {
@@ -2177,7 +2226,8 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     setup:
       "The bow stops on the string during each rest. Keep counting; the rest is part of the bar.",
     hint: "Say the four counts out loud with the bow resting on the string, then add the two strokes at 40 BPM.",
-    takeaway: "A stopped bow is not a stopped count. Notice whether both strokes begin on their beats.",
+    takeaway:
+      "A stopped bow is not a stopped count. Notice whether both strokes begin on their beats.",
     cues: repeat(
       [
         note(0, "⊓", [62], "Down-bow, open D", 0.85),
@@ -2400,6 +2450,281 @@ export const LESSON_EXERCISES: LessonExercise[] = [
       rest(14, "Rest; keep counting"),
       rest(15, "Rest; prepare the landing"),
       note(16, "D ⊓ · land", [62], "Final D on the new beat 1; let it ring", 0.9),
+    ],
+  },
+  {
+    lessonId: "lapsteel-c6-and-the-bar",
+    title: "Six strings, one chord",
+    bpm: 60,
+    beats: 12,
+    goal: "Pick C, E, G, A, C, E one at a time, then brush all six open strings.",
+    setup:
+      "Thumb pick on the low strings, fingers on the high ones. Keep the bar off the strings for now; open strings only.",
+    hint: "Name one string at a time with the guide stopped. Listen for the whole chord in the brush.",
+    takeaway:
+      "Open C6 is already a chord. The bar will move that chord; the picking hand stays the same.",
+    cues: [
+      note(0, "C", [48], "6th string, open"),
+      note(1, "E", [52], "5th string, open"),
+      note(2, "G", [55], "4th string, open"),
+      note(3, "A", [57], "3rd string, open"),
+      note(4, "C", [60], "2nd string, open"),
+      note(5, "E", [64], "1st string, open"),
+      note(6, "C ↓", [48, 52, 55, 57, 60, 64], "Brush all six open strings", 1.8),
+      { beat: 7, label: "Hold", detail: "Let the open chord ring" },
+      note(8, "C ↓", [48, 52, 55, 57, 60, 64], "Brush all six open strings", 3.8),
+      { beat: 9, label: "Hold", detail: "Let the open chord ring" },
+      { beat: 10, label: "Hold", detail: "Let the open chord ring" },
+      { beat: 11, label: "Hold", detail: "Let the open chord ring to the end" },
+    ],
+  },
+  {
+    lessonId: "lapsteel-pick-pulse",
+    title: "Two brushes, four counts",
+    bpm: 60,
+    beats: 16,
+    goal: "Brush the open chord on 1 and 3 for four bars; palm-block the strings through 2 and 4.",
+    setup:
+      "After each brush, rest the side of the picking hand on the strings to stop them. The count keeps going while they are silent.",
+    hint: "Tap the rhythm on your knee for one bar. Say all four numbers, including the blocked ones.",
+    takeaway: "Blocking is part of the rhythm. If you miss a brush, join the next count.",
+    cues: repeat(
+      [
+        { ...strum(0, "lapsteel", "C"), duration: 0.85 },
+        rest(1, "Palm-block the strings; keep counting"),
+        { ...strum(2, "lapsteel", "C"), duration: 0.85 },
+        rest(3, "Palm-block the strings; keep counting"),
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "lapsteel-straight-bar",
+    title: "C → F → G → C, one position each",
+    bpm: 50,
+    beats: 16,
+    goal: "Brush open C, the bar at fret 5, the bar at fret 7, then open C, one bar each.",
+    setup:
+      "Lay the bar straight across all six strings, directly above the fret marker, with light even pressure. Lift it fully to return to open C.",
+    hint: "Place the bar at fret 5 with the guide stopped and pick each string to check it is clear. Then try two bars at 40 BPM.",
+    takeaway: "One straight bar moves the whole chord. Position, not fingering, is the job.",
+    shapes: ["C", "F", "G"],
+    cues: chordBars("lapsteel", ["C", "F", "G", "C"]),
+  },
+  {
+    lessonId: "lapsteel-slide-into",
+    title: "Slide the bar into the change",
+    bpm: 50,
+    beats: 16,
+    goal: "Brush F, slide the bar up to G so it arrives on beat 3, then back down to F, for four bars.",
+    setup:
+      "Keep the bar pressing lightly while it moves. Start the slide on the and of 2 and arrive exactly on 3.",
+    hint: "Slide from fret 5 to 7 with the guide stopped, listening for the pitch to rise smoothly and land above the marker.",
+    retryLabel: "The slide arrives late or the pitch wobbles",
+    takeaway: "The slide is part of the rhythm: it leaves on the and and lands on the beat.",
+    shapes: ["F", "G"],
+    cues: repeat(
+      [
+        {
+          ...strum(0, "lapsteel", "F"),
+          duration: 2.4,
+          detail: "F: brush at fret 5 and let it ring",
+        },
+        { beat: 1, label: "Hold", detail: "Keep the bar still; the chord rings" },
+        { beat: 1.5, label: "⟋", detail: "Start sliding the bar toward fret 7" },
+        {
+          ...strum(2, "lapsteel", "G"),
+          label: "G · arrive",
+          duration: 1.4,
+          detail: "Arrive at fret 7 on the beat; brush again",
+        },
+        { beat: 3, label: "Hold", detail: "Keep counting; slide back down before the next bar" },
+        { beat: 3.5, label: "⟍", detail: "Slide the bar back toward fret 5" },
+      ],
+      4,
+    ),
+  },
+  {
+    lessonId: "lapsteel-vibrato",
+    title: "Hold a note and let it sing",
+    bpm: 50,
+    beats: 8,
+    goal: "Hold one bar-position note for four beats with a slow, even vibrato, twice.",
+    setup:
+      "Bar at fret 5, pick only the 1st string: A. Once the note speaks, rock the bar gently along the string, centred on the fret marker.",
+    hint: "Hold the note with no vibrato first, at 40 BPM, and listen to how long it lasts before adding motion.",
+    retryLabel: "The vibrato pulls the note out of tune",
+    takeaway:
+      "Vibrato is a small, even motion around the true pitch. It starts after the note, not with it.",
+    cues: [
+      note(0, "A", [69], "1st string, bar at fret 5; vibrato after the attack", 3.8),
+      { beat: 1, label: "Vibrato", detail: "Rock the bar gently around the marker" },
+      { beat: 2, label: "Vibrato", detail: "Keep the motion small and even" },
+      { beat: 3, label: "Release", detail: "Let the note fade; lift the bar" },
+      note(4, "B", [71], "1st string, bar at fret 7; vibrato after the attack", 3.8),
+      { beat: 5, label: "Vibrato", detail: "Rock the bar gently around the marker" },
+      { beat: 6, label: "Vibrato", detail: "Keep the motion small and even" },
+      { beat: 7, label: "Release", detail: "Let the note fade; lift the bar" },
+    ],
+  },
+  {
+    lessonId: "lapsteel-single-string-melody",
+    title: "A melody on the first string",
+    bpm: 50,
+    beats: 16,
+    goal: "Play E, G, A, G, then A, G, E, rest on the 1st string using bar positions 0, 3, and 5, twice.",
+    setup:
+      "Pick only the 1st string. Open is E, fret 3 is G, fret 5 is A. Lift the bar cleanly for the open note.",
+    hint: "Move the bar between frets 3 and 5 with the guide stopped until both notes land above their markers.",
+    retryLabel: "The bar lands between frets",
+    takeaway: "One string and three positions make a melody. The bar's accuracy is the tuning.",
+    cues: repeatEvery(
+      [
+        note(0, "E", [64], "1st string, open"),
+        note(1, "G", [67], "1st string, bar at fret 3"),
+        note(2, "A", [69], "1st string, bar at fret 5"),
+        note(3, "G", [67], "1st string, bar at fret 3"),
+        note(4, "A", [69], "1st string, bar at fret 5"),
+        note(5, "G", [67], "1st string, bar at fret 3"),
+        note(6, "E", [64], "1st string, open"),
+        rest(7, "Rest; lift the bar and keep counting"),
+      ],
+      2,
+      8,
+    ),
+  },
+  {
+    lessonId: "lapsteel-harmony-in-thirds",
+    title: "Two strings under one bar",
+    bpm: 50,
+    beats: 16,
+    goal: "Play the first-string melody with the 2nd string added, so the straight bar gives harmony.",
+    setup:
+      "Pick strings 2 and 1 together at bar positions 0, 3, and 5. The 2nd string sits a third below the melody.",
+    hint: "Pick the pair at the open position first, then at fret 3, with the guide stopped. Both notes should speak at once.",
+    retryLabel: "One of the two strings is missing or late",
+    takeaway:
+      "A straight bar harmonises any melody automatically. Choosing which strings to pick chooses the harmony.",
+    project: advancedProject(
+      8,
+      {
+        title: "Build the harmonised melody",
+        instruction: "Play the two-bar melody with strings 2 and 1 together at each position.",
+        button: "I built the harmony",
+      },
+      {
+        title: "Choose the interval",
+        instruction:
+          "Choose thirds or sixths for bars 3 and 4, then add them after the first half.",
+        button: "Save my interval choice",
+      },
+      {
+        title: "Refine the pairs",
+        instruction:
+          "After the four-bar reference stops, play the melody twice yourself with your chosen pairing. Refine one thing: both strings speaking together, or the bar landing above the marker.",
+        button: "I tried my refined pairs",
+      },
+      [
+        {
+          label: "Thirds",
+          detail: "Strings 2 and 1 together: close harmony a third below the melody.",
+        },
+        {
+          label: "Sixths",
+          detail: "Strings 3 and 1 together: wider harmony a sixth below the melody.",
+        },
+      ],
+    ),
+    cues: [
+      note(0, "E+C", [60, 64], "Strings 2 and 1, open"),
+      note(1, "G+E♭", [63, 67], "Strings 2 and 1, bar at fret 3"),
+      note(2, "A+F", [65, 69], "Strings 2 and 1, bar at fret 5"),
+      note(3, "G+E♭", [63, 67], "Strings 2 and 1, bar at fret 3"),
+      note(4, "A+F", [65, 69], "Strings 2 and 1, bar at fret 5"),
+      note(5, "G+E♭", [63, 67], "Strings 2 and 1, bar at fret 3"),
+      note(6, "E+C", [60, 64], "Strings 2 and 1, open"),
+      rest(7, "Rest; lift the bar"),
+      note(8, "E+G", [55, 64], "Strings 3 and 1, open"),
+      note(9, "G+B♭", [58, 67], "Strings 3 and 1, bar at fret 3"),
+      note(10, "A+C", [60, 69], "Strings 3 and 1, bar at fret 5"),
+      note(11, "G+B♭", [58, 67], "Strings 3 and 1, bar at fret 3"),
+      note(12, "A+C", [60, 69], "Strings 3 and 1, bar at fret 5"),
+      note(13, "G+B♭", [58, 67], "Strings 3 and 1, bar at fret 3"),
+      note(14, "E+G", [55, 64], "Strings 3 and 1, open", 1.8),
+      { beat: 15, label: "Hold", detail: "Let the final pair ring" },
+    ],
+  },
+  {
+    lessonId: "lapsteel-arrangement",
+    title: "Chords, a slide, a melody, and home",
+    bpm: 50,
+    beats: 17,
+    goal: "Build a four-bar guide: brushed C, F sliding to G, the first-string melody, then land on open C.",
+    setup:
+      "Bar 1: brush C on 1 and 3. Bar 2: brush F, slide to G on the and of 2. Bar 3: E G A G on the 1st string. Bar 4: brush G, lift to open C on the new beat 1.",
+    hint: "Loop bar 2 into bar 3 at 40 BPM: the bar arrives at G, then lifts to the open E for the melody.",
+    retryLabel: "The lift from the slide to the melody loses beat 1",
+    takeaway:
+      "Positions, a slide, and a single-string line can share one count. The lift to open C ends it.",
+    shapes: ["C", "F", "G"],
+    project: advancedProject(
+      8,
+      {
+        title: "Build the chord half",
+        instruction: "Brush C twice, then F sliding into G, keeping the count steady.",
+        button: "I built the chord half",
+      },
+      {
+        title: "Choose the ending",
+        instruction:
+          "Choose one ending, then add the melody bar, the G bar, and the landing on open C.",
+        button: "Save my ending choice",
+      },
+      {
+        title: "Refine the landing",
+        instruction:
+          "After the four-bar reference and final C stop, play the whole arrangement yourself twice. Protect the lift from G to the open melody, and give the final open C its full count.",
+        button: "I tried my refined arrangement",
+      },
+      [
+        {
+          label: "Slide home",
+          detail: "Slide the bar down from G to the nut so open C arrives on the new beat 1.",
+        },
+        {
+          label: "Lift and ring",
+          detail: "Lift the bar cleanly on the last count and brush open C so it rings.",
+        },
+      ],
+    ),
+    cues: [
+      { ...strum(0, "lapsteel", "C"), duration: 1.8 },
+      { beat: 1, label: "Hold", detail: "Let C ring" },
+      { ...strum(2, "lapsteel", "C"), duration: 1.8 },
+      { beat: 3, label: "Prepare", detail: "Bring the bar to fret 5 while you count" },
+      { ...strum(4, "lapsteel", "F"), duration: 1.4 },
+      { beat: 5, label: "Hold", detail: "Keep the bar still" },
+      { beat: 5.5, label: "⟋", detail: "Slide toward fret 7" },
+      {
+        ...strum(6, "lapsteel", "G"),
+        label: "G · arrive",
+        duration: 1.8,
+        detail: "Arrive at fret 7 on the beat",
+      },
+      { beat: 7, label: "Lift", detail: "Lift the bar for the open melody" },
+      note(8, "E", [64], "1st string, open"),
+      note(9, "G", [67], "1st string, bar at fret 3"),
+      note(10, "A", [69], "1st string, bar at fret 5"),
+      note(11, "G", [67], "1st string, bar at fret 3"),
+      { ...strum(12, "lapsteel", "G"), duration: 1.8, detail: "G: brush at fret 7" },
+      { beat: 13, label: "Hold", detail: "Let G ring" },
+      { beat: 14, label: "Prepare", detail: "Get ready to lift or slide home" },
+      { beat: 15, label: "Prepare", detail: "Keep counting to the landing" },
+      {
+        ...strum(16, "lapsteel", "C"),
+        label: "C ↓ · land",
+        detail: "Open C on the new beat 1; let all six strings ring",
+      },
     ],
   },
 ];
