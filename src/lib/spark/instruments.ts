@@ -1418,13 +1418,16 @@ export const MANDOLIN_CHORDS: Record<string, { frets: (number | null)[]; fingers
 
 /**
  * Frets in g–D–G–B–D order for a five-string banjo in open G. The short fifth
- * string (first entry) starts at fret 5 and is always shown open here.
+ * string (first entry) starts at fret 5 and is never fretted here. It is shown
+ * open where it belongs to the chord and muted (null) for D and D7, where the
+ * high g rubs against the third when the chord is brushed. Rolls still play it
+ * open: the roll helper treats a muted fifth string as open.
  */
 export const BANJO_CHORDS: Record<string, { frets: (number | null)[]; fingers: (number | null)[]; notes: string[] }> = {
   G: { frets: [0, 0, 0, 0, 0], fingers: [0, 0, 0, 0, 0], notes: ["g", "D", "G", "B", "D"] },
   C: { frets: [0, 2, 0, 1, 2], fingers: [0, 2, 0, 1, 3], notes: ["g", "E", "G", "C", "E"] },
-  D7: { frets: [0, 0, 2, 1, 2], fingers: [0, 0, 2, 1, 3], notes: ["g", "D", "A", "C", "E"] },
-  D: { frets: [0, 0, 2, 3, 4], fingers: [0, 0, 1, 2, 3], notes: ["g", "D", "A", "D", "F♯"] },
+  D7: { frets: [null, 0, 2, 1, 2], fingers: [null, 0, 2, 1, 3], notes: ["D", "A", "C", "E"] },
+  D: { frets: [null, 0, 2, 3, 4], fingers: [null, 0, 1, 2, 3], notes: ["D", "A", "D", "F♯"] },
   Em: { frets: [0, 2, 0, 0, 2], fingers: [0, 1, 0, 0, 2], notes: ["g", "E", "G", "B", "E"] },
   Am: { frets: [0, 2, 2, 1, 2], fingers: [0, 2, 3, 1, 4], notes: ["g", "E", "A", "C", "E"] },
 };

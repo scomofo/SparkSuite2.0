@@ -1959,7 +1959,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Alternate open G and D7 for four bars, brushing only on each beat 1.",
     setup:
-      "G is all five strings open. D7 is 0–0–2–1–2 in g–D–G–B–D order. Use beats 3 and 4 to place the shape.",
+      "G is all five strings open. D7 is 0–2–1–2 on the four long strings; skip the short fifth string. Use beats 3 and 4 to place the shape.",
     hint: "Put the guide on hold and place D7 from open strings three times. Then try two bars at 40 BPM.",
     takeaway:
       "You gave each change a place in the bar. Keep the same small goal on your next attempt.",
