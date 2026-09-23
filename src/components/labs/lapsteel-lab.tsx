@@ -1,15 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { ChordDiagram } from "@/components/chord-diagram";
-import {
-  BeatStrip,
-  Chip,
-  LabCopy,
-  PlayBar,
-  TabRow,
-  usePlayhead,
-  type LineHit,
-} from "@/components/labs/shared";
+import { BeatStrip, Chip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { ghostNote, pianoHold, strum, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, LAPSTEEL_CHORDS, midiToFreq } from "@/lib/spark/instruments";
 

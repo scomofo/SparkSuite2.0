@@ -44,9 +44,10 @@ function LearnPage() {
     setSelected(id && data.records[id]?.step < 3 ? id : null);
     setPaused(false);
   }, [ready, instrument, data]);
+  const lessonId = lesson?.id;
   useEffect(() => {
-    if (lesson) heading.current?.focus();
-  }, [lesson?.id, step, paused]);
+    if (lessonId) heading.current?.focus();
+  }, [lessonId, step, paused]);
 
   function open(id: string) {
     begin(id);

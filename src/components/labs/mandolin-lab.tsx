@@ -1,15 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { ChordDiagram } from "@/components/chord-diagram";
-import {
-  BeatStrip,
-  Chip,
-  LabCopy,
-  PlayBar,
-  TabRow,
-  usePlayhead,
-  type LineHit,
-} from "@/components/labs/shared";
+import { BeatStrip, Chip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { ghostNote, pianoHold, pluck, strum, strumUp, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, MANDOLIN_CHORDS } from "@/lib/spark/instruments";
 import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
@@ -145,7 +138,11 @@ export function MandolinLab() {
   const liveChord = tab === "switch" && (head.cursorBeat ?? 0) >= 4 ? "G" : chord;
   const cells = Array.from({ length: 8 }, (_, beat) => {
     if (tab === "alt")
-      return { beat: beat / 2, top: beat % 2 === 0 ? "D" : "U", bot: ALT_LINE.cues[beat].notes ? ALT_LINE.cues[beat].label.split(" ")[0] : "rest" };
+      return {
+        beat: beat / 2,
+        top: beat % 2 === 0 ? "D" : "U",
+        bot: ALT_LINE.cues[beat].notes ? ALT_LINE.cues[beat].label.split(" ")[0] : "rest",
+      };
     if (tab === "chop") return { beat, top: beat % 2 === 0 ? "D" : "x", bot: chord };
     if (tab === "tremolo")
       return { beat, top: beat % 4 < 2 ? "≈" : "·", bot: beat % 4 < 2 ? "A" : "rest" };
@@ -188,7 +185,8 @@ export function MandolinLab() {
         </LabCopy>
         <BeatStrip cells={cells} cursorBeat={head.cursorBeat} />
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          Synthesized pitch and rhythm references. Practise the written hand movements on your instrument; these sounds do not demonstrate physical articulation.
+          Synthesized pitch and rhythm references. Practise the written hand movements on your
+          instrument; these sounds do not demonstrate physical articulation.
         </p>
         {tab !== "alt" && tab !== "tremolo" ? (
           <section className="mt-6 flex flex-col items-center">

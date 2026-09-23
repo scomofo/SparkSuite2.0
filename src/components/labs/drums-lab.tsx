@@ -1,7 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { DrumPads } from "@/components/drum-pads";
-import { BeatStrip, LabCopy, PlayBar, TabRow, usePlayhead, type BeatCell, type LineHit } from "@/components/labs/shared";
+import { BeatStrip, LabCopy, PlayBar, TabRow, type BeatCell } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { drumHit, unlockAudio } from "@/lib/spark/audio";
 
 export type DrumTab = "kick" | "backbeat" | "hats" | "four" | "fill";
@@ -50,7 +51,8 @@ const COPY: Record<DrumTab, { kicker: string; title: string; body: string; hear:
 const NAMES = ["K", "S", "H", "T"];
 
 function parseTab(raw: string): DrumTab {
-  if (raw === "kick" || raw === "backbeat" || raw === "hats" || raw === "four" || raw === "fill") return raw;
+  if (raw === "kick" || raw === "backbeat" || raw === "hats" || raw === "four" || raw === "fill")
+    return raw;
   return "kick";
 }
 
@@ -97,7 +99,11 @@ function cells(tab: DrumTab): BeatCell[] {
     const here = hits.filter((h) => h.beat === beat);
     if (!here.length) return { beat, top: "·", bot: "·" };
     const main = here.find((h) => h.pad !== 2) ?? here[0];
-    return { beat, top: NAMES[main.pad] ?? "·", bot: here.length > 1 ? "+" : NAMES[main.pad] ?? "·" };
+    return {
+      beat,
+      top: NAMES[main.pad] ?? "·",
+      bot: here.length > 1 ? "+" : (NAMES[main.pad] ?? "·"),
+    };
   });
 }
 
@@ -129,7 +135,9 @@ export function DrumsLab() {
       <header className="px-5 pb-2 pt-8">
         <p className="text-[11px] uppercase tracking-[0.22em] text-dim">Drums lab · Kit</p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Groove</h1>
-        <p className="mt-3 max-w-sm text-pretty text-muted">Kick names one. Snare answers. Hats are the clock.</p>
+        <p className="mt-3 max-w-sm text-pretty text-muted">
+          Kick names one. Snare answers. Hats are the clock.
+        </p>
       </header>
       <div className="sticky top-0 z-10 mx-4 mt-4 rounded-lg border border-border bg-surface/95 p-2 backdrop-blur-sm">
         <TabRow tabs={TABS} active={tab} onPick={patch} />
@@ -149,7 +157,9 @@ export function DrumsLab() {
           <p className="mb-2 text-[11px] uppercase tracking-[0.18em] text-dim">Pads</p>
           <DrumPads active={head.mark} expected={head.mark} onHit={(i) => drumHit(i)} />
         </section>
-        <p className="mt-5 text-pretty text-sm text-muted">Tap a pad yourself. Then play the line and match it.</p>
+        <p className="mt-5 text-pretty text-sm text-muted">
+          Tap a pad yourself. Then play the line and match it.
+        </p>
       </div>
     </AppShell>
   );

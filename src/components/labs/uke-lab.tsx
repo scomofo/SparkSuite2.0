@@ -1,7 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { ChordDiagram } from "@/components/chord-diagram";
-import { BeatStrip, Chip, LabCopy, PlayBar, TabRow, usePlayhead, type LineHit } from "@/components/labs/shared";
+import { BeatStrip, Chip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { ghostNote, pluck, strum, strumUp, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, UKE_CHORDS } from "@/lib/spark/instruments";
 
@@ -51,7 +52,8 @@ const COPY: Record<UkeTab, { kicker: string; title: string; body: string; hear: 
 };
 
 function parseTab(raw: string): UkeTab {
-  if (raw === "down" || raw === "island" || raw === "chunk" || raw === "pick" || raw === "switch") return raw;
+  if (raw === "down" || raw === "island" || raw === "chunk" || raw === "pick" || raw === "switch")
+    return raw;
   return "down";
 }
 function parseChord(raw: string): UkeChord {
@@ -97,7 +99,9 @@ export function UkeLab() {
     } else if (tab === "island") {
       const slots: ("D" | "U" | ".")[] = ["D", ".", "D", "U", ".", "U", "D", "U"];
       hits = slots.flatMap((kind, i) =>
-        kind === "." ? [] : [{ beat: i, sound: (w: number) => (kind === "U" ? strumUp(f, w) : strum(f, w)) }],
+        kind === "."
+          ? []
+          : [{ beat: i, sound: (w: number) => (kind === "U" ? strumUp(f, w) : strum(f, w)) }],
       );
     } else if (tab === "chunk") {
       hits = Array.from({ length: 8 }, (_, i) => ({
@@ -127,7 +131,12 @@ export function UkeLab() {
       return { beat, top: slots[beat] ?? "·", bot: chord };
     }
     if (tab === "chunk") return { beat, top: beat % 2 === 0 ? "D" : "x", bot: chord };
-    if (tab === "pick") return { beat, top: ["p", "i", "m", "a"][beat % 4] ?? "p", bot: ["G", "C", "E", "A"][beat % 4] ?? "G" };
+    if (tab === "pick")
+      return {
+        beat,
+        top: ["p", "i", "m", "a"][beat % 4] ?? "p",
+        bot: ["G", "C", "E", "A"][beat % 4] ?? "G",
+      };
     if (tab === "switch") return { beat, top: "D", bot: beat < 4 ? chord : "G" };
     return { beat, top: "D", bot: chord };
   });
@@ -137,7 +146,9 @@ export function UkeLab() {
       <header className="px-5 pb-2 pt-8">
         <p className="text-[11px] uppercase tracking-[0.22em] text-dim">Ukulele lab · GCEA</p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Strum</h1>
-        <p className="mt-3 max-w-sm text-pretty text-muted">Four strings. The right hand is the song.</p>
+        <p className="mt-3 max-w-sm text-pretty text-muted">
+          Four strings. The right hand is the song.
+        </p>
       </header>
       <div className="sticky top-0 z-10 mx-4 mt-4 rounded-lg border border-border bg-surface/95 p-2 backdrop-blur-sm">
         <TabRow tabs={TABS} active={tab} onPick={(id) => patch({ tab: id })} />

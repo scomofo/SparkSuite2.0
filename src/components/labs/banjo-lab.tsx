@@ -1,15 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { ChordDiagram } from "@/components/chord-diagram";
-import {
-  BeatStrip,
-  Chip,
-  LabCopy,
-  PlayBar,
-  TabRow,
-  usePlayhead,
-  type LineHit,
-} from "@/components/labs/shared";
+import { BeatStrip, Chip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { ghostNote, pianoHold, pluck, strum, unlockAudio } from "@/lib/spark/audio";
 import { BANJO_CHORDS, banjoChordFrequencies, instrumentById } from "@/lib/spark/instruments";
 import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
@@ -190,7 +183,8 @@ export function BanjoLab() {
         </LabCopy>
         <BeatStrip cells={cells} cursorBeat={head.cursorBeat} />
         <p className="mt-4 text-xs leading-relaxed text-muted">
-          Synthesized pitch and rhythm references. Practise the written hand movements on your instrument; these sounds do not demonstrate physical articulation.
+          Synthesized pitch and rhythm references. Practise the written hand movements on your
+          instrument; these sounds do not demonstrate physical articulation.
         </p>
         {showsChord ? (
           <section className="mt-6 flex flex-col items-center">

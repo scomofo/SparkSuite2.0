@@ -1,7 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { PianoKeyboard } from "@/components/piano-keyboard";
-import { BeatStrip, Chip, LabCopy, PlayBar, TabRow, usePlayhead, type LineHit } from "@/components/labs/shared";
+import { BeatStrip, Chip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { pianoChord, pianoTone, unlockAudio } from "@/lib/spark/audio";
 import { midiToFreq, PIANO_VOICINGS } from "@/lib/spark/instruments";
 
@@ -51,7 +52,14 @@ const COPY: Record<PianoTab, { kicker: string; title: string; body: string; hear
 };
 
 function parseTab(raw: string): PianoTab {
-  if (raw === "middlec" || raw === "triad" || raw === "invert" || raw === "cadence" || raw === "five") return raw;
+  if (
+    raw === "middlec" ||
+    raw === "triad" ||
+    raw === "invert" ||
+    raw === "cadence" ||
+    raw === "five"
+  )
+    return raw;
   return "middlec";
 }
 function parseChord(raw: string): PianoChord {
@@ -68,11 +76,17 @@ function invert(midis: number[], n: number) {
   return notes;
 }
 
-function line(tab: PianoTab, chord: PianoChord): { beat: number; midis: number[]; label: string }[] {
+function line(
+  tab: PianoTab,
+  chord: PianoChord,
+): { beat: number; midis: number[]; label: string }[] {
   const voicing = PIANO_VOICINGS[chord] ?? [60, 64, 67];
-  if (tab === "middlec") return Array.from({ length: 8 }, (_, i) => ({ beat: i, midis: [60], label: "C" }));
+  if (tab === "middlec")
+    return Array.from({ length: 8 }, (_, i) => ({ beat: i, midis: [60], label: "C" }));
   if (tab === "triad") {
-    const names = voicing.map((m) => ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][m % 12] ?? "?");
+    const names = voicing.map(
+      (m) => ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"][m % 12] ?? "?",
+    );
     return [
       { beat: 0, midis: [voicing[0]], label: names[0] ?? "R" },
       { beat: 1, midis: [voicing[1]], label: names[1] ?? "3" },
@@ -157,7 +171,9 @@ export function PianoLab() {
       <header className="px-5 pb-2 pt-8">
         <p className="text-[11px] uppercase tracking-[0.22em] text-dim">Piano lab · Keys</p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Hands</h1>
-        <p className="mt-3 max-w-sm text-pretty text-muted">Find C, build a triad, feel G pull you home.</p>
+        <p className="mt-3 max-w-sm text-pretty text-muted">
+          Find C, build a triad, feel G pull you home.
+        </p>
       </header>
       <div className="sticky top-0 z-10 mx-4 mt-4 rounded-lg border border-border bg-surface/95 p-2 backdrop-blur-sm">
         <TabRow tabs={TABS} active={tab} onPick={(id) => patch({ tab: id })} />
@@ -184,7 +200,11 @@ export function PianoLab() {
           />
         </LabCopy>
         <BeatStrip
-          cells={events.map((e) => ({ beat: e.beat, top: e.label, bot: e.midis.length > 1 ? "chord" : "key" }))}
+          cells={events.map((e) => ({
+            beat: e.beat,
+            top: e.label,
+            bot: e.midis.length > 1 ? "chord" : "key",
+          }))}
           cursorBeat={head.cursorBeat}
         />
         <section className="mt-6">

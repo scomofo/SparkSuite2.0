@@ -1,13 +1,7 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
-import {
-  BeatStrip,
-  LabCopy,
-  PlayBar,
-  TabRow,
-  usePlayhead,
-  type LineHit,
-} from "@/components/labs/shared";
+import { BeatStrip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { pianoHold, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, midiToFreq } from "@/lib/spark/instruments";
 import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
