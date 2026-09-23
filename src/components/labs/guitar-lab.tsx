@@ -1,7 +1,8 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { ChordDiagram } from "@/components/chord-diagram";
-import { BeatStrip, Chip, LabCopy, PlayBar, TabRow, usePlayhead, type LineHit } from "@/components/labs/shared";
+import { BeatStrip, Chip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { bassLegato, ghostNote, pluck, strum, strumUp, unlockAudio } from "@/lib/spark/audio";
 import { CHORDS, OPEN_FREQ } from "@/lib/spark/guitar";
 
@@ -51,7 +52,8 @@ const COPY: Record<GuitarTab, { kicker: string; title: string; body: string; hea
 };
 
 function parseTab(raw: string): GuitarTab {
-  if (raw === "down" || raw === "up" || raw === "chuck" || raw === "hammer" || raw === "travis") return raw;
+  if (raw === "down" || raw === "up" || raw === "chuck" || raw === "hammer" || raw === "travis")
+    return raw;
   return "down";
 }
 function parseChord(raw: string): GChord {
@@ -84,7 +86,8 @@ export function GuitarLab() {
   const play = () => {
     unlockAudio();
     let hits: LineHit[] = [];
-    if (tab === "down") hits = Array.from({ length: 8 }, (_, i) => ({ beat: i, sound: (w) => strum(f, w) }));
+    if (tab === "down")
+      hits = Array.from({ length: 8 }, (_, i) => ({ beat: i, sound: (w) => strum(f, w) }));
     else if (tab === "up")
       hits = Array.from({ length: 8 }, (_, i) => ({
         beat: i,
@@ -98,7 +101,10 @@ export function GuitarLab() {
     else if (tab === "hammer") {
       hits = Array.from({ length: 4 }, (_, i) => [
         { beat: i * 2, sound: (w: number) => pluck(OPEN_FREQ[3] ?? 196, w, 0.4) },
-        { beat: i * 2 + 1, sound: (w: number) => bassLegato((OPEN_FREQ[3] ?? 196) * Math.pow(2, 2 / 12), w) },
+        {
+          beat: i * 2 + 1,
+          sound: (w: number) => bassLegato((OPEN_FREQ[3] ?? 196) * Math.pow(2, 2 / 12), w),
+        },
       ]).flat();
     } else {
       hits = Array.from({ length: 8 }, (_, i) => ({
@@ -115,8 +121,10 @@ export function GuitarLab() {
   const cells = Array.from({ length: 8 }, (_, beat) => {
     if (tab === "up") return { beat, top: beat % 2 === 0 ? "D" : "U", bot: chord };
     if (tab === "chuck") return { beat, top: beat % 2 === 0 ? "D" : "x", bot: chord };
-    if (tab === "hammer") return { beat, top: beat % 2 === 0 ? "G" : "h", bot: beat % 2 === 0 ? "pick" : "A" };
-    if (tab === "travis") return { beat, top: beat % 2 === 0 ? "p" : "i", bot: beat % 2 === 0 ? "bass" : "high" };
+    if (tab === "hammer")
+      return { beat, top: beat % 2 === 0 ? "G" : "h", bot: beat % 2 === 0 ? "pick" : "A" };
+    if (tab === "travis")
+      return { beat, top: beat % 2 === 0 ? "p" : "i", bot: beat % 2 === 0 ? "bass" : "high" };
     return { beat, top: "D", bot: chord };
   });
 
@@ -125,7 +133,9 @@ export function GuitarLab() {
       <header className="px-5 pb-2 pt-8">
         <p className="text-[11px] uppercase tracking-[0.22em] text-dim">Guitar lab · 6-string</p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Right hand</h1>
-        <p className="mt-3 max-w-sm text-pretty text-muted">The chord is a shape. The groove is the stroke.</p>
+        <p className="mt-3 max-w-sm text-pretty text-muted">
+          The chord is a shape. The groove is the stroke.
+        </p>
       </header>
       <div className="sticky top-0 z-10 mx-4 mt-4 rounded-lg border border-border bg-surface/95 p-2 backdrop-blur-sm">
         <TabRow tabs={TABS} active={tab} onPick={(id) => patch({ tab: id })} />
@@ -154,7 +164,9 @@ export function GuitarLab() {
         <BeatStrip cells={cells} cursorBeat={head.cursorBeat} />
         {tab !== "hammer" && tab !== "travis" ? (
           <section className="mt-6 flex flex-col items-center">
-            <p className="mb-2 self-start text-[11px] uppercase tracking-[0.18em] text-dim">Shape</p>
+            <p className="mb-2 self-start text-[11px] uppercase tracking-[0.18em] text-dim">
+              Shape
+            </p>
             <ChordDiagram chordId={chord} />
           </section>
         ) : null}

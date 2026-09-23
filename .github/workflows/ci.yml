@@ -31,6 +31,7 @@ jobs:
       - run: npm test
       - run: npm run build
       - run: npm run typecheck
+      - run: npm run lint
       - name: Install browser for UI checks
         if: matrix.node == 24
         run: npx playwright install --with-deps chromium

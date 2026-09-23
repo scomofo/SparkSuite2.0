@@ -2,7 +2,8 @@ import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { PitchMatch } from "@/components/tuner-panel";
-import { BeatStrip, LabCopy, PlayBar, TabRow, usePlayhead, type LineHit } from "@/components/labs/shared";
+import { BeatStrip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
+import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { pianoHold, pianoTone, unlockAudio } from "@/lib/spark/audio";
 import { midiToFreq } from "@/lib/spark/instruments";
 
@@ -50,7 +51,14 @@ const COPY: Record<VoiceTab, { kicker: string; title: string; body: string; hear
 };
 
 function parseTab(raw: string): VoiceTab {
-  if (raw === "drone" || raw === "match" || raw === "hold" || raw === "neighbor" || raw === "octave") return raw;
+  if (
+    raw === "drone" ||
+    raw === "match" ||
+    raw === "hold" ||
+    raw === "neighbor" ||
+    raw === "octave"
+  )
+    return raw;
   return "drone";
 }
 
@@ -111,9 +119,17 @@ export function VoiceLab() {
     tab === "neighbor"
       ? ["C", "D", "E", "D", "C", "D", "E", "C"].map((n, beat) => ({ beat, top: "·", bot: n }))
       : tab === "octave"
-        ? ["C4", "·", "C5", "·", "C4", "·", "C5", "·"].map((n, beat) => ({ beat, top: n === "·" ? "·" : "C", bot: n }))
+        ? ["C4", "·", "C5", "·", "C4", "·", "C5", "·"].map((n, beat) => ({
+            beat,
+            top: n === "·" ? "·" : "C",
+            bot: n,
+          }))
         : tab === "hold"
-          ? Array.from({ length: 8 }, (_, beat) => ({ beat, top: beat % 4 === 0 ? "hold" : "→", bot: "C" }))
+          ? Array.from({ length: 8 }, (_, beat) => ({
+              beat,
+              top: beat % 4 === 0 ? "hold" : "→",
+              bot: "C",
+            }))
           : Array.from({ length: 8 }, (_, beat) => ({ beat, top: "C", bot: "drone" }));
 
   return (
@@ -121,7 +137,9 @@ export function VoiceLab() {
       <header className="px-5 pb-2 pt-8">
         <p className="text-[11px] uppercase tracking-[0.22em] text-dim">Voice lab · Pitch</p>
         <h1 className="mt-2 font-display text-4xl font-semibold tracking-tight">Breath</h1>
-        <p className="mt-3 max-w-sm text-pretty text-muted">Match a C. Hold it. The air is the instrument.</p>
+        <p className="mt-3 max-w-sm text-pretty text-muted">
+          Match a C. Hold it. The air is the instrument.
+        </p>
       </header>
       <div className="sticky top-0 z-10 mx-4 mt-4 rounded-lg border border-border bg-surface/95 p-2 backdrop-blur-sm">
         <TabRow tabs={TABS} active={tab} onPick={patch} />

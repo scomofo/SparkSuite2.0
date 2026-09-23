@@ -23,6 +23,7 @@ import { instrumentById, lessonsFor, withSurface, type InstrumentId } from "./in
 import type { PlanItem } from "./types.ts";
 import { defaultProgress, loadSuite, saveProgress } from "./storage.ts";
 import { finalizeSession } from "./progress.ts";
+import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import type { DailyPlan } from "./types.ts";
@@ -53,7 +54,18 @@ describe("practice scoring thresholds", () => {
 
   it("empty item summarizes to zero, not NaN", () => {
     const r = summarizeItem(
-      { id: "x", lessonId: "l", type: "song", title: "t", subtitle: "", durationSec: 1, chords: [], pattern: "D", bars: 1, bpm: 60 } as never,
+      {
+        id: "x",
+        lessonId: "l",
+        type: "song",
+        title: "t",
+        subtitle: "",
+        durationSec: 1,
+        chords: [],
+        pattern: "D",
+        bars: 1,
+        bpm: 60,
+      } as never,
       0,
       0,
     );
@@ -131,7 +143,11 @@ describe("theory spelling", () => {
         if (f != null) ivs.add((openPcs[i] + f - t.openRootPc + 12) % 12);
       });
       const label = `${t.caged}-shape ${t.quality}`;
-      for (const iv of ivs) assert.ok(want.includes(iv), `${label} sounds interval ${iv} outside ${q.formula.join(" ")}`);
+      for (const iv of ivs)
+        assert.ok(
+          want.includes(iv),
+          `${label} sounds interval ${iv} outside ${q.formula.join(" ")}`,
+        );
       assert.ok(ivs.has(0), `${label} has no root`);
       assert.ok(ivs.has(want[1]), `${label} has no ${q.formula[1]}`);
     }
@@ -139,7 +155,18 @@ describe("theory spelling", () => {
 });
 
 describe("listen and make passes are playable with the generic control", () => {
-  const ids: InstrumentId[] = ["guitar", "piano", "ukulele", "bass", "drums", "vocals", "mandolin", "banjo", "violin", "lapsteel"];
+  const ids: InstrumentId[] = [
+    "guitar",
+    "piano",
+    "ukulele",
+    "bass",
+    "drums",
+    "vocals",
+    "mandolin",
+    "banjo",
+    "violin",
+    "lapsteel",
+  ];
   const items = ids.flatMap((id) =>
     lessonsFor(id)
       .filter((l) => l.process === "respond" || l.process === "create")
@@ -176,7 +203,8 @@ describe("listen and make passes are playable with the generic control", () => {
       if (item.surface === "pads") continue;
       const notes = buildTimeline(item);
       assert.ok(notes.length > 0, item.lessonId);
-      for (const n of notes) assert.equal(n.string, undefined, `${item.lessonId} expects string ${n.string}`);
+      for (const n of notes)
+        assert.equal(n.string, undefined, `${item.lessonId} expects string ${n.string}`);
       const res = consumeHit(notes, notes[0].t, 230);
       assert.equal(res.hit, true, item.lessonId);
     }
@@ -222,7 +250,18 @@ describe("empty sessions do not complete the day", () => {
       minutes: 10,
       promise: "p",
       items: [
-        { id: "a", type: "song", title: "a", subtitle: "", durationSec: 10, lessonId: "lesson_guitar_em_chord_01", chords: ["Em"], pattern: "D", bars: 4, bpm: 70 },
+        {
+          id: "a",
+          type: "song",
+          title: "a",
+          subtitle: "",
+          durationSec: 10,
+          lessonId: "lesson_guitar_em_chord_01",
+          chords: ["Em"],
+          pattern: "D",
+          bars: 4,
+          bpm: 70,
+        },
       ],
     };
     let s = startSession(defaultProgress(), plan);
@@ -230,6 +269,40 @@ describe("empty sessions do not complete the day", () => {
     const { progress, result } = closeSession(defaultProgress(), s, "guitar");
     assert.equal(result.items.length, 0);
     assert.deepEqual(progress.dailyComplete, {});
+  });
+});
+
+describe("dailyComplete pruning", () => {
+  it("finalizeSession drops dailyComplete entries older than 60 days", () => {
+    const restore = withMemoryStorage();
+    try {
+      const day = 86_400_000;
+      const oldKey = localDayKey(new Date(Date.now() - 90 * day));
+      const recentKey = localDayKey(new Date(Date.now() - 10 * day));
+      const todayKey = localDayKey();
+      const before = {
+        ...defaultProgress(),
+        dailyComplete: { [oldKey]: true, [recentKey]: true },
+      };
+      const next = finalizeSession(
+        before,
+        {
+          date: todayKey,
+          accuracy: 1,
+          stars: 3,
+          xp: 10,
+          items: [
+            { itemId: "i", lessonId: "l", hits: 4, misses: 0, accuracy: 1, stars: 3, xp: 10 },
+          ],
+        },
+        "guitar",
+      );
+      assert.equal(next.dailyComplete[oldKey], undefined);
+      assert.equal(next.dailyComplete[recentKey], true);
+      assert.equal(next.dailyComplete[todayKey], true);
+    } finally {
+      restore();
+    }
   });
 });
 
@@ -298,7 +371,9 @@ describe("bass tuner range", () => {
   function tone(hz: number, sr: number, n: number) {
     const buf = new Float32Array(n);
     for (let i = 0; i < n; i++) {
-      buf[i] = 0.5 * Math.sin((2 * Math.PI * hz * i) / sr) + 0.2 * Math.sin((2 * Math.PI * 2 * hz * i) / sr);
+      buf[i] =
+        0.5 * Math.sin((2 * Math.PI * hz * i) / sr) +
+        0.2 * Math.sin((2 * Math.PI * 2 * hz * i) / sr);
     }
     return buf;
   }
