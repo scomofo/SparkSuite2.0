@@ -7,7 +7,7 @@ import { lessonExercise } from "../src/lib/spark/lesson-practice.ts";
 import { beginMilestone, musicalMilestone } from "../src/lib/spark/milestones.ts";
 import { defaultSuite } from "../src/lib/spark/storage.ts";
 
-const url = process.argv[2] ?? "http://127.0.0.1:8080";
+const url = process.argv[2] ?? "http://127.0.0.1:8083";
 const label = process.argv[3] ?? "dev";
 const output = "/workspace/screenshots";
 mkdirSync(output, { recursive: true });

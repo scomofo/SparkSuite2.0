@@ -89,10 +89,10 @@ Files: `scripts/learning-browser.mjs`, `scripts/studio-browser.mjs`, `scripts/pe
 
 ```sh
 sh startup.sh
-node scripts/studio-browser.mjs http://127.0.0.1:8080 dev
-node scripts/learning-browser.mjs http://127.0.0.1:8080 dev
-node scripts/lesson-practice-browser.mjs http://127.0.0.1:8080 dev
-node scripts/personalized-browser.mjs http://127.0.0.1:8080 dev
+node scripts/studio-browser.mjs http://127.0.0.1:8083 dev
+node scripts/learning-browser.mjs http://127.0.0.1:8083 dev
+node scripts/lesson-practice-browser.mjs http://127.0.0.1:8083 dev
+node scripts/personalized-browser.mjs http://127.0.0.1:8083 dev
 ```
 
 Screenshots land under `/workspace/screenshots`. Check the 320px shots for horizontal overflow on the new chord diagrams and lab.

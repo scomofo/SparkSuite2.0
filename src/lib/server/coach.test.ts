@@ -355,9 +355,9 @@ describe("request-scoped personal coach keys", () => {
 
   it("permits matching loopback HTTP requests for development", async () => {
     for (const url of [
-      "http://localhost:8080/api/coach",
-      "http://127.0.0.1:8080/api/coach",
-      "http://[::1]:8080/api/coach",
+      "http://localhost:8083/api/coach",
+      "http://127.0.0.1:8083/api/coach",
+      "http://[::1]:8083/api/coach",
     ]) {
       const { service, calls } = harness({ environment: () => ({}) });
       assert.equal((await service.respond(personalRequest({ url }))).status, 200);
