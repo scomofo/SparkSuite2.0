@@ -15,6 +15,7 @@ import { VoiceLab } from "@/components/labs/voice-lab";
 import { Chip, TabRow } from "@/components/labs/shared";
 import { Button } from "@/components/ui/button";
 import { LessonPractice } from "@/components/lesson-practice";
+import { SideQuestPractice } from "@/components/side-quest-practice";
 import { bassLegato, bassTone, click, ghostNote, kick, scheduleRun, unlockAudio, type AudioRun } from "@/lib/spark/audio";
 import {
   BASS_CHORDS,
@@ -46,6 +47,7 @@ export const Route = createFileRoute("/techniques")({
     tab: typeof raw.tab === "string" ? raw.tab : "",
     chord: typeof raw.chord === "string" ? raw.chord : "",
     ...(typeof raw.lesson === "string" ? { lesson: raw.lesson.slice(0, 100) } : {}),
+    ...(typeof raw.quest === "string" ? { quest: raw.quest.slice(0, 100) } : {}),
   }),
   component: TechniquesPage,
 });
@@ -53,6 +55,7 @@ export const Route = createFileRoute("/techniques")({
 function TechniquesPage() {
   const instrument = useSpark((s) => s.instrument);
   const search = Route.useSearch();
+  if (search.quest !== undefined) return <SideQuestPractice key={search.quest} id={search.quest} />;
   if (search.lesson !== undefined) return <LessonPractice key={search.lesson} id={search.lesson} />;
   if (instrument === "drums") return <DrumsLab />;
   if (instrument === "piano") return <PianoLab />;
