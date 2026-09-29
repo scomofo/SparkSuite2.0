@@ -20,6 +20,7 @@ import {
 } from "./learning.ts";
 import { lessonExercise } from "./lesson-practice.ts";
 import { SIDE_QUESTS, sideQuestsFor } from "./side-quests.ts";
+import { sideQuestExercise } from "./side-quest-practice.ts";
 
 const TODAY = "2026-09-05";
 const id = "guitar-first-sound";
@@ -81,6 +82,12 @@ describe("guided curriculum", () => {
         assert.ok(quest.purpose.length > 35);
         assert.ok(quest.challenge.length > 45);
         assert.ok(quest.listenFor.length > 35);
+        const exercise = sideQuestExercise(quest.id);
+        assert.ok(exercise, quest.id);
+        assert.equal(exercise!.lessonId, quest.id);
+        assert.ok(exercise!.beats >= 4);
+        assert.ok(exercise!.cues.length >= 4);
+        assert.ok(exercise!.cues.every((cue) => cue.beat >= 0 && cue.beat < exercise!.beats));
       }
       assert.equal(learningPath(instrument.id).length, 8);
     }
