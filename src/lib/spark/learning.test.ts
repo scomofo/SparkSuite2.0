@@ -52,6 +52,21 @@ describe("guided curriculum", () => {
     assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).whyItMatters)).size, INSTRUMENTS.length);
   });
 
+  it("uses a distinct instrument teaching voice in the lesson copy itself", () => {
+    const firstLines = new Set<string>();
+    for (const instrument of INSTRUMENTS) {
+      const lessons = learningPath(instrument.id);
+      const lead = lessons[0].explanation.split(". ")[0];
+      firstLines.add(lead);
+      for (const lesson of lessons) {
+        assert.ok(lesson.example.includes(":"), lesson.id);
+        assert.ok(lesson.practice.every((step) => step.includes(":")), lesson.id);
+        assert.ok(lesson.feedback.includes("clue:"), lesson.id);
+      }
+    }
+    assert.equal(firstLines.size, INSTRUMENTS.length);
+  });
+
   it("has complete, uniquely identified lessons and an ordered prerequisite path for every instrument", () => {
     assert.equal(CURRICULUM.length, INSTRUMENTS.length * 8);
     assert.equal(INSTRUMENTS.length, 10);
