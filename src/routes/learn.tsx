@@ -11,6 +11,7 @@ import { INSTRUMENTS, instrumentById, type InstrumentId } from "@/lib/spark/inst
 import { learningPace, learningSummary } from "@/lib/spark/learning";
 import { labSearchFor } from "@/lib/spark/labs";
 import { lessonExercise } from "@/lib/spark/lesson-practice";
+import { sideQuestsFor } from "@/lib/spark/side-quests";
 import { useLearning } from "@/store/learning";
 import { useSpark } from "@/store/spark";
 import { cn } from "@/lib/utils";
@@ -583,6 +584,28 @@ function LearnPage() {
                               );
                             })}
                           </ul>
+                          {sideQuestsFor(instrument, level.id).map((quest) => (
+                            <details
+                              key={quest.id}
+                              className="mt-4 rounded-lg border border-dashed border-border bg-raised/40 p-4"
+                            >
+                              <summary className="min-h-11 cursor-pointer text-sm font-medium">
+                                Side quest · {quest.title}
+                              </summary>
+                              <p className="mt-2 text-sm leading-relaxed text-muted">{quest.purpose}</p>
+                              <p className="mt-3 text-sm leading-relaxed">
+                                <span className="font-medium">Try: </span>
+                                {quest.challenge}
+                              </p>
+                              <p className="mt-2 text-sm leading-relaxed text-muted">
+                                <span className="font-medium text-fg">Listen for: </span>
+                                {quest.listenFor}
+                              </p>
+                              <p className="mt-3 text-xs leading-relaxed text-muted">
+                                Optional. No score, no streak, no prerequisite—just musicianship.
+                              </p>
+                            </details>
+                          ))}
                         </details>
                       );
                     })}
