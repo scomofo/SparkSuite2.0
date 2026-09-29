@@ -2,8 +2,10 @@ import type { LearningLesson } from "./curriculum.ts";
 
 export type LessonVoice = {
   opener: string;
+  whyItMatters: string;
   listenFor: string;
   permission: string;
+  reflection: string;
 };
 
 const instrumentLanguage: Record<LearningLesson["instrument"], string> = {
@@ -17,6 +19,19 @@ const instrumentLanguage: Record<LearningLesson["instrument"], string> = {
   banjo: "picking hand, fretting hand, and the roll",
   violin: "bow arm, left hand, and ear",
   lapsteel: "bar hand, picking hand, and the moving pitch",
+};
+
+const instrumentWhy: Record<LearningLesson["instrument"], string> = {
+  guitar: "The payoff is practical: cleaner chord changes, steadier rhythm, and phrases that sound intentional instead of assembled.",
+  piano: "This gives your hands a musical reason to move, so the keyboard becomes a map of sound rather than a row of keys to memorize.",
+  ukulele: "This is the kind of small move that makes accompaniment feel buoyant and singable instead of like chord-shape homework.",
+  bass: "Bass lives in the relationship between note and pulse. This lesson strengthens the part that makes other musicians feel where the music is.",
+  drums: "A drum part works when the listener can feel the next beat coming. This lesson builds that sense of inevitability.",
+  vocals: "The useful skill is not hitting an isolated note; it is making breath, pitch, words, and timing cooperate in a phrase.",
+  mandolin: "Mandolin comes alive when pick motion, short sustain, and chord shape agree on the pulse. This lesson connects those pieces.",
+  banjo: "Banjo can sound busy very quickly. This lesson helps the roll or chord change feel like music with direction rather than a stream of notes.",
+  violin: "On violin, tiny physical choices become audible immediately. This lesson turns one of those choices into something you can hear and repeat.",
+  lapsteel: "Lap steel is all about arriving: pitch, bar movement, sustain, and timing have to meet in the same place. This lesson trains that arrival.",
 };
 
 const levelOpeners: Record<LearningLesson["level"], (lesson: LearningLesson) => string> = {
@@ -47,6 +62,21 @@ function focusFor(lesson: LearningLesson) {
   return `Listen for the moment when your ${instrumentLanguage[lesson.instrument]} start working as one system instead of separate jobs.`;
 }
 
+function reflectionFor(lesson: LearningLesson) {
+  const text = `${lesson.id} ${lesson.title} ${lesson.outcome}`.toLowerCase();
+  if (/pulse|eighth|rhythm|rest|backbeat|syncop|groove|polyrhythm|subdivision/.test(text))
+    return "After the last bar, ask: did the pulse keep moving even when I did less?";
+  if (/chord|triad|dominant|seventh|progression|cadence|harmony|voice-leading|major|minor/.test(text))
+    return "After the last bar, ask: which note or finger movement made the change feel easiest?";
+  if (/melody|phrase|motif|pentatonic|scale|tetrachord|line/.test(text))
+    return "After the last phrase, ask: could I sing or tap back the shape I just played?";
+  if (/bow|slide|vibrato|hammer|finger|crossing|bar|pick|strum|roll|stroke|breath/.test(text))
+    return "After the attempt, name the one motion that felt relaxed enough to repeat.";
+  if (/arrang|miniature|performance|create|refine|interpret|backup|break/.test(text))
+    return "After the attempt, name one choice you would keep and one you would change on the next pass.";
+  return "After the attempt, name one thing that became easier to notice. That observation is your next practice clue.";
+}
+
 function permissionFor(lesson: LearningLesson) {
   if (lesson.level === "foundations")
     return "A rough first sound is useful information. Stop after one clear attempt if your attention is done.";
@@ -60,7 +90,9 @@ function permissionFor(lesson: LearningLesson) {
 export function lessonVoice(lesson: LearningLesson): LessonVoice {
   return {
     opener: levelOpeners[lesson.level](lesson),
+    whyItMatters: instrumentWhy[lesson.instrument],
     listenFor: focusFor(lesson),
     permission: permissionFor(lesson),
+    reflection: reflectionFor(lesson),
   };
 }
