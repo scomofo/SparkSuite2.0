@@ -1,6 +1,6 @@
 import type { InstrumentId } from "./instruments.ts";
 
-export type LabSearch = { tab: string; chord: string; lesson?: string };
+export type LabSearch = { tab: string; chord: string; lesson?: string; quest?: string };
 
 export function labSearchFor(id: InstrumentId): LabSearch {
   switch (id) {
