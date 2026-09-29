@@ -43,13 +43,100 @@ export type LearningLesson = {
 };
 
 type Seed = Omit<LearningLesson, "id" | "instrument" | "prerequisite"> & { slug: string };
-function path(instrument: InstrumentId, lessons: Seed[]): LearningLesson[] {
-  return lessons.map(({ slug, ...lesson }, index) => ({
+
+type TeachingVoice = {
+  explanationLead: string;
+  exampleLead: string;
+  practiceLead: [string, string, string];
+  feedbackLead: string;
+};
+
+const TEACHING_VOICE: Record<InstrumentId, TeachingVoice> = {
+  guitar: {
+    explanationLead: "Think like a guitarist: keep the fretting hand economical and let the picking hand keep time.",
+    exampleLead: "Put it under your fingers:",
+    practiceLead: ["Set the shape:", "Keep the pulse alive:", "Make it sound like music:"],
+    feedbackLead: "Guitar clue:",
+  },
+  piano: {
+    explanationLead: "At the keyboard, look for shapes and distances before you worry about note names.",
+    exampleLead: "See it on the keys:",
+    practiceLead: ["Map it first:", "Give each hand one clear job:", "Play the idea as a phrase:"],
+    feedbackLead: "Keyboard clue:",
+  },
+  ukulele: {
+    explanationLead: "Ukulele rewards light hands and an easy pulse; let the chord ring instead of wrestling it.",
+    exampleLead: "Try it with a relaxed strum:",
+    practiceLead: ["Find the easy shape:", "Let the strumming hand coast:", "Turn the loop into accompaniment:"],
+    feedbackLead: "Uke clue:",
+  },
+  bass: {
+    explanationLead: "On bass, the note is only half the job. Where it lands—and how long it lasts—is the groove.",
+    exampleLead: "Hear it from the rhythm section:",
+    practiceLead: ["Find the landing:", "Lock it to the pulse:", "Make the line support the groove:"],
+    feedbackLead: "Bass clue:",
+  },
+  drums: {
+    explanationLead: "A drummer's first job is to make time feel dependable. Keep the pocket before adding motion.",
+    exampleLead: "Put it in the pocket:",
+    practiceLead: ["Set the pulse:", "Coordinate the limbs:", "Run the groove without chasing it:"],
+    feedbackLead: "Drummer's clue:",
+  },
+  vocals: {
+    explanationLead: "Treat your voice like an instrument with breath behind every note. Easy air and a clear target beat force.",
+    exampleLead: "Sing it as a short phrase:",
+    practiceLead: ["Settle the breath:", "Find the pitch without pushing:", "Shape the whole phrase:"],
+    feedbackLead: "Singer's clue:",
+  },
+  mandolin: {
+    explanationLead: "Mandolin has very little sustain, so clean pick motion and exact timing do a lot of the musical work.",
+    exampleLead: "Put it into the pick hand:",
+    practiceLead: ["Place the fingers cleanly:", "Keep the pick small and even:", "Give the short notes a musical shape:"],
+    feedbackLead: "Mandolin clue:",
+  },
+  banjo: {
+    explanationLead: "Banjo gets busy fast. Keep the roll relaxed and let the chord change happen inside the flow.",
+    exampleLead: "Drop it into the roll:",
+    practiceLead: ["Set the left hand:", "Let the picking pattern roll:", "Keep the tune moving through the change:"],
+    feedbackLead: "Banjo clue:",
+  },
+  violin: {
+    explanationLead: "On violin, listen before you correct. Bow path, contact, and finger placement should feel repeatable, not forced.",
+    exampleLead: "Hear it through the bow:",
+    practiceLead: ["Set the bow and balance:", "Place the left hand by ear:", "Shape the line in one calm motion:"],
+    feedbackLead: "String-player clue:",
+  },
+  lapsteel: {
+    explanationLead: "Lap steel is about arriving in tune. Let the bar travel smoothly, then settle exactly where the note belongs.",
+    exampleLead: "Let the bar tell the story:",
+    practiceLead: ["Set the bar square:", "Move without losing the count:", "Land the phrase and let it ring:"],
+    feedbackLead: "Steel clue:",
+  },
+};
+
+function humanizeSeed(instrument: InstrumentId, lesson: Seed): Seed {
+  const voice = TEACHING_VOICE[instrument];
+  return {
     ...lesson,
-    id: `${instrument}-${slug}`,
-    instrument,
-    prerequisite: index ? `${instrument}-${lessons[index - 1].slug}` : undefined,
-  }));
+    explanation: `${voice.explanationLead} ${lesson.explanation}`,
+    example: `${voice.exampleLead} ${lesson.example}`,
+    practice: lesson.practice.map(
+      (instruction, index) => `${voice.practiceLead[index]} ${instruction}`,
+    ) as [string, string, string],
+    feedback: `${voice.feedbackLead} ${lesson.feedback}`,
+  };
+}
+
+function path(instrument: InstrumentId, lessons: Seed[]): LearningLesson[] {
+  return lessons.map((seed, index) => {
+    const { slug, ...lesson } = humanizeSeed(instrument, seed);
+    return {
+      ...lesson,
+      id: `${instrument}-${slug}`,
+      instrument,
+      prerequisite: index ? `${instrument}-${lessons[index - 1].slug}` : undefined,
+    };
+  });
 }
 
 const guitar = path("guitar", [

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { CURRICULUM, LEARNING_LEVELS, learningPath } from "./curriculum.ts";
+import { lessonVoice } from "./curriculum-voice.ts";
 import { INSTRUMENTS } from "./instruments.ts";
 import {
   LEARNING_KEY,
@@ -18,6 +19,8 @@ import {
   type LearningState,
 } from "./learning.ts";
 import { lessonExercise } from "./lesson-practice.ts";
+import { SIDE_QUESTS, sideQuestsFor } from "./side-quests.ts";
+import { SIDE_QUEST_PATTERNS, sideQuestExercise } from "./side-quest-practice.ts";
 
 const TODAY = "2026-09-05";
 const id = "guitar-first-sound";
@@ -37,6 +40,64 @@ function complete(data: LearningState, lessonId = id, day = TODAY) {
 }
 
 describe("guided curriculum", () => {
+  it("gives every curriculum lesson a human teaching frame", () => {
+    for (const lesson of CURRICULUM) {
+      const voice = lessonVoice(lesson);
+      assert.ok(voice.opener.length > 60, lesson.id);
+      assert.ok(voice.whyItMatters.length > 60, lesson.id);
+      assert.ok(voice.listenFor.length > 60, lesson.id);
+      assert.ok(voice.permission.length > 45, lesson.id);
+      assert.ok(voice.reflection.length > 45, lesson.id);
+      assert.ok(voice.opener.toLowerCase().includes(lesson.title.toLowerCase()), lesson.id);
+    }
+    assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).listenFor)).size >= 5, true);
+    assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).whyItMatters)).size, INSTRUMENTS.length);
+  });
+
+  it("uses a distinct instrument teaching voice in the lesson copy itself", () => {
+    const firstLines = new Set<string>();
+    for (const instrument of INSTRUMENTS) {
+      const lessons = learningPath(instrument.id);
+      const lead = lessons[0].explanation.split(". ")[0];
+      firstLines.add(lead);
+      for (const lesson of lessons) {
+        assert.ok(lesson.example.includes(":"), lesson.id);
+        assert.ok(lesson.practice.every((step) => step.includes(":")), lesson.id);
+        assert.ok(lesson.feedback.includes("clue:"), lesson.id);
+      }
+    }
+    assert.equal(firstLines.size, INSTRUMENTS.length);
+  });
+
+  it("offers four optional musicianship side quests per instrument without changing the core path", () => {
+    assert.equal(SIDE_QUESTS.length, INSTRUMENTS.length * LEARNING_LEVELS.length);
+    assert.equal(new Set(SIDE_QUESTS.map((quest) => quest.id)).size, SIDE_QUESTS.length);
+    assert.equal(Object.keys(SIDE_QUEST_PATTERNS).length, SIDE_QUESTS.length);
+    assert.deepEqual(
+      Object.keys(SIDE_QUEST_PATTERNS).sort(),
+      SIDE_QUESTS.map((quest) => quest.id).sort(),
+    );
+    for (const instrument of INSTRUMENTS) {
+      const quests = sideQuestsFor(instrument.id);
+      assert.equal(quests.length, LEARNING_LEVELS.length);
+      for (const level of LEARNING_LEVELS) {
+        const [quest] = sideQuestsFor(instrument.id, level.id);
+        assert.ok(quest, `${instrument.id}-${level.id}`);
+        assert.ok(quest.title.length > 10);
+        assert.ok(quest.purpose.length > 35);
+        assert.ok(quest.challenge.length > 45);
+        assert.ok(quest.listenFor.length > 35);
+        const exercise = sideQuestExercise(quest.id);
+        assert.ok(exercise, quest.id);
+        assert.equal(exercise!.lessonId, quest.id);
+        assert.ok(exercise!.beats >= 4);
+        assert.ok(exercise!.cues.length >= 4);
+        assert.ok(exercise!.cues.every((cue) => cue.beat >= 0 && cue.beat < exercise!.beats));
+      }
+      assert.equal(learningPath(instrument.id).length, 8);
+    }
+  });
+
   it("has complete, uniquely identified lessons and an ordered prerequisite path for every instrument", () => {
     assert.equal(CURRICULUM.length, INSTRUMENTS.length * 8);
     assert.equal(INSTRUMENTS.length, 10);
