@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { CURRICULUM, LEARNING_LEVELS, learningPath } from "./curriculum.ts";
+import { lessonVoice } from "./curriculum-voice.ts";
 import { INSTRUMENTS } from "./instruments.ts";
 import {
   LEARNING_KEY,
@@ -37,6 +38,17 @@ function complete(data: LearningState, lessonId = id, day = TODAY) {
 }
 
 describe("guided curriculum", () => {
+  it("gives every curriculum lesson a human teaching frame", () => {
+    for (const lesson of CURRICULUM) {
+      const voice = lessonVoice(lesson);
+      assert.ok(voice.opener.length > 60, lesson.id);
+      assert.ok(voice.listenFor.length > 60, lesson.id);
+      assert.ok(voice.permission.length > 45, lesson.id);
+      assert.ok(voice.opener.toLowerCase().includes(lesson.title.toLowerCase()), lesson.id);
+    }
+    assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).listenFor)).size >= 5, true);
+  });
+
   it("has complete, uniquely identified lessons and an ordered prerequisite path for every instrument", () => {
     assert.equal(CURRICULUM.length, INSTRUMENTS.length * 8);
     assert.equal(INSTRUMENTS.length, 10);
