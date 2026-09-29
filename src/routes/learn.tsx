@@ -6,7 +6,7 @@ import { CoachLink } from "@/components/coach-link";
 import { MilestoneCard } from "@/components/milestone-card";
 import { LessonDemo } from "@/components/lesson-demo";
 import { Button } from "@/components/ui/button";
-import { LEARNING_LEVELS, learningLesson } from "@/lib/spark/curriculum";
+import { LEARNING_LEVELS, learningLesson } from "@/lib/spark/curriculum";\nimport { lessonVoice } from "@/lib/spark/curriculum-voice";
 import { INSTRUMENTS, instrumentById, type InstrumentId } from "@/lib/spark/instruments";
 import { learningPace, learningSummary } from "@/lib/spark/learning";
 import { labSearchFor } from "@/lib/spark/labs";
@@ -16,7 +16,7 @@ import { useSpark } from "@/store/spark";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/learn")({ component: LearnPage });
-const STEPS = ["Understand", "Try it", "Check"];
+const STEPS = ["Meet the idea", "Play with it", "Check it"];
 
 function LearnPage() {
   const instrument = useSpark((s) => s.instrument);
@@ -64,7 +64,7 @@ function LearnPage() {
     setPaused(false);
   }
   const prerequisite = lesson?.prerequisite ? learningLesson(lesson.prerequisite) : undefined;
-  const exercise = lessonExercise(lesson?.id);
+  const exercise = lessonExercise(lesson?.id);\n  const voice = lesson ? lessonVoice(lesson) : undefined;
 
   return (
     <AppShell wide>
@@ -225,9 +225,10 @@ function LearnPage() {
                       <p className="mt-3 font-medium text-ember">{lesson.outcome}</p>
                       {step === 0 ? (
                         <>
-                          <p className="mt-5 leading-relaxed text-fg">{lesson.explanation}</p>
+                          <p className="mt-5 text-lg leading-relaxed text-fg">{voice?.opener}</p>
+                          <p className="mt-4 leading-relaxed text-muted">{lesson.explanation}</p>
                           <div className="mt-5 rounded-lg bg-raised p-4">
-                            <p className="studio-label">A concrete example</p>
+                            <p className="studio-label">Hear it in context</p>
                             <p className="mt-2 text-sm leading-relaxed">{lesson.example}</p>
                             {lesson.demo ? <LessonDemo key={lesson.id} demo={lesson.demo} /> : null}
                           </div>
@@ -243,16 +244,20 @@ function LearnPage() {
                               . You can explore this level now or revisit that first.
                             </p>
                           ) : null}
+                          <div className="mt-5 rounded-lg border border-border p-4">
+                            <p className="studio-label">What to listen for</p>
+                            <p className="mt-2 text-sm leading-relaxed">{voice?.listenFor}</p>
+                          </div>
                           <Button className="mt-6 w-full" size="lg" onClick={nextStep}>
-                            Got the idea
+                            Let me try it
                             <ArrowRight className="size-4" aria-hidden="true" />
                           </Button>
                         </>
                       ) : step === 1 ? (
                         <>
-                          <p className="mt-4 text-sm text-muted">
-                            Try one slow pass. A rough attempt is enough to move on; you can repeat
-                            it later.
+                          <p className="mt-4 text-sm leading-relaxed text-muted">
+                            Start slower than your ambition. You are looking for one moment that feels
+                            or sounds more settled than the last attempt—not a flawless take.
                           </p>
                           <ol className="mt-5 space-y-4">
                             {lesson.practice.map((instruction, index) => (
@@ -264,6 +269,9 @@ function LearnPage() {
                               </li>
                             ))}
                           </ol>
+                          <p className="mt-5 rounded-lg bg-raised p-4 text-sm leading-relaxed">
+                            {voice?.permission}
+                          </p>
                           <details className="mt-5 rounded-lg border border-border p-4">
                             <summary className="min-h-11 cursor-pointer text-sm text-muted">
                               Show the example again
@@ -380,7 +388,7 @@ function LearnPage() {
                             disabled={record.answer !== lesson.answer}
                             onClick={() => finish(lesson.id)}
                           >
-                            Finish this lesson
+                            Wrap up this lesson
                             <Check className="size-4" aria-hidden="true" />
                           </Button>
                         </>
