@@ -20,7 +20,7 @@ import {
 } from "./learning.ts";
 import { lessonExercise } from "./lesson-practice.ts";
 import { SIDE_QUESTS, sideQuestsFor } from "./side-quests.ts";
-import { sideQuestExercise } from "./side-quest-practice.ts";
+import { SIDE_QUEST_PATTERNS, sideQuestExercise } from "./side-quest-practice.ts";
 
 const TODAY = "2026-09-05";
 const id = "guitar-first-sound";
@@ -72,6 +72,11 @@ describe("guided curriculum", () => {
   it("offers four optional musicianship side quests per instrument without changing the core path", () => {
     assert.equal(SIDE_QUESTS.length, INSTRUMENTS.length * LEARNING_LEVELS.length);
     assert.equal(new Set(SIDE_QUESTS.map((quest) => quest.id)).size, SIDE_QUESTS.length);
+    assert.equal(Object.keys(SIDE_QUEST_PATTERNS).length, SIDE_QUESTS.length);
+    assert.deepEqual(
+      Object.keys(SIDE_QUEST_PATTERNS).sort(),
+      SIDE_QUESTS.map((quest) => quest.id).sort(),
+    );
     for (const instrument of INSTRUMENTS) {
       const quests = sideQuestsFor(instrument.id);
       assert.equal(quests.length, LEARNING_LEVELS.length);
