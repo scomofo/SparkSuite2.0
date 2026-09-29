@@ -19,6 +19,7 @@ import {
   type LearningState,
 } from "./learning.ts";
 import { lessonExercise } from "./lesson-practice.ts";
+import { SIDE_QUESTS, sideQuestsFor } from "./side-quests.ts";
 
 const TODAY = "2026-09-05";
 const id = "guitar-first-sound";
@@ -65,6 +66,24 @@ describe("guided curriculum", () => {
       }
     }
     assert.equal(firstLines.size, INSTRUMENTS.length);
+  });
+
+  it("offers four optional musicianship side quests per instrument without changing the core path", () => {
+    assert.equal(SIDE_QUESTS.length, INSTRUMENTS.length * LEARNING_LEVELS.length);
+    assert.equal(new Set(SIDE_QUESTS.map((quest) => quest.id)).size, SIDE_QUESTS.length);
+    for (const instrument of INSTRUMENTS) {
+      const quests = sideQuestsFor(instrument.id);
+      assert.equal(quests.length, LEARNING_LEVELS.length);
+      for (const level of LEARNING_LEVELS) {
+        const [quest] = sideQuestsFor(instrument.id, level.id);
+        assert.ok(quest, `${instrument.id}-${level.id}`);
+        assert.ok(quest.title.length > 10);
+        assert.ok(quest.purpose.length > 35);
+        assert.ok(quest.challenge.length > 45);
+        assert.ok(quest.listenFor.length > 35);
+      }
+      assert.equal(learningPath(instrument.id).length, 8);
+    }
   });
 
   it("has complete, uniquely identified lessons and an ordered prerequisite path for every instrument", () => {
