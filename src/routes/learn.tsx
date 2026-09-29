@@ -604,6 +604,15 @@ function LearnPage() {
                               <p className="mt-3 text-xs leading-relaxed text-muted">
                                 Optional. No score, no streak, no prerequisite—just musicianship.
                               </p>
+                              <Button asChild variant="secondary" className="mt-4 w-full">
+                                <Link
+                                  to="/techniques"
+                                  search={{ ...labSearchFor(instrument), quest: quest.id }}
+                                >
+                                  Open playable side quest
+                                  <ArrowRight className="size-4" aria-hidden="true" />
+                                </Link>
+                              </Button>
                             </details>
                           ))}
                         </details>
