@@ -42,11 +42,14 @@ describe("guided curriculum", () => {
     for (const lesson of CURRICULUM) {
       const voice = lessonVoice(lesson);
       assert.ok(voice.opener.length > 60, lesson.id);
+      assert.ok(voice.whyItMatters.length > 60, lesson.id);
       assert.ok(voice.listenFor.length > 60, lesson.id);
       assert.ok(voice.permission.length > 45, lesson.id);
+      assert.ok(voice.reflection.length > 45, lesson.id);
       assert.ok(voice.opener.toLowerCase().includes(lesson.title.toLowerCase()), lesson.id);
     }
     assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).listenFor)).size >= 5, true);
+    assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).whyItMatters)).size, INSTRUMENTS.length);
   });
 
   it("has complete, uniquely identified lessons and an ordered prerequisite path for every instrument", () => {
