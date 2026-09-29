@@ -301,6 +301,9 @@ async function restart() {
     cwd: ROOT,
     detached: true,
     stdio: ["ignore", log, log],
+    // Windows resolves .cmd shims (npm.cmd) only via a shell. Without this,
+    // the restart fails with `spawn npm ENOENT` despite a valid install.
+    shell: process.platform === "win32",
   });
   child.unref();
   writeFileSync(PID_FILE, `${child.pid}\n`);
