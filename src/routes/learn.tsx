@@ -227,6 +227,10 @@ function LearnPage() {
                         <>
                           <p className="mt-5 text-lg leading-relaxed text-fg">{voice?.opener}</p>
                           <p className="mt-4 leading-relaxed text-muted">{lesson.explanation}</p>
+                          <p className="mt-4 text-sm leading-relaxed text-fg">
+                            <span className="font-semibold">Why this matters: </span>
+                            {voice?.whyItMatters}
+                          </p>
                           <div className="mt-5 rounded-lg bg-raised p-4">
                             <p className="studio-label">Hear it in context</p>
                             <p className="mt-2 text-sm leading-relaxed">{lesson.example}</p>
@@ -272,6 +276,10 @@ function LearnPage() {
                           <p className="mt-5 rounded-lg bg-raised p-4 text-sm leading-relaxed">
                             {voice?.permission}
                           </p>
+                          <div className="mt-5 rounded-lg border border-border p-4">
+                            <p className="studio-label">After you play</p>
+                            <p className="mt-2 text-sm leading-relaxed">{voice?.reflection}</p>
+                          </div>
                           <details className="mt-5 rounded-lg border border-border p-4">
                             <summary className="min-h-11 cursor-pointer text-sm text-muted">
                               Show the example again
@@ -366,10 +374,15 @@ function LearnPage() {
                             >
                               <p className="font-semibold text-ember">
                                 {record.answer === lesson.answer
-                                  ? "That's the idea."
-                                  : "Take another look. You can try again."}
+                                  ? "Yes — that's the musical idea."
+                                  : "Not quite yet. Here's the useful bit to revisit."}
                               </p>
                               <p className="mt-2">{lesson.feedback}</p>
+                              {record.answer === lesson.answer ? (
+                                <p className="mt-2 text-muted">
+                                  You do not need to prove it again right now. Carry that idea into the next play-through.
+                                </p>
+                              ) : null}
                             </div>
                           ) : (
                             <p className="mt-4 text-sm text-muted">
