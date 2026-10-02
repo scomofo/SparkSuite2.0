@@ -1,12 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, ArrowRight, BookOpen, Check, CheckCircle2, Clock, Coffee } from "lucide-react";
+import { SharedPhrase } from "@/components/shared-phrase";
 import { AppShell } from "@/components/app-shell";
 import { CoachLink } from "@/components/coach-link";
 import { MilestoneCard } from "@/components/milestone-card";
 import { LessonDemo } from "@/components/lesson-demo";
 import { Button } from "@/components/ui/button";
-import { LEARNING_LEVELS, learningLesson } from "@/lib/spark/curriculum";\nimport { lessonVoice } from "@/lib/spark/curriculum-voice";
+import { LEARNING_LEVELS, lessonCheck, learningLesson } from "@/lib/spark/curriculum";
+import { lessonVoice } from "@/lib/spark/curriculum-voice";
 import { INSTRUMENTS, instrumentById, type InstrumentId } from "@/lib/spark/instruments";
 import { learningPace, learningSummary } from "@/lib/spark/learning";
 import { labSearchFor } from "@/lib/spark/labs";
@@ -24,7 +26,8 @@ function LearnPage() {
   const selectInstrument = useSpark((s) => s.selectInstrument);
   const sparkReady = useSpark((s) => s.hydrated);
   const day = useSpark((s) => s.plan.date);
-  const { data, hydrated, storageOk, begin, advance, answer, finish, setPace } = useLearning();
+  const { data, hydrated, storageOk, begin, advance, answer, finish, assist, setPace } =
+    useLearning();
   const [selected, setSelected] = useState<string | null>(null);
   const [paused, setPaused] = useState(false);
   const initializedFor = useRef<InstrumentId | null>(null);
@@ -36,6 +39,9 @@ function LearnPage() {
   const lesson = candidate?.instrument === instrument ? candidate : undefined;
   const record = lesson ? data.records[lesson.id] : undefined;
   const step = record?.step ?? 0;
+  const check = lesson
+    ? lessonCheck(lesson, !!record?.completedOn, record?.reviews ?? 0)
+    : undefined;
   const ready = hydrated && sparkReady;
 
   useEffect(() => {
@@ -65,7 +71,8 @@ function LearnPage() {
     setPaused(false);
   }
   const prerequisite = lesson?.prerequisite ? learningLesson(lesson.prerequisite) : undefined;
-  const exercise = lessonExercise(lesson?.id);\n  const voice = lesson ? lessonVoice(lesson) : undefined;
+  const exercise = lessonExercise(lesson?.id);
+  const voice = lesson ? lessonVoice(lesson) : undefined;
 
   return (
     <AppShell wide>
@@ -96,6 +103,7 @@ function LearnPage() {
         </header>
 
         <CoachLink className="mt-5" />
+        {ready && !lesson ? <SharedPhrase key={instrument} instrument={instrument} /> : null}
         {!ready ? (
           <p role="status" className="mt-8 text-muted">
             Finding your place…
@@ -226,12 +234,16 @@ function LearnPage() {
                       <p className="mt-3 font-medium text-ember">{lesson.outcome}</p>
                       {step === 0 ? (
                         <>
-                          <p className="mt-5 text-lg leading-relaxed text-fg">{voice?.opener}</p>
-                          <p className="mt-4 leading-relaxed text-muted">{lesson.explanation}</p>
-                          <p className="mt-4 text-sm leading-relaxed text-fg">
-                            <span className="font-semibold">Why this matters: </span>
-                            {voice?.whyItMatters}
+                          <p className="mt-5 text-sm leading-relaxed text-muted">
+                            One idea, one attempt. Your place is saved; stopping here is fine.
                           </p>
+                          <p className="mt-4 leading-relaxed text-muted">{lesson.explanation}</p>
+                          <details className="mt-4 text-sm text-muted">
+                            <summary className="min-h-11 cursor-pointer">
+                              How to use this in practice
+                            </summary>
+                            <p className="leading-relaxed">{voice?.whyItMatters}</p>
+                          </details>
                           <div className="mt-5 rounded-lg bg-raised p-4">
                             <p className="studio-label">Hear it in context</p>
                             <p className="mt-2 text-sm leading-relaxed">{lesson.example}</p>
@@ -249,10 +261,19 @@ function LearnPage() {
                               . You can explore this level now or revisit that first.
                             </p>
                           ) : null}
-                          <div className="mt-5 rounded-lg border border-border p-4">
-                            <p className="studio-label">What to listen for</p>
-                            <p className="mt-2 text-sm leading-relaxed">{voice?.listenFor}</p>
-                          </div>
+                          <details className="mt-4 text-sm text-muted">
+                            <summary className="min-h-11 cursor-pointer">
+                              Optional refresher: chord and rhythm terms
+                            </summary>
+                            <p className="leading-relaxed">
+                              A root names a chord. Its third and fifth are counted from that root,
+                              including the starting note. An inversion changes the lowest sounding
+                              chord note. A scale degree numbers a note within a key. I is the home
+                              chord; V is its dominant. V7/V means the dominant seventh of the V
+                              chord. Here, a beat is the quarter-note pulse; subdivision splits it
+                              into smaller equal parts.
+                            </p>
+                          </details>
                           <Button className="mt-6 w-full" size="lg" onClick={nextStep}>
                             Let me try it
                             <ArrowRight className="size-4" aria-hidden="true" />
@@ -261,8 +282,8 @@ function LearnPage() {
                       ) : step === 1 ? (
                         <>
                           <p className="mt-4 text-sm leading-relaxed text-muted">
-                            Start slower than your ambition. You are looking for one moment that feels
-                            or sounds more settled than the last attempt—not a flawless take.
+                            Start slower than your ambition. You are looking for one moment that
+                            feels or sounds more settled than the last attempt—not a flawless take.
                           </p>
                           <ol className="mt-5 space-y-4">
                             {lesson.practice.map((instruction, index) => (
@@ -317,6 +338,17 @@ function LearnPage() {
                               </p>
                             </div>
                           ) : null}
+                          <details className="mt-4 text-sm text-muted">
+                            <summary className="min-h-11 cursor-pointer">
+                              Optional: try it with less guidance
+                            </summary>
+                            <p className="leading-relaxed">
+                              After one guided attempt, repeat just one bar with the reference
+                              stopped. Keep the same notes and pulse. Notice one thing you can now
+                              remember, or listen again and describe it instead. Stop there; a
+                              longer performance is optional.
+                            </p>
+                          </details>
                           {exercise?.project ? (
                             <p className="mt-4 text-xs leading-relaxed text-muted">
                               Finish Build, Choose, and Refine in the guided project to open the
@@ -343,29 +375,38 @@ function LearnPage() {
                       ) : (
                         <>
                           <fieldset className="mt-6 min-w-0">
-                            <legend className="text-lg font-medium">{lesson.question}</legend>
+                            <legend className="text-lg font-medium">{check?.question}</legend>
                             <div className="mt-4 space-y-3">
-                              {lesson.options.map((option, index) => (
-                                <label
-                                  key={option}
-                                  className={cn(
-                                    "flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-4 text-sm leading-relaxed",
-                                    record.answer === index
-                                      ? "border-ember bg-raised"
-                                      : "border-border",
-                                  )}
-                                >
-                                  <input
-                                    type="radio"
-                                    name={`answer-${lesson.id}`}
-                                    value={index}
-                                    checked={record.answer === index}
-                                    onChange={() => answer(lesson.id, index)}
-                                    className="size-4 shrink-0 accent-accent"
-                                  />
-                                  <span>{option}</span>
-                                </label>
-                              ))}
+                              {check!.options
+                                .map((option, index) => ({ option, index }))
+                                .sort(
+                                  (a, b) =>
+                                    ((a.index + (record.reviews + (record.completedOn ? 1 : 0))) %
+                                      lesson.options.length) -
+                                    ((b.index + (record.reviews + (record.completedOn ? 1 : 0))) %
+                                      lesson.options.length),
+                                )
+                                .map(({ option, index }) => (
+                                  <label
+                                    key={option}
+                                    className={cn(
+                                      "flex min-h-12 cursor-pointer items-center gap-3 rounded-lg border p-4 text-sm leading-relaxed",
+                                      record.answer === index
+                                        ? "border-ember bg-raised"
+                                        : "border-border",
+                                    )}
+                                  >
+                                    <input
+                                      type="radio"
+                                      name={`answer-${lesson.id}`}
+                                      value={index}
+                                      checked={record.answer === index}
+                                      onChange={() => answer(lesson.id, index)}
+                                      className="size-4 shrink-0 accent-accent"
+                                    />
+                                    <span>{option}</span>
+                                  </label>
+                                ))}
                             </div>
                           </fieldset>
                           {record.answer !== undefined ? (
@@ -378,10 +419,12 @@ function LearnPage() {
                                   ? "Yes — that's the musical idea."
                                   : "Not quite yet. Here's the useful bit to revisit."}
                               </p>
-                              <p className="mt-2">{lesson.feedback}</p>
+                              <p className="mt-2">{check?.feedback}</p>
                               {record.answer === lesson.answer ? (
                                 <p className="mt-2 text-muted">
-                                  You do not need to prove it again right now. Carry that idea into the next play-through.
+                                  {record.assisted || record.firstAnswer !== lesson.answer
+                                    ? "Useful correction. A short review will help this stick; your completion still counts."
+                                    : "Recalled independently. Carry this idea into the next play-through."}
                                 </p>
                               ) : null}
                             </div>
@@ -390,7 +433,12 @@ function LearnPage() {
                               Take your time. You can change your answer; there is no penalty.
                             </p>
                           )}
-                          <details className="mt-4 text-sm text-muted">
+                          <details
+                            className="mt-4 text-sm text-muted"
+                            onToggle={(event) => {
+                              if (event.currentTarget.open) assist(lesson.id);
+                            }}
+                          >
                             <summary className="min-h-11 cursor-pointer">
                               Look back at the explanation
                             </summary>
@@ -592,7 +640,9 @@ function LearnPage() {
                               <summary className="min-h-11 cursor-pointer text-sm font-medium">
                                 Side quest · {quest.title}
                               </summary>
-                              <p className="mt-2 text-sm leading-relaxed text-muted">{quest.purpose}</p>
+                              <p className="mt-2 text-sm leading-relaxed text-muted">
+                                {quest.purpose}
+                              </p>
                               <p className="mt-3 text-sm leading-relaxed">
                                 <span className="font-medium">Try: </span>
                                 {quest.challenge}

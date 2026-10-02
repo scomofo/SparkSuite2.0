@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import {
   advanceLearning,
+  assistLearning,
   answerLearning,
   beginLearning,
   beginLessonPractice,
@@ -26,6 +27,7 @@ type LearningStore = {
   advance: (id: string) => void;
   answer: (id: string, answer: number) => void;
   finish: (id: string) => void;
+  assist: (id: string) => void;
   setPace: (pace: LearningState["pace"], instrument?: InstrumentId) => void;
   configure: (instrument: InstrumentId, profile: LearningProfile) => void;
   skipSetup: (instrument: InstrumentId) => void;
@@ -52,6 +54,7 @@ export const useLearning = create<LearningStore>((set, get) => {
     begin: (id) => update((data) => beginLearning(data, id)),
     advance: (id) => update((data) => advanceLearning(data, id)),
     answer: (id, answer) => update((data) => answerLearning(data, id, answer)),
+    assist: (id) => update((data) => assistLearning(data, id)),
     finish: (id) => update((data) => finishLearning(data, id)),
     setPace: (pace, instrument) =>
       update((data) => {

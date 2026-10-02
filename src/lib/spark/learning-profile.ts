@@ -22,7 +22,7 @@ export const EXPERIENCE_OPTIONS = [
   },
   {
     id: "advanced",
-    label: "Ready for advanced work",
+    label: "Ready to create and refine",
     detail: "Explore arranging, expression, and harmony.",
     start: 6,
   },

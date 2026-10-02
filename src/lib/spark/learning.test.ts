@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { CURRICULUM, LEARNING_LEVELS, learningPath } from "./curriculum.ts";
+import { CURRICULUM, LEARNING_LEVELS, learningPath, lessonCheck } from "./curriculum.ts";
 import { lessonVoice } from "./curriculum-voice.ts";
 import { INSTRUMENTS } from "./instruments.ts";
 import {
@@ -50,23 +50,23 @@ describe("guided curriculum", () => {
       assert.ok(voice.reflection.length > 45, lesson.id);
       assert.ok(voice.opener.toLowerCase().includes(lesson.title.toLowerCase()), lesson.id);
     }
-    assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).listenFor)).size >= 5, true);
-    assert.equal(new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).whyItMatters)).size, INSTRUMENTS.length);
+    assert.equal(
+      new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).listenFor)).size >= 5,
+      true,
+    );
+    assert.ok(
+      new Set(CURRICULUM.map((lesson) => lessonVoice(lesson).whyItMatters)).size >
+        INSTRUMENTS.length,
+    );
   });
 
-  it("uses a distinct instrument teaching voice in the lesson copy itself", () => {
-    const firstLines = new Set<string>();
-    for (const instrument of INSTRUMENTS) {
-      const lessons = learningPath(instrument.id);
-      const lead = lessons[0].explanation.split(". ")[0];
-      firstLines.add(lead);
-      for (const lesson of lessons) {
-        assert.ok(lesson.example.includes(":"), lesson.id);
-        assert.ok(lesson.practice.every((step) => step.includes(":")), lesson.id);
-        assert.ok(lesson.feedback.includes("clue:"), lesson.id);
-      }
+  it("keeps core explanations direct and practice coaching specific", () => {
+    for (const lesson of CURRICULUM) {
+      assert.ok(lesson.explanation.length > 30);
+      assert.ok(
+        lessonVoice(lesson).whyItMatters.includes(lesson.practice[2].replace(/^[^:]+: /, "")),
+      );
     }
-    assert.equal(firstLines.size, INSTRUMENTS.length);
   });
 
   it("offers four optional musicianship side quests per instrument without changing the core path", () => {
@@ -251,4 +251,38 @@ describe("learning storage", () => {
       else Reflect.deleteProperty(globalThis, "localStorage");
     }
   });
+});
+
+it("keeps corrected reviews due soon without removing completion", () => {
+  let data = complete(emptyLearning());
+  data = beginLearning(data, id);
+  data = advanceLearning(advanceLearning(data, id), id);
+  data = answerLearning(data, id, 1);
+  data = answerLearning(data, id, 0);
+  data = finishLearning(data, id, "2026-09-06");
+  assert.equal(data.records[id].firstAnswer, 1);
+  assert.equal(data.records[id].reviews, 0);
+  assert.equal(data.records[id].reviewOn, "2026-09-07");
+  assert.equal(data.records[id].completedOn, TODAY);
+});
+
+it("changes authored recall questions without changing saved answer IDs", () => {
+  const lesson = CURRICULUM.find((l) => l.id === "guitar-first-sound")!;
+  const check = lessonCheck(lesson, true, 0);
+  assert.notEqual(check.question, lesson.question);
+  assert.equal(check.options[lesson.answer], "The pitch rises from E to F");
+  assert.equal(lessonCheck(lesson, false, 0).question, lesson.question);
+});
+
+it("preserves legacy first responses when restoring an unfinished check", () => {
+  const lesson = CURRICULUM[0]!;
+  for (const answer of [lesson.answer, (lesson.answer + 1) % lesson.options.length]) {
+    const data = parseLearning(
+      JSON.stringify({ version: 1, records: { [lesson.id]: { step: 2, answer } } }),
+    );
+    assert.equal(data.records[lesson.id]!.firstAnswer, answer);
+    const corrected = answerLearning(data, lesson.id, lesson.answer);
+    assert.equal(corrected.records[lesson.id]!.firstAnswer, answer);
+    assert.equal(corrected.records[lesson.id]!.assisted, answer !== lesson.answer);
+  }
 });

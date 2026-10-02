@@ -21,19 +21,6 @@ const instrumentLanguage: Record<LearningLesson["instrument"], string> = {
   lapsteel: "bar hand, picking hand, and the moving pitch",
 };
 
-const instrumentWhy: Record<LearningLesson["instrument"], string> = {
-  guitar: "The payoff is practical: cleaner chord changes, steadier rhythm, and phrases that sound intentional instead of assembled.",
-  piano: "This gives your hands a musical reason to move, so the keyboard becomes a map of sound rather than a row of keys to memorize.",
-  ukulele: "This is the kind of small move that makes accompaniment feel buoyant and singable instead of like chord-shape homework.",
-  bass: "Bass lives in the relationship between note and pulse. This lesson strengthens the part that makes other musicians feel where the music is.",
-  drums: "A drum part works when the listener can feel the next beat coming. This lesson builds that sense of inevitability.",
-  vocals: "The useful skill is not hitting an isolated note; it is making breath, pitch, words, and timing cooperate in a phrase.",
-  mandolin: "Mandolin comes alive when pick motion, short sustain, and chord shape agree on the pulse. This lesson connects those pieces.",
-  banjo: "Banjo can sound busy very quickly. This lesson helps the roll or chord change feel like music with direction rather than a stream of notes.",
-  violin: "On violin, tiny physical choices become audible immediately. This lesson turns one of those choices into something you can hear and repeat.",
-  lapsteel: "Lap steel is all about arriving: pitch, bar movement, sustain, and timing have to meet in the same place. This lesson trains that arrival.",
-};
-
 const levelOpeners: Record<LearningLesson["level"], (lesson: LearningLesson) => string> = {
   foundations: (lesson) =>
     `This is a landmark lesson, not a performance test. “${lesson.title}” gives you one dependable place to start so the instrument feels less like a puzzle.`,
@@ -50,7 +37,9 @@ function focusFor(lesson: LearningLesson) {
 
   if (/pulse|eighth|rhythm|rest|backbeat|syncop|groove|polyrhythm|subdivision/.test(text))
     return "Listen for the pulse continuing underneath everything, especially through rests, changes, or off-beat notes.";
-  if (/chord|triad|dominant|seventh|progression|cadence|harmony|voice-leading|major|minor/.test(text))
+  if (
+    /chord|triad|dominant|seventh|progression|cadence|harmony|voice-leading|major|minor/.test(text)
+  )
     return "Listen for what stays stable and what creates motion. The useful clue is usually a note that holds, moves by a small step, or creates tension before release.";
   if (/melody|phrase|motif|pentatonic|scale|tetrachord|line/.test(text))
     return "Listen for a shape you could sing back: where the idea begins, where it seems to lean, and where it feels finished.";
@@ -66,7 +55,9 @@ function reflectionFor(lesson: LearningLesson) {
   const text = `${lesson.id} ${lesson.title} ${lesson.outcome}`.toLowerCase();
   if (/pulse|eighth|rhythm|rest|backbeat|syncop|groove|polyrhythm|subdivision/.test(text))
     return "After the last bar, ask: did the pulse keep moving even when I did less?";
-  if (/chord|triad|dominant|seventh|progression|cadence|harmony|voice-leading|major|minor/.test(text))
+  if (
+    /chord|triad|dominant|seventh|progression|cadence|harmony|voice-leading|major|minor/.test(text)
+  )
     return "After the last bar, ask: which note or finger movement made the change feel easiest?";
   if (/melody|phrase|motif|pentatonic|scale|tetrachord|line/.test(text))
     return "After the last phrase, ask: could I sing or tap back the shape I just played?";
@@ -90,7 +81,7 @@ function permissionFor(lesson: LearningLesson) {
 export function lessonVoice(lesson: LearningLesson): LessonVoice {
   return {
     opener: levelOpeners[lesson.level](lesson),
-    whyItMatters: instrumentWhy[lesson.instrument],
+    whyItMatters: `Use this in your next practice: ${lesson.practice[2].replace(/^[^:]+: /, "")}`,
     listenFor: focusFor(lesson),
     permission: permissionFor(lesson),
     reflection: reflectionFor(lesson),

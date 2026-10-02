@@ -531,7 +531,7 @@ describe("curriculum-grounded coach requests", () => {
     assert.equal(reply.target.id, id);
     assert.deepEqual(Object.keys(reply).sort(), ["advice", "target"]);
     const context = JSON.parse(calls[0].body.input[0].content) as SentContext;
-    assert.match(context.experience, /advanced/i);
+    assert.match(context.experience, /create and refine/i);
     assert.equal(context.lesson?.checkpoint, "Try it");
     assert.equal(context.practice?.bpm, 40);
     assert.equal(context.practice?.guide, "pulse");
