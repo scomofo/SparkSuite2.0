@@ -48,7 +48,7 @@ try {
   await page.getByRole("button", { name: "Start learning", exact: true }).press("Enter");
   await page.getByRole("button", { name: "Play reference", exact: true }).click();
   await page.getByRole("button", { name: "Stop reference", exact: true }).click();
-  await page.getByRole("button", { name: "Got the idea", exact: true }).click();
+  await page.getByRole("button", { name: "Let me try it", exact: true }).click();
   await page.getByRole("heading", { name: "That step counts.", exact: true }).waitFor();
   await page.getByRole("link", { name: "Done for now", exact: true }).click();
   await page.getByRole("link", { name: "Resume learning", exact: true }).click();
@@ -57,7 +57,7 @@ try {
   await page.getByRole("button", { name: "I tried it", exact: true }).waitFor();
   await page.getByLabel("Learning instrument", { exact: true }).selectOption("piano");
   await page.getByRole("button", { name: "Start learning", exact: true }).click();
-  await page.getByRole("button", { name: "Got the idea", exact: true }).click();
+  await page.getByRole("button", { name: "Let me try it", exact: true }).click();
   await page.getByLabel("Learning instrument", { exact: true }).selectOption("guitar");
   await page.getByRole("button", { name: "I tried it", exact: true }).click();
   await page.getByRole("button", { name: "Continue this lesson", exact: true }).click();
@@ -104,7 +104,7 @@ try {
   await page.getByRole("button", { name: "Learning path", exact: true }).click();
   await page.getByRole("radio", { name: /A whole lesson/ }).check();
   await page.getByRole("button", { name: "Continue where I left off", exact: true }).click();
-  await page.getByRole("button", { name: "Got the idea", exact: true }).click();
+  await page.getByRole("button", { name: "Let me try it", exact: true }).click();
   await page.getByRole("button", { name: "I tried it", exact: true }).waitFor();
 
   // Every instrument exposes advanced work without pretending the earlier lessons are mastered.
@@ -119,7 +119,7 @@ try {
     if (await pathButton.isVisible()) await pathButton.click();
     await advanced.locator("summary").click();
     await advanced.getByRole("button").last().click();
-    await page.getByRole("button", { name: "Got the idea", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Let me try it", exact: true }).waitFor();
     assert.equal(
       await page.evaluate(() => document.documentElement.scrollWidth > innerWidth),
       false,
@@ -132,7 +132,7 @@ try {
   await page.getByRole("heading", { name: "That step counts.", exact: true }).waitFor();
   await page.getByRole("link", { name: "Done for now", exact: true }).click();
   await page.getByRole("link", { name: "Learn", exact: true }).click();
-  await page.getByRole("button", { name: "Got the idea", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Let me try it", exact: true }).waitFor();
   assert.equal(
     await page.evaluate(() => document.activeElement?.tagName),
     "H2",
@@ -145,7 +145,7 @@ try {
       throw new DOMException("Quota", "QuotaExceededError");
     };
   });
-  await page.getByRole("button", { name: "Got the idea", exact: true }).click();
+  await page.getByRole("button", { name: "Let me try it", exact: true }).click();
   await page.getByText("This browser could not save your learning.", { exact: false }).waitFor();
   await page.getByRole("link", { name: "Open guided project", exact: true }).waitFor();
   assert.equal(

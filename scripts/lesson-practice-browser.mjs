@@ -32,7 +32,7 @@ async function noOverflow() {
 try {
   await page.goto(`${url}/learn`, { waitUntil: "networkidle" });
   await button("Start learning").click();
-  await button("Got the idea").click();
+  await button("Let me try it").click();
   await button("Continue this lesson").click();
   await link("Open guided exercise").press("Enter");
   await page.getByRole("heading", { name: "Open E → F → E", exact: true }).waitFor();

@@ -71,7 +71,7 @@ try {
   await button("Show my next step").press("Enter");
   await link("Start my next lesson").click();
   await heading(learningPath("guitar")[0].title).waitFor();
-  await button("Got the idea").click();
+  await button("Let me try it").click();
   await heading("That step counts.").waitFor();
   await link("Done for now").click();
 
@@ -100,7 +100,7 @@ try {
     2,
     "Each instrument keeps its own time preference",
   );
-  await button("Got the idea").click();
+  await button("Let me try it").click();
   await link("Open guided project").waitFor();
   assert.equal(await button("I tried it").count(), 0, "Advanced projects cannot skip stages");
 
