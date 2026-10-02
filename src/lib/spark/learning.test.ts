@@ -273,3 +273,16 @@ it("changes authored recall questions without changing saved answer IDs", () => 
   assert.equal(check.options[lesson.answer], "The pitch rises from E to F");
   assert.equal(lessonCheck(lesson, false, 0).question, lesson.question);
 });
+
+it("preserves legacy first responses when restoring an unfinished check", () => {
+  const lesson = CURRICULUM[0]!;
+  for (const answer of [lesson.answer, (lesson.answer + 1) % lesson.options.length]) {
+    const data = parseLearning(
+      JSON.stringify({ version: 1, records: { [lesson.id]: { step: 2, answer } } }),
+    );
+    assert.equal(data.records[lesson.id]!.firstAnswer, answer);
+    const corrected = answerLearning(data, lesson.id, lesson.answer);
+    assert.equal(corrected.records[lesson.id]!.firstAnswer, answer);
+    assert.equal(corrected.records[lesson.id]!.assisted, answer !== lesson.answer);
+  }
+});

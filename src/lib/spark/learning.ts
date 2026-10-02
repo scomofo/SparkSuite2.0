@@ -79,6 +79,8 @@ export function parseLearning(text: string): LearningState {
         saved.firstAnswer < lesson.options.length
       )
         record.firstAnswer = saved.firstAnswer;
+      else if (record.step === 2 && saved.firstAnswer === undefined && record.answer !== undefined)
+        record.firstAnswer = record.answer;
       if (typeof saved.assisted === "boolean") record.assisted = saved.assisted;
       if (isDayKey(saved.completedOn)) record.completedOn = saved.completedOn;
       if (record.completedOn) {
