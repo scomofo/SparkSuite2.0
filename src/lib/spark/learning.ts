@@ -18,6 +18,8 @@ export const REVIEW_DAYS = [1, 3, 7, 14] as const;
 export type LearningRecord = {
   step: 0 | 1 | 2 | 3;
   answer?: number;
+  firstAnswer?: number;
+  assisted?: boolean;
   completedOn?: string;
   reviewOn?: string;
   lastReviewedOn?: string;
@@ -71,6 +73,13 @@ export function parseLearning(text: string): LearningState {
         saved.answer < lesson.options.length
       )
         record.answer = saved.answer;
+      if (
+        Number.isInteger(saved.firstAnswer) &&
+        saved.firstAnswer >= 0 &&
+        saved.firstAnswer < lesson.options.length
+      )
+        record.firstAnswer = saved.firstAnswer;
+      if (typeof saved.assisted === "boolean") record.assisted = saved.assisted;
       if (isDayKey(saved.completedOn)) record.completedOn = saved.completedOn;
       if (record.completedOn) {
         record.reviews = Number.isInteger(saved.reviews)
@@ -147,8 +156,10 @@ export function beginLearning(data: LearningState, id: string): LearningState {
     previous?.step === 3
       ? {
           ...previous,
-          step: 0 as const,
+          step: 2 as const,
           answer: undefined,
+          firstAnswer: undefined,
+          assisted: false,
           ...(previous.practice
             ? {
                 practice: {
@@ -181,7 +192,7 @@ export function beginLessonPractice(data: LearningState, id: string): LearningSt
       ...next.records,
       [id]: {
         ...record,
-        step: record.step === 0 ? 1 : record.step,
+        step: record.step === 0 || (record.completedOn && record.step === 2) ? 1 : record.step,
         practice: record.practice
           ? {
               ...record.practice,
@@ -337,7 +348,17 @@ export function answerLearning(data: LearningState, id: string, answer: number):
   return {
     ...data,
     focus: { ...data.focus, [lesson.instrument]: "lesson" },
-    records: { ...data.records, [id]: { ...record, answer } },
+    records: {
+      ...data.records,
+      [id]: {
+        ...record,
+        answer,
+        firstAnswer: record.firstAnswer ?? answer,
+        assisted:
+          record.assisted ||
+          (record.firstAnswer !== undefined && record.firstAnswer !== lesson.answer),
+      },
+    },
   };
 }
 
@@ -353,7 +374,8 @@ export function finishLearning(
   const first = !record.completedOn;
   const review =
     !first && !!record.reviewOn && record.reviewOn <= today && record.lastReviewedOn !== today;
-  const reviews = review ? Math.min(3, record.reviews + 1) : record.reviews;
+  const independent = record.firstAnswer === lesson.answer && !record.assisted;
+  const reviews = review ? (independent ? Math.min(3, record.reviews + 1) : 0) : record.reviews;
   return {
     ...data,
     records: {
@@ -413,4 +435,10 @@ export function configureLearning(
 export function learningPace(data: LearningState, instrument: InstrumentId) {
   const profile = data.profiles[instrument];
   return profile ? (profile.minutes === 2 ? "step" : "lesson") : data.pace;
+}
+
+export function assistLearning(data: LearningState, id: string): LearningState {
+  const record = data.records[id];
+  if (!record || record.step !== 2 || record.assisted) return data;
+  return { ...data, records: { ...data.records, [id]: { ...record, assisted: true } } };
 }

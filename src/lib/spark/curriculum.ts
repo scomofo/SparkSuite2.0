@@ -18,7 +18,7 @@ export const LEARNING_LEVELS = [
   },
   {
     id: "advanced",
-    title: "Create and refine",
+    title: "Creative application",
     outcome: "Apply the ideas in an independent performance.",
   },
 ] as const;
@@ -53,63 +53,101 @@ type TeachingVoice = {
 
 const TEACHING_VOICE: Record<InstrumentId, TeachingVoice> = {
   guitar: {
-    explanationLead: "Think like a guitarist: keep the fretting hand economical and let the picking hand keep time.",
+    explanationLead:
+      "Think like a guitarist: keep the fretting hand economical and let the picking hand keep time.",
     exampleLead: "Put it under your fingers:",
     practiceLead: ["Set the shape:", "Keep the pulse alive:", "Make it sound like music:"],
     feedbackLead: "Guitar clue:",
   },
   piano: {
-    explanationLead: "At the keyboard, look for shapes and distances before you worry about note names.",
+    explanationLead:
+      "At the keyboard, look for shapes and distances before you worry about note names.",
     exampleLead: "See it on the keys:",
     practiceLead: ["Map it first:", "Give each hand one clear job:", "Play the idea as a phrase:"],
     feedbackLead: "Keyboard clue:",
   },
   ukulele: {
-    explanationLead: "Ukulele rewards light hands and an easy pulse; let the chord ring instead of wrestling it.",
+    explanationLead:
+      "Ukulele rewards light hands and an easy pulse; let the chord ring instead of wrestling it.",
     exampleLead: "Try it with a relaxed strum:",
-    practiceLead: ["Find the easy shape:", "Let the strumming hand coast:", "Turn the loop into accompaniment:"],
+    practiceLead: [
+      "Find the easy shape:",
+      "Let the strumming hand coast:",
+      "Turn the loop into accompaniment:",
+    ],
     feedbackLead: "Uke clue:",
   },
   bass: {
-    explanationLead: "On bass, the note is only half the job. Where it lands—and how long it lasts—is the groove.",
+    explanationLead:
+      "On bass, the note is only half the job. Where it lands—and how long it lasts—is the groove.",
     exampleLead: "Hear it from the rhythm section:",
-    practiceLead: ["Find the landing:", "Lock it to the pulse:", "Make the line support the groove:"],
+    practiceLead: [
+      "Find the landing:",
+      "Lock it to the pulse:",
+      "Make the line support the groove:",
+    ],
     feedbackLead: "Bass clue:",
   },
   drums: {
-    explanationLead: "A drummer's first job is to make time feel dependable. Keep the pocket before adding motion.",
+    explanationLead:
+      "A drummer's first job is to make time feel dependable. Keep the pocket before adding motion.",
     exampleLead: "Put it in the pocket:",
     practiceLead: ["Set the pulse:", "Coordinate the limbs:", "Run the groove without chasing it:"],
     feedbackLead: "Drummer's clue:",
   },
   vocals: {
-    explanationLead: "Treat your voice like an instrument with breath behind every note. Easy air and a clear target beat force.",
+    explanationLead:
+      "Treat your voice like an instrument with breath behind every note. Easy air and a clear target beat force.",
     exampleLead: "Sing it as a short phrase:",
-    practiceLead: ["Settle the breath:", "Find the pitch without pushing:", "Shape the whole phrase:"],
+    practiceLead: [
+      "Settle the breath:",
+      "Find the pitch without pushing:",
+      "Shape the whole phrase:",
+    ],
     feedbackLead: "Singer's clue:",
   },
   mandolin: {
-    explanationLead: "Mandolin has very little sustain, so clean pick motion and exact timing do a lot of the musical work.",
+    explanationLead:
+      "Mandolin has very little sustain, so clean pick motion and exact timing do a lot of the musical work.",
     exampleLead: "Put it into the pick hand:",
-    practiceLead: ["Place the fingers cleanly:", "Keep the pick small and even:", "Give the short notes a musical shape:"],
+    practiceLead: [
+      "Place the fingers cleanly:",
+      "Keep the pick small and even:",
+      "Give the short notes a musical shape:",
+    ],
     feedbackLead: "Mandolin clue:",
   },
   banjo: {
-    explanationLead: "Banjo gets busy fast. Keep the roll relaxed and let the chord change happen inside the flow.",
+    explanationLead:
+      "Banjo gets busy fast. Keep the roll relaxed and let the chord change happen inside the flow.",
     exampleLead: "Drop it into the roll:",
-    practiceLead: ["Set the left hand:", "Let the picking pattern roll:", "Keep the tune moving through the change:"],
+    practiceLead: [
+      "Set the left hand:",
+      "Let the picking pattern roll:",
+      "Keep the tune moving through the change:",
+    ],
     feedbackLead: "Banjo clue:",
   },
   violin: {
-    explanationLead: "On violin, listen before you correct. Bow path, contact, and finger placement should feel repeatable, not forced.",
+    explanationLead:
+      "On violin, listen before you correct. Bow path, contact, and finger placement should feel repeatable, not forced.",
     exampleLead: "Hear it through the bow:",
-    practiceLead: ["Set the bow and balance:", "Place the left hand by ear:", "Shape the line in one calm motion:"],
+    practiceLead: [
+      "Set the bow and balance:",
+      "Place the left hand by ear:",
+      "Shape the line in one calm motion:",
+    ],
     feedbackLead: "String-player clue:",
   },
   lapsteel: {
-    explanationLead: "Lap steel is about arriving in tune. Let the bar travel smoothly, then settle exactly where the note belongs.",
+    explanationLead:
+      "Lap steel is about arriving in tune. Let the bar travel smoothly, then settle exactly where the note belongs.",
     exampleLead: "Let the bar tell the story:",
-    practiceLead: ["Set the bar square:", "Move without losing the count:", "Land the phrase and let it ring:"],
+    practiceLead: [
+      "Set the bar square:",
+      "Move without losing the count:",
+      "Land the phrase and let it ring:",
+    ],
     feedbackLead: "Steel clue:",
   },
 };
@@ -118,7 +156,7 @@ function humanizeSeed(instrument: InstrumentId, lesson: Seed): Seed {
   const voice = TEACHING_VOICE[instrument];
   return {
     ...lesson,
-    explanation: `${voice.explanationLead} ${lesson.explanation}`,
+    explanation: lesson.explanation,
     example: `${voice.exampleLead} ${lesson.example}`,
     practice: lesson.practice.map(
       (instruction, index) => `${voice.practiceLead[index]} ${instruction}`,
@@ -2075,3 +2113,94 @@ export const CURRICULUM: LearningLesson[] = [
 export const learningPath = (instrument: InstrumentId) =>
   CURRICULUM.filter((lesson) => lesson.instrument === instrument);
 export const learningLesson = (id: string) => CURRICULUM.find((lesson) => lesson.id === id);
+
+/** Alternate checks reuse canonical answer IDs so existing progress remains compatible. */
+const RECALL_CHECKS: Record<string, [string, string, string, string, string]> = {
+  "bass-one-note": [
+    "Why deliberately stop a bass note?",
+    "Its ending helps shape the groove",
+    "It changes standard tuning",
+    "It makes the next fret lower",
+    "Muting controls unwanted vibration and note length. The end of a note is part of its rhythm.",
+  ],
+  "drums-pulse": [
+    "What makes four taps a steady 4/4 pulse?",
+    "Equal time between quarter-note beats",
+    "Each tap must be louder",
+    "The last tap must come early",
+    "Keep the spacing even. Different drum sounds can vary while the pulse stays steady.",
+  ],
+  "mandolin-gdae": [
+    "What is a mandolin course?",
+    "A pair of strings tuned in unison",
+    "A single fret",
+    "Four notes played at once",
+    "Eight strings form four pairs. Each unison pair behaves as one course.",
+  ],
+  "banjo-open-g": [
+    "Why is the short fifth string not the lowest pitch?",
+    "It is tuned to a high g",
+    "All open strings sound D",
+    "String order always descends in pitch",
+    "Open-G tuning is g–D–G–B–D; the short fifth string is high g.",
+  ],
+  "violin-open-strings-and-bow": [
+    "What should guide the first bowing attempt?",
+    "A repeatable relaxed bow path",
+    "As much pressure as possible",
+    "Speed before an even sound",
+    "Begin with an easy repeatable motion on an open string. Listen for an even sound before adding speed.",
+  ],
+  "lapsteel-c6-and-the-bar": [
+    "What makes an open C6 lap steel chord possible?",
+    "The strings are already tuned C–E–G–A–C–E",
+    "Pressing behind a fret",
+    "All six strings share one pitch",
+    "C6 tuning includes C E G and A. The bar moves those pitches together; no fretting is needed.",
+  ],
+
+  "guitar-first-sound": [
+    "What changes when you fret the low E string at fret 1?",
+    "The pitch rises from E to F",
+    "The pitch stays E",
+    "Only loudness can change",
+    "Fretting shortens the vibrating length; the first fret is one semitone above open E.",
+  ],
+  "guitar-pulse": [
+    "What should continue during a silent beat?",
+    "The steady count",
+    "A restart of the bar",
+    "A faster tempo",
+    "A rest occupies measured time. Keep the pulse through it.",
+  ],
+  "piano-find-c": [
+    "Where is C beside a group of two black keys?",
+    "On the white key immediately to their left",
+    "On the white key immediately to their right",
+    "On either black key",
+    "The two-black-key group is a reusable landmark: C is immediately to its left.",
+  ],
+  "ukulele-gcea": [
+    "In high-G tuning, does string order always run from low to high pitch?",
+    "No; the G is above the C",
+    "Yes; G is always the lowest",
+    "No; all strings sound the same pitch",
+    "High-G is re-entrant tuning. Playing order and pitch order differ.",
+  ],
+  "vocals-easy-tone": [
+    "Which attempt keeps the task comfortable?",
+    "A short hum near your speaking range",
+    "Forcing the reference pitch louder",
+    "Holding a note until breath runs out",
+    "A short comfortable sound, or listening, keeps attention on the musical idea without forcing range.",
+  ],
+};
+export function lessonCheck(lesson: LearningLesson, completed: boolean, reviews: number) {
+  const alternate = completed && reviews % 2 === 0 ? RECALL_CHECKS[lesson.id] : undefined;
+  if (!alternate)
+    return { question: lesson.question, options: lesson.options, feedback: lesson.feedback };
+  const [question, correct, wrongA, wrongB, feedback] = alternate;
+  const options = [wrongA, wrongB];
+  options.splice(lesson.answer, 0, correct);
+  return { question, options, feedback };
+}

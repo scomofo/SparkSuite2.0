@@ -75,7 +75,7 @@ describe("coach curriculum context", () => {
       assert.equal(context.target.kind, "lesson");
       assert.equal(context.lesson?.level, "advanced");
       assert.equal(context.lesson?.checkpoint, "Understand");
-      assert.equal(context.experience, "Ready for advanced work");
+      assert.equal(context.experience, "Ready to create and refine");
       assert.equal(context.explored, 0);
       assert.equal(context.minutes, 10);
       assert.equal((context.practice?.project as { stage: string }).stage, "Build");
