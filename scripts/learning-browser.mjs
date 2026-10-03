@@ -61,11 +61,11 @@ try {
   await page.getByLabel("Learning instrument", { exact: true }).selectOption("guitar");
   await page.getByRole("button", { name: "I tried it", exact: true }).click();
   await page.getByRole("button", { name: "Continue this lesson", exact: true }).click();
-  const finish = page.getByRole("button", { name: "Finish this lesson", exact: true });
+  const finish = page.getByRole("button", { name: "Wrap up this lesson", exact: true });
   assert.equal(await finish.isDisabled(), true, "An unanswered check cannot finish");
   await page.getByRole("radio", { name: "A string pressed at fret twelve", exact: true }).check();
   assert.equal(await finish.isDisabled(), true, "A wrong answer cannot finish");
-  await page.getByText("Take another look. You can try again.", { exact: true }).waitFor();
+  await page.getByText("Not quite yet. Here's the useful bit to revisit.", { exact: true }).waitFor();
   await page.getByRole("radio", { name: "A string played without fretting", exact: true }).check();
   await page.reload({ waitUntil: "networkidle" });
   assert.equal(
@@ -113,11 +113,11 @@ try {
     const pathButton = page.getByRole("button", { name: "Learning path", exact: true });
     const advanced = page
       .locator("details")
-      .filter({ has: page.locator("summary", { hasText: "Create and refine" }) });
+      .filter({ has: page.locator("summary", { hasText: "Creative application" }) });
     // The switch may land on a lesson view or the path; wait for either before deciding.
     await pathButton.or(advanced).first().waitFor();
     if (await pathButton.isVisible()) await pathButton.click();
-    await advanced.locator("summary").click();
+    await advanced.locator("summary").first().click();
     await advanced.getByRole("button").last().click();
     await page.getByRole("button", { name: "Let me try it", exact: true }).waitFor();
     assert.equal(

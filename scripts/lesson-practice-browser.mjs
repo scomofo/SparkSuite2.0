@@ -103,12 +103,12 @@ try {
   await button("I tried the exercise").click();
   await page.getByRole("radio", { name: "I'm ready to move on", exact: true }).check();
   await button("Continue to lesson check").click();
-  await button("Finish this lesson").waitFor();
-  assert.equal(await button("Finish this lesson").isDisabled(), true);
+  await button("Wrap up this lesson").waitFor();
+  assert.equal(await button("Wrap up this lesson").isDisabled(), true);
   await page.getByRole("radio", { name: "A string pressed at fret twelve", exact: true }).check();
-  assert.equal(await button("Finish this lesson").isDisabled(), true);
+  assert.equal(await button("Wrap up this lesson").isDisabled(), true);
   await page.getByRole("radio", { name: "A string played without fretting", exact: true }).check();
-  await button("Finish this lesson").click();
+  await button("Wrap up this lesson").click();
   await page.getByRole("heading", { name: "A useful step forward.", exact: true }).waitFor();
   const suite = await page.evaluate(() => JSON.parse(localStorage.getItem("sparksuite.v2")));
   assert.equal(suite.apps.guitar.xp, 0, "Guided attempts do not award timing XP");
@@ -215,7 +215,7 @@ try {
   await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("radio", { name: "I'm ready to move on", exact: true }).check();
   await button("Continue to lesson check").click();
-  await button("Finish this lesson").waitFor();
+  await button("Wrap up this lesson").waitFor();
   const projectRecord = (await saved()).records[project.lessonId];
   assert.equal(
     projectRecord.practice.projectStage,
