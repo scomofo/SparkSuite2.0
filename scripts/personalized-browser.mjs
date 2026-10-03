@@ -71,13 +71,13 @@ try {
   await button("Show my next step").press("Enter");
   await link("Start my next lesson").click();
   await heading(learningPath("guitar")[0].title).waitFor();
-  await button("Got the idea").click();
+  await button("Let me try it").click();
   await heading("That step counts.").waitFor();
   await link("Done for now").click();
 
   // Editing a preference keeps unfinished work ahead of the new starting level.
   await link("Adjust my starting point or time").click();
-  await page.getByRole("radio", { name: "Ready for advanced work", exact: true }).check();
+  await page.getByRole("radio", { name: "Ready to create and refine", exact: true }).check();
   await page.getByText("Your unfinished work stays first.", { exact: false }).waitFor();
   await button("Show my next step").click();
   await link("Resume learning").click();
@@ -85,7 +85,7 @@ try {
   assert.equal((await saved()).records["guitar-first-sound"].step, 1);
   await page.goto(`${url}/start`, { waitUntil: "networkidle" });
   await page.getByLabel("Setup instrument").selectOption("piano");
-  await page.getByRole("radio", { name: "Ready for advanced work", exact: true }).check();
+  await page.getByRole("radio", { name: "Ready to create and refine", exact: true }).check();
   await page.getByRole("radio", { name: "10 min", exact: true }).check();
   await button("Show my next step").click();
   await link("Start my next lesson").click();
@@ -100,7 +100,7 @@ try {
     2,
     "Each instrument keeps its own time preference",
   );
-  await button("Got the idea").click();
+  await button("Let me try it").click();
   await link("Open guided project").waitFor();
   assert.equal(await button("I tried it").count(), 0, "Advanced projects cannot skip stages");
 
