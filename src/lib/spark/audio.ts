@@ -171,14 +171,14 @@ export function strumUp(freqs: number[], when?: number) {
 }
 
 /** Soft piano-like tone (sine + quiet odd harmonic). */
-export function pianoTone(freq: number, when?: number, gain = 0.28) {
-  if (!validFreq(freq)) return;
+export function pianoTone(freq: number, when?: number, gain = 0.28, duration = 1.5) {
+  if (!validFreq(freq) || !Number.isFinite(duration) || duration <= 0) return;
   const ac = safeCtx();
   if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
   const g = ac.createGain();
   g.gain.setValueAtTime(gain, t);
-  g.gain.exponentialRampToValueAtTime(0.0008, t + 1.4);
+  g.gain.exponentialRampToValueAtTime(0.0008, t + duration * (1.4 / 1.5));
   g.connect(out());
   ([1, 2, 3] as const).forEach((h, i) => {
     const o = ac.createOscillator();
@@ -189,7 +189,7 @@ export function pianoTone(freq: number, when?: number, gain = 0.28) {
     o.connect(hg);
     hg.connect(g);
     o.start(t);
-    o.stop(t + 1.5);
+    o.stop(t + duration);
   });
 }
 

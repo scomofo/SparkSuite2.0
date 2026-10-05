@@ -1,21 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { getCtx, pianoTone, scheduleRun, isMuted } from "@/lib/spark/audio";
-function playPhrase(onsets: number[], beat: number, _beats: number) {
-  return scheduleRun(() => {
-    const ctx = getCtx();
-    if (!ctx) return;
-    for (const onset of onsets) pianoTone(261.63, ctx.currentTime + onset * beat, 0.22);
-  });
-}
+import { isMuted } from "@/lib/spark/audio";
+import { playSharedPhrase, sharedPhrasePattern } from "@/lib/spark/shared-phrase";
 
 const BARS = ["1 · 2 · 3 · 4", "1 · 2 & · 3 · 4", "1 · 2 · 3 · 4", "1 · 2 & · 3 · rest"];
-const ONSETS = [
-  [0, 1, 2, 3],
-  [0, 1, 1.5, 2, 3],
-  [0, 1, 2, 3],
-  [0, 1, 1.5, 2],
-];
 const ACTIONS: Record<string, string> = {
   guitar: "Use one comfortable open string, or one familiar chord. Keep the same sound throughout.",
   piano: "Use one comfortable key with one finger. Keep the same note throughout.",
@@ -94,15 +82,13 @@ export function SharedPhrase({ instrument = "theory" }: { instrument?: string })
       setNotice("Sound is muted. Use the written count or change your sound settings.");
       return;
     }
-    const beat = 60 / (slow ? 48 : 72);
-    const bars = oneBar ? [ONSETS[1]] : ONSETS;
-    const onsets = bars.flatMap((bar, index) => bar.map((offset) => index * 4 + offset));
+    const phrase = sharedPhrasePattern({ slow, oneBar });
     try {
-      playback.current = playPhrase(onsets, beat, bars.length * 4);
+      playback.current = playSharedPhrase(phrase);
       if (!playback.current) throw new Error("Audio unavailable");
       setPlaying(true);
       setNotice("");
-      timer.current = setTimeout(stop, bars.length * 4 * beat * 1000 + 100);
+      timer.current = setTimeout(stop, phrase.beats * phrase.beat * 1000 + 100);
     } catch {
       setNotice("Audio is unavailable. Tap the written count instead.");
     }
