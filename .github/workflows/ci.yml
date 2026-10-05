@@ -51,6 +51,8 @@ jobs:
           node scripts/lesson-practice-browser.mjs http://127.0.0.1:8083 dev
           node scripts/personalized-browser.mjs http://127.0.0.1:8083 dev
           node scripts/coach-browser.mjs http://127.0.0.1:8083 dev
+          node scripts/adult-curriculum-browser.mjs spark http://127.0.0.1:8083 dev
+          node scripts/shared-phrase-audio-browser.mjs
           node scripts/browser-smoke.mjs http://127.0.0.1:8083/ /workspace/screenshots/dev.png
           npm run preview:restart
           node scripts/studio-browser.mjs http://127.0.0.1:8081 built
@@ -58,6 +60,7 @@ jobs:
           node scripts/lesson-practice-browser.mjs http://127.0.0.1:8081 built
           node scripts/personalized-browser.mjs http://127.0.0.1:8081 built
           node scripts/coach-browser.mjs http://127.0.0.1:8081 built
+          node scripts/adult-curriculum-browser.mjs spark http://127.0.0.1:8081 built
           node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/built.png --baseline /workspace/screenshots/dev.json
       - name: Upload browser evidence
         if: always() && matrix.node == 24
