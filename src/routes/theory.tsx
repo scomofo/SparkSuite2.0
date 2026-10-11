@@ -183,11 +183,17 @@ function TheoryPage() {
       </header>
 
       <div className="sticky top-0 z-10 mx-4 mt-4 rounded-lg border border-border bg-surface/95 p-1 backdrop-blur-sm">
-        <div className={cn("grid gap-0.5", tabs.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
+        <div
+          role="tablist"
+          aria-label="Theory sections"
+          className={cn("grid gap-0.5", tabs.length === 4 ? "grid-cols-4" : "grid-cols-3")}
+        >
           {tabs.map((t) => (
             <button
               key={t.id}
               type="button"
+              role="tab"
+              aria-selected={tab === t.id}
               onClick={() => patch({ tab: t.id })}
               className={cn(
                 "h-10 rounded-md text-sm font-medium transition-colors duration-(--motion-quick)",
@@ -220,6 +226,7 @@ function Chip({
   return (
     <button
       type="button"
+      aria-pressed={active}
       onClick={onClick}
       className={cn(
         "h-10 min-w-10 rounded-md px-3 text-sm font-medium transition-colors duration-(--motion-quick)",
@@ -437,6 +444,21 @@ function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>)
     setSel(0);
   }, [search.key, search.mode, sevenths]);
 
+  const playScale = () => {
+    unlockAudio();
+    const ac = unlockAudio();
+    if (!ac) return;
+    scale.forEach((pc, i) => {
+      const midi = 60 + ((pc - (keyPc % 12) + 12) % 12);
+      const freq = midiToFreq(midi);
+      if (inst.theoryNeck === "piano" || inst.surface === "keys" || inst.surface === "voice") {
+        pianoTone(freq, ac.currentTime + i * 0.22, 0.35);
+      } else {
+        pluck(freq, ac.currentTime + i * 0.22, 0.45);
+      }
+    });
+  };
+
   return (
     <div className="px-5 pb-8 pt-5">
       <p className="text-[11px] uppercase tracking-[0.18em] text-dim">Tonic</p>
@@ -467,10 +489,16 @@ function KeyTab({ search, patch }: { search: Search; patch: (n: Partial<Search>)
         />
       </div>
 
-      <p className="mt-2 text-center text-sm text-muted">
-        Scale · {scale.map((pc) => noteName(pc, flats)).join("  ")}
-      </p>
-      <p className="mt-1 text-center text-xs text-dim">
+      <div className="mt-4 flex flex-col items-center gap-2">
+        <p className="text-center text-sm text-muted">
+          Scale · {scale.map((pc) => noteName(pc, flats)).join("  ")}
+        </p>
+        <Button size="sm" variant="secondary" onClick={playScale}>
+          <Play className="size-3.5" />
+          Play scale
+        </Button>
+      </div>
+      <p className="mt-2 text-center text-xs text-dim">
         Outer ring = major keys · inner = relative minors
       </p>
 
