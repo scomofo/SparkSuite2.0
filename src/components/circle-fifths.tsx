@@ -50,18 +50,34 @@ export function CircleFifths({
               fill={active && mode === "major" ? "var(--color-accent)" : "var(--color-raised)"}
               stroke="var(--color-border)"
               strokeWidth={1}
-              className="cursor-pointer"
-              onClick={() => onPick(pc, "major")}
+              tabIndex={0}
+              role="button"
               aria-label={`${outerLabel} major`}
+              className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent"
+              onClick={() => onPick(pc, "major")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onPick(pc, "major");
+                }
+              }}
             />
             <path
               d={annulus(cx, cy, holeR, innerR, a0, a1)}
               fill={relActive ? "var(--color-accent)" : "var(--color-surface)"}
               stroke="var(--color-border)"
               strokeWidth={1}
-              className="cursor-pointer"
-              onClick={() => onPick(rel, "minor")}
+              tabIndex={0}
+              role="button"
               aria-label={`${innerLabel} minor`}
+              className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-accent"
+              onClick={() => onPick(rel, "minor")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  onPick(rel, "minor");
+                }
+              }}
             />
             <text
               x={r(cx + Math.cos(mid) * ((outerR + innerR) / 2))}
