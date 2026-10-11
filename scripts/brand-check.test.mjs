@@ -310,7 +310,7 @@ test("SKILL.md and AGENTS.md name the marker path and bound this script uses", (
   const bound = new RegExp(`${OG_PENDING_MAX_AGE_MS / 60_000}\\s+minutes`);
   for (const rel of [".grok/skills/og/SKILL.md", "AGENTS.md"]) {
     const doc = readDoc(rel);
-    assert.ok(doc.includes(`/app/${OG_PENDING_REL_PATH}`), `${rel}: marker path`);
+    assert.ok(doc.includes(`/workspace/${OG_PENDING_REL_PATH}`), `${rel}: marker path`);
     assert.ok(bound.test(doc), `${rel}: staleness bound`);
   }
 });

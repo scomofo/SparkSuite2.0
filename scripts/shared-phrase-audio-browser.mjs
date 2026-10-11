@@ -150,9 +150,9 @@ try {
     "Other piano callers retain their default duration",
   );
   const verdict = { passed: true, nativeAudio: "OfflineAudioContext", results, defaultStops };
-  mkdirSync("screenshots", { recursive: true });
+  mkdirSync("/workspace/screenshots", { recursive: true });
   writeFileSync(
-    "screenshots/shared-phrase-audio.json",
+    "/workspace/screenshots/shared-phrase-audio.json",
     JSON.stringify(verdict, null, 2),
   );
   console.log(JSON.stringify(verdict, null, 2));

@@ -65,7 +65,7 @@ export function ogPendingActive(workspaceRoot, now = Date.now()) {
  */
 export function computeBrandWarnings({
   hasCanvas,
-  workspaceRoot = "/app",
+  workspaceRoot = "/workspace",
   now = Date.now(),
 }) {
   if (ogPendingActive(workspaceRoot, now)) return [];
@@ -82,7 +82,7 @@ export function computeBrandWarnings({
  */
 function brandWarningsOnDisk({
   hasCanvas,
-  workspaceRoot = "/app",
+  workspaceRoot = "/workspace",
   cardRequired = false,
 }) {
   const skillPath = join(workspaceRoot, ".grok/skills/og/SKILL.md");

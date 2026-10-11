@@ -279,7 +279,7 @@ test("baselineComparison fails closed on malformed or wrong-shape baselines", ()
 test("parseSmokeArgs defaults", () => {
   assert.deepEqual(parseSmokeArgs([], {}), {
     url: "http://127.0.0.1:8083/",
-    outPng: "screenshots/app-builder-preview.png",
+    outPng: "/workspace/screenshots/app-builder-preview.png",
     baseline: "",
   });
 });
@@ -287,13 +287,13 @@ test("parseSmokeArgs defaults", () => {
 test("parseSmokeArgs consumes --baseline without shifting positionals", () => {
   assert.deepEqual(
     parseSmokeArgs(
-      ["http://127.0.0.1:8081/", "--baseline", "/app/a.json", "/app/b.png"],
+      ["http://127.0.0.1:8081/", "--baseline", "/workspace/a.json", "/workspace/b.png"],
       {},
     ),
     {
       url: "http://127.0.0.1:8081/",
-      outPng: "/app/b.png",
-      baseline: "/app/a.json",
+      outPng: "/workspace/b.png",
+      baseline: "/workspace/a.json",
     },
   );
 });
@@ -305,7 +305,7 @@ test("parseSmokeArgs rejects a trailing --baseline flag", () => {
 });
 
 test("parseSmokeArgs supports the --baseline= form", () => {
-  assert.equal(parseSmokeArgs(["--baseline=/app/a.json"], {}).baseline, "/app/a.json");
+  assert.equal(parseSmokeArgs(["--baseline=/workspace/a.json"], {}).baseline, "/workspace/a.json");
   assert.deepEqual(parseSmokeArgs(["--baseline="], {}), {
     error: "--baseline requires a path to a prior verdict JSON",
   });
@@ -314,7 +314,7 @@ test("parseSmokeArgs supports the --baseline= form", () => {
 test("parseSmokeArgs rejects unknown flags instead of treating them as positionals", () => {
   assert.deepEqual(parseSmokeArgs(["--nope"], {}), { error: "unknown flag: --nope" });
   assert.deepEqual(
-    parseSmokeArgs(["http://127.0.0.1:8083/", "--Baseline", "/app/a.json"], {}),
+    parseSmokeArgs(["http://127.0.0.1:8083/", "--Baseline", "/workspace/a.json"], {}),
     {
       error: "unknown flag: --Baseline",
     },
@@ -322,26 +322,26 @@ test("parseSmokeArgs rejects unknown flags instead of treating them as positiona
 });
 
 test("parseSmokeArgs env fallback and flag precedence", () => {
-  const env = { BROWSER_SMOKE_BASELINE: "/app/env.json" };
-  assert.equal(parseSmokeArgs([], env).baseline, "/app/env.json");
+  const env = { BROWSER_SMOKE_BASELINE: "/workspace/env.json" };
+  assert.equal(parseSmokeArgs([], env).baseline, "/workspace/env.json");
   assert.equal(
-    parseSmokeArgs(["--baseline", "/app/flag.json"], env).baseline,
-    "/app/flag.json",
+    parseSmokeArgs(["--baseline", "/workspace/flag.json"], env).baseline,
+    "/workspace/flag.json",
   );
 });
 
 test("derivedPaths handles .png, .PNG, and extensionless inputs", () => {
-  assert.deepEqual(derivedPaths("/app/shot.png"), {
-    mobilePng: "/app/shot-mobile.png",
-    verdictJson: "/app/shot.json",
+  assert.deepEqual(derivedPaths("/workspace/shot.png"), {
+    mobilePng: "/workspace/shot-mobile.png",
+    verdictJson: "/workspace/shot.json",
   });
-  assert.deepEqual(derivedPaths("/app/shot.PNG"), {
-    mobilePng: "/app/shot-mobile.png",
-    verdictJson: "/app/shot.json",
+  assert.deepEqual(derivedPaths("/workspace/shot.PNG"), {
+    mobilePng: "/workspace/shot-mobile.png",
+    verdictJson: "/workspace/shot.json",
   });
-  assert.deepEqual(derivedPaths("/app/shot"), {
-    mobilePng: "/app/shot-mobile.png",
-    verdictJson: "/app/shot.json",
+  assert.deepEqual(derivedPaths("/workspace/shot"), {
+    mobilePng: "/workspace/shot-mobile.png",
+    verdictJson: "/workspace/shot.json",
   });
 });
 
@@ -377,10 +377,10 @@ test("browser-smoke wires the guard and verdict helpers", () => {
   assert.match(src, /from "\.\/browser-smoke-verdict\.mjs"/);
   assert.match(src, /const args = parseSmokeArgs\(process\.argv\.slice\(2\), process\.env\)/);
   assert.match(src, /const url = checkedUrl\(args\.url\)/);
-  assert.match(src, /const outPng = checkedOutputPath\(args\.outPng, \["\/app"\]\)/);
-  assert.match(src, /const mobilePng = checkedOutputPath\(derived\.mobilePng, \["\/app"\]\)/);
-  assert.match(src, /const outJson = checkedOutputPath\(derived\.verdictJson, \["\/app"\]/);
-  assert.match(src, /checkedOutputPath\(realpathSync\(args\.baseline\), \["\/app"\]/);
+  assert.match(src, /const outPng = checkedOutputPath\(args\.outPng, \["\/workspace"\]\)/);
+  assert.match(src, /const mobilePng = checkedOutputPath\(derived\.mobilePng, \["\/workspace"\]\)/);
+  assert.match(src, /const outJson = checkedOutputPath\(derived\.verdictJson, \["\/workspace"\]/);
+  assert.match(src, /checkedOutputPath\(realpathSync\(args\.baseline\), \["\/workspace"\]/);
   assert.match(src, /baselinePath === outJson/);
   assert.match(src, /normalizedBodyTextHash\(/);
   assert.match(src, /bodyTextPrefix\(/);
