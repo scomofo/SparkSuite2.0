@@ -7,10 +7,10 @@ import { checkedUrl, checkedOutputPath } from "./browser-guard.mjs";
 const url = checkedUrl(process.argv[3]).replace(/\/$/, "");
 const label = process.argv[4] ?? "dev";
 assert.match(label, /^[a-zA-Z0-9_-]+$/, "Use a simple evidence label");
-const output = checkedOutputPath(`/workspace/screenshots/spark-phrase-${label}`, [
-  "/workspace/screenshots",
+const output = checkedOutputPath(`screenshots/spark-phrase-${label}`, [
+  "screenshots",
 ]);
-mkdirSync("/workspace/screenshots", { recursive: true });
+mkdirSync("screenshots", { recursive: true });
 const browser = await chromium.launch({
   headless: true,
   ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH

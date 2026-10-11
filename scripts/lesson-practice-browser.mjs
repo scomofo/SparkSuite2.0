@@ -5,7 +5,7 @@ import { LESSON_EXERCISES } from "../src/lib/spark/lesson-practice.ts";
 
 const url = process.argv[2] ?? "http://127.0.0.1:8083";
 const label = process.argv[3] ?? "dev";
-const output = "/workspace/screenshots";
+const output = "screenshots";
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const page = await browser.newPage({

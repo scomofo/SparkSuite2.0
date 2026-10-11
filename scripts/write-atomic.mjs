@@ -2,12 +2,12 @@
 /**
  * Hand a staged file over to a path another agent reads, in one step.
  *
- *   node scripts/write-atomic.mjs /workspace/.grok/og.jpg.tmp public/og.jpg
+ *   node scripts/write-atomic.mjs /app/.grok/og.jpg.tmp public/og.jpg
  *
  * The brand-asset task writes public/og.jpg and src/lib/og/site.json while the
  * parent may be mid-`npm run build`, so an in-place write can be read
  * half-finished. rename(2) is atomic within one filesystem: a reader sees the
- * old bytes or the new ones. /workspace is one filesystem, so a staged file
+ * old bytes or the new ones. /app is one filesystem, so a staged file
  * from anywhere else (/tmp is a separate mount) is refused rather than copied:
  * copying would have to land its temp in the target's directory, which is the
  * one thing a staged path is not allowed to do.
@@ -48,7 +48,7 @@ export function stagingError({ staged, target, publicDir }) {
 /**
  * Moves `staged` onto `target`, leaving `target` untouched if anything fails.
  * `rename` is injectable because EXDEV — the refusal the "stage under
- * /workspace/.grok/" contract rests on — cannot be provoked portably.
+ * /app/.grok/" contract rests on — cannot be provoked portably.
  */
 export function handOver(staged, target, { rename = renameSync } = {}) {
   if (!existsSync(staged)) {
@@ -61,7 +61,7 @@ export function handOver(staged, target, { rename = renameSync } = {}) {
     if (err?.code === "EXDEV") {
       throw new Error(
         `${staged} is on another filesystem than ${target}, so the hand-over cannot be a `
-          + "rename — stage under /workspace/.grok/ instead",
+          + "rename — stage under /app/.grok/ instead",
       );
     }
     throw err;

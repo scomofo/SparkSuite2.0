@@ -35,27 +35,27 @@ test("parseWriteAtomicArgs needs exactly a staged file and a target", () => {
 });
 
 test("stagingError refuses a temp inside public/ and a no-op move", () => {
-  const publicDir = "/workspace/public";
+  const publicDir = "/app/public";
   assert.equal(
     stagingError({
-      staged: "/workspace/.grok/og.jpg.tmp",
-      target: "/workspace/public/og.jpg",
+      staged: "/app/.grok/og.jpg.tmp",
+      target: "/app/public/og.jpg",
       publicDir,
     }),
     null,
   );
   assert.match(
     stagingError({
-      staged: "/workspace/public/og.jpg.tmp",
-      target: "/workspace/public/og.jpg",
+      staged: "/app/public/og.jpg.tmp",
+      target: "/app/public/og.jpg",
       publicDir,
     }),
     /vite build ships that directory verbatim/,
   );
   assert.match(
     stagingError({
-      staged: "/workspace/public/og.jpg",
-      target: "/workspace/public/og.jpg",
+      staged: "/app/public/og.jpg",
+      target: "/app/public/og.jpg",
       publicDir,
     }),
     /same path/,
@@ -116,7 +116,7 @@ test("a staged file on another filesystem is refused, not copied", () => {
   };
 
   assert.throws(() => handOver(staged, target, { rename: crossDevice }), {
-    message: /stage under \/workspace\/\.grok\//,
+    message: /stage under \/app\/\.grok\//,
   });
   // Copying would have had to stage its own temp inside public/, which is the
   // one place stagingError refuses.
@@ -180,7 +180,7 @@ test("every hand-over the og skill prints is one this script accepts", () => {
     const args = parseWriteAtomicArgs(argv);
     assert.equal(args.error, undefined, line);
     assert.equal(
-      stagingError({ staged: args.staged, target: args.target, publicDir: "/workspace/public" }),
+      stagingError({ staged: args.staged, target: args.target, publicDir: "/app/public" }),
       null,
       line,
     );

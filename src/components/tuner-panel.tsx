@@ -30,6 +30,8 @@ export function TunerPanel() {
   const decimate = fftSize >= 8192 ? 4 : 2;
   const [cents, setCents] = useState(0);
   const [name, setName] = useState("-");
+  const [freqHz, setFreqHz] = useState<number | null>(null);
+  const [targetHz, setTargetHz] = useState<number | null>(null);
   const [live, setLive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
@@ -71,6 +73,8 @@ export function TunerPanel() {
           if (n.index >= 0 && Number.isFinite(n.cents)) {
             setName(n.name);
             setCents(Math.max(-50, Math.min(50, n.cents)));
+            setFreqHz(hz);
+            setTargetHz(refs.freqs[n.index] ?? null);
           }
         }
       }
@@ -93,38 +97,80 @@ export function TunerPanel() {
 
   return (
     <div className="flex flex-col items-center gap-6">
-      <div className="relative h-36 w-full max-w-sm">
+      <div className="relative h-36 w-full max-w-sm rounded-xl border border-border bg-surface p-4 shadow-sm">
         <div className="absolute inset-x-6 top-1/2 h-px bg-border" />
-        <div className="absolute left-1/2 top-6 h-20 w-px bg-accent" />
+        <div className="absolute left-1/2 top-6 h-16 w-0.5 bg-accent/60" />
         <div
-          className={cn("absolute top-10 size-4 -translate-x-1/2 rounded-full", inTune ? "bg-good" : "bg-accent")}
+          className={cn(
+            "absolute top-8 size-5 -translate-x-1/2 rounded-full transition-all duration-100 shadow-md",
+            inTune && live ? "bg-good ring-4 ring-good/20 scale-110" : "bg-accent",
+          )}
           style={{ left: `${50 + cents * 0.8}%` }}
         />
-        <p className="absolute inset-x-0 bottom-0 text-center font-display text-4xl font-semibold">{name}</p>
+        <div className="absolute inset-x-0 bottom-3 text-center">
+          <p className="font-display text-4xl font-semibold tracking-tight">{name}</p>
+          {inTune && live && name !== "-" ? (
+            <span className="mt-1 inline-block rounded-full bg-good/15 px-2 py-0.5 text-xs font-medium text-good">
+              In Tune
+            </span>
+          ) : null}
+        </div>
       </div>
-      <p className="tabular text-sm text-muted">{cents > 0 ? `+${cents.toFixed(0)}` : cents.toFixed(0)} cents</p>
+      <div className="flex items-center gap-4 text-sm text-muted tabular">
+        <p>{cents > 0 ? `+${cents.toFixed(0)}` : cents.toFixed(0)} cents</p>
+        {freqHz != null ? (
+          <>
+            <span className="text-border">·</span>
+            <p>{freqHz.toFixed(1)} Hz</p>
+          </>
+        ) : null}
+        {targetHz != null ? (
+          <>
+            <span className="text-border">·</span>
+            <p className="text-dim">target {targetHz.toFixed(1)} Hz</p>
+          </>
+        ) : null}
+      </div>
       {error ? <p className="text-center text-sm text-warn">{error}</p> : null}
       <Button variant={live ? "secondary" : "primary"} onClick={() => (live ? stopRef.current?.() : void listen())}>
         {live ? "Stop mic" : "Listen with mic"}
       </Button>
-      <div className="grid w-full gap-1" style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
-        {refs.names.map((n, i) => (
-          <button
-            key={`${n}-${i}`}
-            type="button"
-            onClick={() => {
-              unlockAudio();
-              const f = refs.freqs[i] ?? 261.63;
-              if (instrument === "piano" || instrument === "vocals") pianoTone(f, undefined, 0.4);
-              else pluck(f, undefined, 0.55);
-              setName(n);
-              setCents(0);
-            }}
-            className="flex h-12 flex-col items-center justify-center rounded-sm bg-raised text-sm hover:bg-border"
-          >
-            {n}
-          </button>
-        ))}
+      <div
+        className="grid w-full gap-2"
+        style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+        role="group"
+        aria-label="Reference pitches"
+      >
+        {refs.names.map((n, i) => {
+          const isSelected = name === n;
+          return (
+            <button
+              key={`${n}-${i}`}
+              type="button"
+              aria-pressed={isSelected}
+              aria-label={`Play reference pitch ${n}`}
+              onClick={() => {
+                unlockAudio();
+                const f = refs.freqs[i] ?? 261.63;
+                if (instrument === "piano" || instrument === "vocals") pianoTone(f, undefined, 0.4);
+                else pluck(f, undefined, 0.55);
+                setName(n);
+                setCents(0);
+                setFreqHz(f);
+                setTargetHz(f);
+              }}
+              className={cn(
+                "flex h-12 flex-col items-center justify-center rounded-lg border text-sm font-medium transition-colors",
+                isSelected
+                  ? "border-ember bg-raised text-ember shadow-xs"
+                  : "border-border bg-surface text-fg hover:border-ember/50 hover:bg-raised",
+              )}
+            >
+              <span>{n}</span>
+              <span className="text-[10px] text-dim">{refs.freqs[i]?.toFixed(1)} Hz</span>
+            </button>
+          );
+        })}
       </div>
       <p className="text-center text-xs text-dim">
         {instrument === "vocals"

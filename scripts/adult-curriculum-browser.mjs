@@ -15,7 +15,7 @@ const run = (...args) =>
   execFileSync(process.env.AGENT_BROWSER_BIN ?? "agent-browser", args, { env, encoding: "utf8" });
 const click = (name) => run("find", "role", "button", "click", "--name", name, "--exact");
 const inspect = (code) => run("eval", code);
-mkdirSync("/workspace/screenshots", { recursive: true });
+mkdirSync("screenshots", { recursive: true });
 try {
   run("open", url);
   run("snapshot", "-i");
@@ -60,7 +60,7 @@ try {
   inspect(
     `if([...document.querySelectorAll("button")].some(b=>b.textContent==="Stop phrase"))throw new Error("collapse did not stop")`,
   );
-  run("screenshot", `/workspace/screenshots/${kind}-adult-phrase.png`, "--full");
+  run("screenshot", `screenshots/${kind}-adult-phrase.png`, "--full");
   console.log(run("errors"));
   console.log(JSON.stringify({ kind, passed: true }));
 } finally {
