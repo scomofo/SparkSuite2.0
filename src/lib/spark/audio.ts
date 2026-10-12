@@ -125,35 +125,72 @@ function validFreq(freq: number): boolean {
   return typeof freq === "number" && Number.isFinite(freq) && freq > 0;
 }
 
-/** Karplus–Strong-ish pluck at `freq` Hz. */
-export function pluck(freq: number, when?: number, gain = 0.45) {
+/** Plucked string synthesis at `freq` Hz. Clean, non-feedback physical modeling. */
+export function pluck(freq: number, when?: number, gain = 0.42) {
   if (!validFreq(freq)) return;
   const ac = safeCtx();
   if (!ac || !sfx) return;
   const t = when ?? ac.currentTime;
-  const period = Math.max(20, Math.round(ac.sampleRate / freq));
-  const burst = noiseBuffer(period);
-  if (!burst) return;
-  const src = ac.createBufferSource();
-  src.buffer = burst;
-  const comb = ac.createDelay();
-  comb.delayTime.value = 1 / freq;
-  const fb = ac.createGain();
-  fb.gain.value = 0.96;
-  const lp = ac.createBiquadFilter();
-  lp.type = "lowpass";
-  lp.frequency.value = Math.min(4200, freq * 8);
+  const duration = Math.min(2.0, Math.max(0.6, 260 / freq));
+
   const g = ac.createGain();
   g.gain.setValueAtTime(gain, t);
-  g.gain.exponentialRampToValueAtTime(0.0008, t + 1.6);
-  src.connect(comb);
-  comb.connect(fb);
-  fb.connect(lp);
-  lp.connect(comb);
-  lp.connect(g);
-  g.connect(out());
-  src.start(t);
-  src.stop(t + 0.04);
+  g.gain.exponentialRampToValueAtTime(0.0008, t + duration);
+
+  const lp = ac.createBiquadFilter();
+  lp.type = "lowpass";
+  const startCutoff = Math.min(8000, freq * 6);
+  const endCutoff = Math.min(1800, freq * 2);
+  lp.frequency.setValueAtTime(startCutoff, t);
+  lp.frequency.exponentialRampToValueAtTime(Math.max(120, endCutoff), t + 0.4);
+
+  g.connect(lp);
+  lp.connect(out());
+
+  const osc1 = ac.createOscillator();
+  osc1.type = "triangle";
+  osc1.frequency.value = freq;
+  osc1.connect(g);
+  osc1.start(t);
+  osc1.stop(t + duration);
+
+  const osc2 = ac.createOscillator();
+  osc2.type = "sawtooth";
+  osc2.frequency.value = freq;
+  const g2 = ac.createGain();
+  g2.gain.setValueAtTime(0.25, t);
+  g2.gain.exponentialRampToValueAtTime(0.0008, t + 0.25);
+  osc2.connect(g2);
+  g2.connect(g);
+  osc2.start(t);
+  osc2.stop(t + 0.3);
+
+  const osc3 = ac.createOscillator();
+  osc3.type = "sine";
+  osc3.frequency.value = freq * 2;
+  const g3 = ac.createGain();
+  g3.gain.value = 0.12;
+  osc3.connect(g3);
+  g3.connect(g);
+  osc3.start(t);
+  osc3.stop(t + duration * 0.7);
+
+  const burst = noiseBuffer(Math.max(24, Math.floor(ac.sampleRate * 0.012)));
+  if (burst) {
+    const src = ac.createBufferSource();
+    src.buffer = burst;
+    const ng = ac.createGain();
+    ng.gain.setValueAtTime(0.18, t);
+    ng.gain.exponentialRampToValueAtTime(0.0008, t + 0.02);
+    const nfilter = ac.createBiquadFilter();
+    nfilter.type = "bandpass";
+    nfilter.frequency.value = Math.min(3200, freq * 3);
+    src.connect(nfilter);
+    nfilter.connect(ng);
+    ng.connect(out());
+    src.start(t);
+    src.stop(t + 0.025);
+  }
 }
 
 export function strum(freqs: number[], when?: number) {
