@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { authMiddleware } from "@/lib/auth/middleware";
+import type { ProfileSnapshot } from "./profile-snapshot";
 
 const instrumentId = z.enum([
   "guitar",
@@ -17,10 +18,10 @@ const instrumentId = z.enum([
 
 const payloadSchema = z.object({
   version: z.literal(1),
-  suite: z.unknown(),
-  learning: z.unknown(),
-  checkpoints: z.record(instrumentId, z.string().max(100_000)),
-}).strict();
+  suite: z.record(z.string(), z.unknown()),
+  learning: z.record(z.string(), z.unknown()),
+  checkpoints: z.partialRecord(instrumentId, z.string().max(100_000)),
+}).strict().transform((payload) => payload as unknown as ProfileSnapshot);
 
 const saveSchema = z.object({
   payload: payloadSchema,
@@ -28,7 +29,7 @@ const saveSchema = z.object({
 }).strict();
 
 type CloudRow = {
-  payload: unknown;
+  payload: ProfileSnapshot;
   revision: number;
   updated_at: string | Date;
 };
