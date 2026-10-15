@@ -39,7 +39,7 @@ export function HydrateSpark() {
           userId,
           message: "Checking your cloud progress…",
         });
-        const result = await synchronizeProfile(userId);
+        const result = await synchronizeProfile(userId!);
         if (cancelled) return;
         setSyncState({
           status: result.status,
