@@ -26,7 +26,7 @@ import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
-import { isTonalStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
+import { isTonalStrumSpectrum, isUkuleleStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -404,6 +404,7 @@ describe("acoustic ukulele strum detection", () => {
     const frame = chordFrame();
     const spectrum = chordSpectrum();
     assert.equal(isTonalStrumSpectrum(spectrum, sampleRate, fftSize), true);
+    assert.equal(isUkuleleStrumSpectrum(spectrum, sampleRate, fftSize), true);
     assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, 100), null);
     const event = detector.process(frame, spectrum, sampleRate, fftSize, 132);
     assert.ok(event);
@@ -414,9 +415,12 @@ describe("acoustic ukulele strum detection", () => {
   it("rejects a short broadband click without sustained harmonic energy", () => {
     const detector = new StrumOnsetDetector();
     const flatSpectrum = new Float32Array(fftSize / 2).fill(-30);
+    const clickSpectrum = new Float32Array(fftSize / 2).fill(-100);
+    clickSpectrum[Math.round((880 * fftSize) / sampleRate)] = -25;
     const attack = new Float32Array(fftSize).fill(0.1);
     const quiet = new Float32Array(fftSize).fill(0.001);
     assert.equal(isTonalStrumSpectrum(flatSpectrum, sampleRate, fftSize), false);
+    assert.equal(isUkuleleStrumSpectrum(clickSpectrum, sampleRate, fftSize), false);
     assert.equal(detector.process(attack, flatSpectrum, sampleRate, fftSize, 100), null);
     assert.equal(detector.process(quiet, flatSpectrum, sampleRate, fftSize, 140), null);
     assert.equal(detector.process(quiet, flatSpectrum, sampleRate, fftSize, 220), null);
