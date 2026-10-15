@@ -23,6 +23,7 @@ type LearningStore = {
   hydrated: boolean;
   storageOk: boolean;
   hydrate: () => void;
+  reloadFromStorage: () => void;
   begin: (id: string) => void;
   advance: (id: string) => void;
   answer: (id: string, answer: number) => void;
@@ -51,6 +52,7 @@ export const useLearning = create<LearningStore>((set, get) => {
     hydrate: () => {
       if (!get().hydrated) set({ ...loadLearning(), hydrated: true });
     },
+    reloadFromStorage: () => set({ ...loadLearning(), hydrated: true }),
     begin: (id) => update((data) => beginLearning(data, id)),
     advance: (id) => update((data) => advanceLearning(data, id)),
     answer: (id, answer) => update((data) => answerLearning(data, id, answer)),
