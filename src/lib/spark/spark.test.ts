@@ -26,6 +26,7 @@ import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
+import { isTonalStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -364,6 +365,69 @@ describe("tuner guards (review P4)", () => {
   it("yinPitchFast handles short buffers via the full path", () => {
     const r = yinPitchFast(new Float32Array(128).fill(0.5), 44100);
     assert.equal(typeof r, "number");
+  });
+});
+
+
+describe("acoustic ukulele strum detection", () => {
+  const sampleRate = 48000;
+  const fftSize = 2048;
+
+  function chordFrame() {
+    return Float32Array.from({ length: fftSize }, (_, i) => {
+      const t = (2 * Math.PI * i) / sampleRate;
+      return (
+        0.06 * Math.sin(196 * t) +
+        0.05 * Math.sin(261.63 * t) +
+        0.04 * Math.sin(329.63 * t) +
+        0.03 * Math.sin(440 * t)
+      );
+    });
+  }
+
+  function chordSpectrum() {
+    const spectrum = new Float32Array(fftSize / 2).fill(-100);
+    for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25, 784, 880, 1046.5]) {
+      const center = Math.round((hz * fftSize) / sampleRate);
+      for (let offset = -1; offset <= 1; offset++) {
+        const index = center + offset;
+        if (index >= 0 && index < spectrum.length) {
+          spectrum[index] = Math.max(spectrum[index], offset === 0 ? -24 : -36);
+        }
+      }
+    }
+    return spectrum;
+  }
+
+  it("confirms a sustained harmonic strum and preserves its original attack time", () => {
+    const detector = new StrumOnsetDetector();
+    const frame = chordFrame();
+    const spectrum = chordSpectrum();
+    assert.equal(isTonalStrumSpectrum(spectrum, sampleRate, fftSize), true);
+    assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, 100), null);
+    const event = detector.process(frame, spectrum, sampleRate, fftSize, 132);
+    assert.ok(event);
+    assert.equal(event.onsetMs, 100);
+    assert.ok(event.level > 0.008);
+  });
+
+  it("rejects a short broadband click without sustained harmonic energy", () => {
+    const detector = new StrumOnsetDetector();
+    const flatSpectrum = new Float32Array(fftSize / 2).fill(-30);
+    const attack = new Float32Array(fftSize).fill(0.1);
+    const quiet = new Float32Array(fftSize).fill(0.001);
+    assert.equal(isTonalStrumSpectrum(flatSpectrum, sampleRate, fftSize), false);
+    assert.equal(detector.process(attack, flatSpectrum, sampleRate, fftSize, 100), null);
+    assert.equal(detector.process(quiet, flatSpectrum, sampleRate, fftSize, 140), null);
+    assert.equal(detector.process(quiet, flatSpectrum, sampleRate, fftSize, 220), null);
+  });
+
+  it("ignores invalid timestamps and empty frames", () => {
+    const detector = new StrumOnsetDetector();
+    const frame = new Float32Array(fftSize);
+    const spectrum = new Float32Array(fftSize / 2).fill(-100);
+    assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, Number.NaN), null);
+    assert.equal(detector.process(new Float32Array(0), spectrum, sampleRate, fftSize, 100), null);
   });
 });
 
