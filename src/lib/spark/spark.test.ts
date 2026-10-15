@@ -27,6 +27,7 @@ import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import { isTonalStrumSpectrum, isUkuleleStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
+import { frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -432,6 +433,71 @@ describe("acoustic ukulele strum detection", () => {
     const spectrum = new Float32Array(fftSize / 2).fill(-100);
     assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, Number.NaN), null);
     assert.equal(detector.process(new Float32Array(0), spectrum, sampleRate, fftSize, 100), null);
+  });
+});
+
+
+describe("general acoustic instrument input", () => {
+  const sampleRate = 48000;
+  const fftSize = 4096;
+
+  function tone(hz: number, amplitude = 0.2) {
+    return Float32Array.from(
+      { length: fftSize },
+      (_, i) => amplitude * Math.sin((2 * Math.PI * hz * i) / sampleRate),
+    );
+  }
+
+  it("converts detected frequencies to equal-tempered MIDI notes", () => {
+    assert.equal(frequencyToMidi(261.63), 60);
+    assert.equal(frequencyToMidi(440), 69);
+    assert.equal(frequencyToMidi(41.2), 28);
+    assert.equal(frequencyToMidi(0), -1);
+  });
+
+  it("detects a plucked pitch once, avoids repeats while sustained, and follows a new note", () => {
+    const detector = new PitchOnsetDetector();
+    const first = detector.process(tone(220), sampleRate, 100, 2, 35, 1200);
+    assert.ok(first);
+    assert.equal(first.midi, 57);
+    assert.ok(first.onsetMs < 100);
+    assert.equal(detector.process(tone(220), sampleRate, 260, 2, 35, 1200), null);
+
+    const next = detector.process(tone(329.63), sampleRate, 420, 2, 35, 1200);
+    assert.ok(next);
+    assert.equal(next.midi, 64);
+  });
+
+  it("rejects silence for pitched input", () => {
+    const detector = new PitchOnsetDetector();
+    assert.equal(detector.process(new Float32Array(fftSize), sampleRate, 100, 2), null);
+  });
+
+  it("classifies low kick-like and bright snare-like acoustic attacks", () => {
+    function attackAt(hz: number) {
+      const samples = new Float32Array(fftSize);
+      for (let i = fftSize - 512; i < fftSize; i++) {
+        samples[i] = 0.2 * Math.sin((2 * Math.PI * hz * i) / sampleRate);
+      }
+      const spectrum = new Float32Array(fftSize / 2).fill(-100);
+      for (const peakHz of (hz < 200 ? [hz, hz * 2] : [hz, hz * 1.4, hz * 1.8])) {
+        const index = Math.round((peakHz * fftSize) / sampleRate);
+        if (index < spectrum.length) spectrum[index] = -18;
+      }
+      return { samples, spectrum };
+    }
+
+    const kickDetector = new PercussionOnsetDetector();
+    const kick = attackAt(80);
+    const kickEvent = kickDetector.process(kick.samples, kick.spectrum, sampleRate, fftSize, 100);
+    assert.ok(kickEvent);
+    assert.equal(kickEvent.padIndex, 0);
+
+    const snareDetector = new PercussionOnsetDetector();
+    const snare = attackAt(1800);
+    const snareEvent = snareDetector.process(snare.samples, snare.spectrum, sampleRate, fftSize, 100);
+    assert.ok(snareEvent);
+    assert.equal(snareEvent.padIndex, 1);
   });
 });
 
