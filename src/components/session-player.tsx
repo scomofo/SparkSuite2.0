@@ -28,6 +28,8 @@ import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { PitchMatch } from "@/components/tuner-panel";
+import { startMicAnalyser } from "@/lib/spark/tuner";
+import { StrumOnsetDetector } from "@/lib/spark/strum-detection";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
@@ -133,6 +135,9 @@ export function SessionPlayer() {
   const [modeling, setModeling] = useState(false);
   const [createPick, setCreatePick] = useState<string | null>(null);
   const [listenPick, setListenPick] = useState<"same" | "different" | null>(null);
+  const [micStatus, setMicStatus] = useState<"off" | "starting" | "listening" | "blocked">("off");
+  const [micError, setMicError] = useState<string | null>(null);
+  const [visualOnly, setVisualOnly] = useState(false);
   const notesRef = useRef<NoteEvent[]>([]);
   const consumed = useRef<Set<number>>(new Set());
   const startRef = useRef(0);
@@ -143,10 +148,28 @@ export function SessionPlayer() {
   const missesRef = useRef(0);
   const modelTimers = useRef<number[]>([]);
   const needsPickRef = useRef(false);
+  const visualOnlyRef = useRef(false);
+  const phaseRef = useRef<Phase>("intro");
+  const requiresUkuleleMicRef = useRef(false);
+  const micStopRef = useRef<(() => void) | null>(null);
+  const micFrameRef = useRef(0);
+  const micRequestRef = useRef(0);
+  const attemptRef = useRef<((kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number) => void) | null>(null);
+  const requiresUkuleleMic =
+    instrument === "ukulele" &&
+    item !== null &&
+    !isPluckDrill(item) &&
+    (item.surface ?? inst.surface) === "strings";
+  phaseRef.current = phase;
+  requiresUkuleleMicRef.current = requiresUkuleleMic;
 
   useEffect(() => () => {
     pauseSession();
+    micRequestRef.current += 1;
+    micStopRef.current?.();
+    micStopRef.current = null;
     cancelAnimationFrame(raf.current);
+    cancelAnimationFrame(micFrameRef.current);
     for (const id of modelTimers.current) window.clearTimeout(id);
   }, [pauseSession]);
 
@@ -168,6 +191,8 @@ export function SessionPlayer() {
     setModeling(false);
     setCreatePick(null);
     setListenPick(null);
+    setVisualOnly(false);
+    visualOnlyRef.current = false;
     consumed.current = new Set();
     notesRef.current = [];
     lastBeat.current = -1;
@@ -196,6 +221,7 @@ export function SessionPlayer() {
 
   const beginPlay = useCallback(() => {
     if (!effectiveItem) return;
+    if (requiresUkuleleMic && micStatus !== "listening" && !visualOnlyRef.current) return;
     unlockAudio();
     notesRef.current = buildTimeline(effectiveItem);
     consumed.current = new Set();
@@ -207,7 +233,7 @@ export function SessionPlayer() {
     setPhase("countin");
     setCount(4);
     setLiveChord(effectiveItem.chords[0] ?? "");
-  }, [effectiveItem]);
+  }, [effectiveItem, micStatus, requiresUkuleleMic]);
 
   useEffect(() => {
     if (phase !== "countin" || !item) return;
@@ -233,9 +259,9 @@ export function SessionPlayer() {
   }, [item, phase]);
 
   const onJudge = useCallback(
-    (judge: HitJudge) => {
+    (judge: HitJudge, soundFeedback = true) => {
       setFlash(judge);
-      hitSfx(judge);
+      if (soundFeedback) hitSfx(judge);
       window.setTimeout(() => setFlash(null), 140);
       if (judge === "miss") {
         setCombo(0);
@@ -244,7 +270,7 @@ export function SessionPlayer() {
       } else {
         setCombo((c) => {
           const n = c + 1;
-          if (isComboGate(n)) comboSting(n);
+          if (soundFeedback && isComboGate(n)) comboSting(n);
           return n;
         });
         hitsRef.current += 1;
@@ -255,13 +281,15 @@ export function SessionPlayer() {
   );
 
   const attempt = useCallback(
-    (kind: "strum" | "pluck", stringIndex?: number) => {
+    (kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number) => {
       if (phase !== "play" || !item) return;
+      const fromMic = detectedAtMs !== undefined;
+      if (requiresUkuleleMic && !fromMic) return;
       if (hasInstrumentPattern(item)) {
         kind = "strum";
         stringIndex = undefined;
       }
-      const t = (performance.now() - startRef.current) / 1000;
+      const t = ((detectedAtMs ?? performance.now()) - startRef.current) / 1000;
       const pending = notesRef.current.filter((_, i) => !consumed.current.has(i));
       const res = consumeHit(pending, t, item.windowMs ?? 230);
 
@@ -274,19 +302,22 @@ export function SessionPlayer() {
       }
 
       if (!res.hit || !res.note) {
-        onJudge("miss");
+        onJudge("miss", !fromMic);
         return;
       }
       // Pluck/pad/key notes carry an expected string/pad/midi. Timing alone
       // is not enough — a wrong string, key, or pad is a miss.
       if (res.note.string !== undefined && stringIndex !== res.note.string) {
-        onJudge("miss");
+        onJudge("miss", !fromMic);
         return;
       }
       const realIndex = notesRef.current.indexOf(res.note);
       consumed.current.add(realIndex);
       if (kind !== "pluck") {
-        if (res.note.notes || res.note.muted) {
+        if (fromMic) {
+          // Do not play a synthetic chord or hit sound back into the open mic.
+          if (res.note.chord) setLiveChord(res.note.chord);
+        } else if (res.note.notes || res.note.muted) {
           playMusicalEvent(res.note, item.bpm);
           if (res.note.chord) setLiveChord(res.note.chord);
         } else if (res.note.chord) {
@@ -304,10 +335,80 @@ export function SessionPlayer() {
       } else if (res.note.chord) {
         setLiveChord(res.note.chord);
       }
-      onJudge(res.judge);
+      onJudge(res.judge, !fromMic);
     },
-    [inst, instrument, item, onJudge, phase],
+    [inst, instrument, item, onJudge, phase, requiresUkuleleMic],
   );
+
+  attemptRef.current = attempt;
+
+  const startUkuleleMic = useCallback(async () => {
+    if (!requiresUkuleleMic) return;
+    const request = ++micRequestRef.current;
+    micStopRef.current?.();
+    micStopRef.current = null;
+    setMicStatus("starting");
+    setMicError(null);
+    unlockAudio();
+
+    const mic = await startMicAnalyser(2048);
+    if (request !== micRequestRef.current) {
+      mic?.stop();
+      return;
+    }
+    if (!mic) {
+      setMicStatus("blocked");
+      setMicError("Microphone access was blocked or unavailable. Allow access in your browser and try again.");
+      return;
+    }
+
+    const detector = new StrumOnsetDetector();
+    const timeData = new Float32Array(mic.analyser.fftSize);
+    const spectrumData = new Float32Array(mic.analyser.frequencyBinCount);
+    micStopRef.current = () => {
+      cancelAnimationFrame(micFrameRef.current);
+      mic.stop();
+    };
+    setMicStatus("listening");
+
+    const loop = (ts: number) => {
+      if (request !== micRequestRef.current) return;
+      mic.analyser.getFloatTimeDomainData(timeData);
+      mic.analyser.getFloatFrequencyData(spectrumData);
+      const onset = detector.process(
+        timeData,
+        spectrumData,
+        mic.ctx.sampleRate,
+        mic.analyser.fftSize,
+        ts,
+      );
+      if (
+        onset &&
+        phaseRef.current === "play" &&
+        requiresUkuleleMicRef.current &&
+        !visualOnlyRef.current
+      ) {
+        attemptRef.current?.("strum", undefined, onset.onsetMs);
+      }
+      micFrameRef.current = requestAnimationFrame(loop);
+    };
+    micFrameRef.current = requestAnimationFrame(loop);
+  }, [requiresUkuleleMic]);
+
+  const stopUkuleleMic = useCallback(() => {
+    micRequestRef.current += 1;
+    micStopRef.current?.();
+    micStopRef.current = null;
+    setMicStatus("off");
+    setMicError(null);
+  }, []);
+
+  const beginVisualOnly = useCallback(() => {
+    if (!requiresUkuleleMic || needsPickRef.current || modeling) return;
+    visualOnlyRef.current = true;
+    setVisualOnly(true);
+    beginPlay();
+  }, [beginPlay, modeling, requiresUkuleleMic]);
 
   useEffect(() => {
     if (phase !== "play" || !item) return;
@@ -324,11 +425,13 @@ export function SessionPlayer() {
         if (upcoming?.string !== undefined) setExpectedString(upcoming.string);
         if (upcoming?.chord) setLiveChord(upcoming.chord);
       }
-      for (let i = 0; i < notesRef.current.length; i++) {
-        if (consumed.current.has(i)) continue;
-        if (elapsed - notesRef.current[i].t > (item.windowMs ?? 230) / 1000) {
-          consumed.current.add(i);
-          onJudge("miss");
+      if (!visualOnlyRef.current) {
+        for (let i = 0; i < notesRef.current.length; i++) {
+          if (consumed.current.has(i)) continue;
+          if (elapsed - notesRef.current[i].t > (item.windowMs ?? 230) / 1000) {
+            consumed.current.add(i);
+            onJudge("miss");
+          }
         }
       }
       const last = notesRef.current[notesRef.current.length - 1];
@@ -379,7 +482,8 @@ export function SessionPlayer() {
   }, [pauseSession, attempt, beginPlay, inst.stringNames.length, inst.surface, item?.surface, modeling, navigate, phase]);
 
   const goNext = useCallback(() => {
-    finishItem();
+    if (visualOnlyRef.current) skipCurrent();
+    else finishItem();
     const s = useSpark.getState().session;
     if (!s || isSessionDone(s)) {
       finishDay();
@@ -387,7 +491,7 @@ export function SessionPlayer() {
     } else {
       resetItem();
     }
-  }, [finishDay, finishItem, navigate, resetItem]);
+  }, [finishDay, finishItem, navigate, resetItem, skipCurrent]);
 
   const skipThis = useCallback(() => {
     setCombo(0);
@@ -471,10 +575,10 @@ export function SessionPlayer() {
   );
 
   useEffect(() => {
-    if (phase !== "itemdone") return;
+    if (phase !== "itemdone" || visualOnly) return;
     const id = window.setTimeout(() => goNext(), AUTO_ADVANCE_MS);
     return () => window.clearTimeout(id);
-  }, [goNext, phase]);
+  }, [goNext, phase, visualOnly]);
 
   if (!session || !item) return null;
 
@@ -605,7 +709,52 @@ export function SessionPlayer() {
                 )}
               </div>
             ) : null}
-            <Button size="xl" className="w-full" onClick={beginPlay} disabled={modeling || Boolean(needsPick)}>
+            {requiresUkuleleMic ? (
+              <section className="w-full rounded-lg border border-border bg-surface p-4">
+                <p role="status" className="text-sm leading-relaxed text-muted">
+                  {micStatus === "listening"
+                    ? "Microphone ready. Play your real ukulele; acoustic strum timing will be scored."
+                    : micStatus === "starting"
+                      ? "Requesting microphone access…"
+                      : micError ?? "Enable the microphone to score real ukulele strums. Audio is analyzed locally, never recorded or uploaded."}
+                </p>
+                <div className="mt-3 grid gap-2">
+                  <Button
+                    variant={micStatus === "listening" ? "secondary" : "primary"}
+                    disabled={micStatus === "starting"}
+                    onClick={() => (micStatus === "listening" ? stopUkuleleMic() : void startUkuleleMic())}
+                  >
+                    {micStatus === "starting"
+                      ? "Opening microphone…"
+                      : micStatus === "listening"
+                        ? "Stop microphone"
+                        : "Enable microphone"}
+                  </Button>
+                  {micStatus !== "listening" ? (
+                    <Button
+                      variant="ghost"
+                      disabled={modeling || Boolean(needsPick) || micStatus === "starting"}
+                      onClick={beginVisualOnly}
+                    >
+                      Continue without mic (unscored)
+                    </Button>
+                  ) : null}
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-dim">
+                  Headphones help keep the metronome out of the microphone. The detector checks strum timing, not chord fingering or down/up direction.
+                </p>
+              </section>
+            ) : null}
+            <Button
+              size="xl"
+              className="w-full"
+              onClick={beginPlay}
+              disabled={
+                modeling ||
+                Boolean(needsPick) ||
+                (requiresUkuleleMic && micStatus !== "listening" && !visualOnly)
+              }
+            >
               Count me in
             </Button>
             {item.process === "respond" ? null : (
@@ -691,8 +840,27 @@ export function SessionPlayer() {
 
             <p className="text-center font-display text-sm tabular text-dim">beat {beatN}</p>
             <p className="text-center text-sm text-muted">{item.interpret ?? coachCue(item)}</p>
-            <p className="text-center text-sm text-dim">{musicalPattern ? "Tap with each note or muted click. Taps practise timing; they do not assess your instrument playing." : patternInWords(item.pattern)}</p>
-            {expectsSpecific ? (
+            <p className="text-center text-sm text-dim">
+              {requiresUkuleleMic
+                ? "Strum your actual ukulele when the cue arrives. The microphone scores attack timing, not chord accuracy."
+                : musicalPattern
+                  ? "Tap with each note or muted click. Taps practise timing; they do not assess your instrument playing."
+                  : patternInWords(item.pattern)}
+            </p>
+            {requiresUkuleleMic ? (
+              <section className="w-full rounded-lg border border-border bg-surface p-4">
+                <p role="status" className="text-center text-sm font-medium text-muted">
+                  {visualOnly
+                    ? "Visual-only practice. This attempt will not be scored."
+                    : micStatus === "listening"
+                      ? "Listening for your ukulele strums…"
+                      : "Microphone unavailable. This attempt will not be scored."}
+                </p>
+                <p className="mt-2 text-center text-xs leading-relaxed text-dim">
+                  Play the shown chord on the beat. Use headphones for the click; no audio is recorded or uploaded.
+                </p>
+              </section>
+            ) : expectsSpecific ? (
               <p className="text-center text-sm text-muted">Tap the highlighted pad, key, or string — pitch and timing both count.</p>
             ) : (
               <Button
@@ -730,12 +898,20 @@ export function SessionPlayer() {
               {session.index + 1} / {session.plan.items.length}
             </p>
             <p className="font-display text-4xl font-semibold">
-              {itemCloseCopy(itemSummary?.stars ?? 0, lastItem)}
+              {visualOnly ? "Pattern complete" : itemCloseCopy(itemSummary?.stars ?? 0, lastItem)}
             </p>
-            <p className="tabular text-muted">
-              {itemSummary?.stars ?? 0}★ · {Math.round((itemSummary?.accuracy ?? 0) * 100)}% · +{itemSummary?.xp ?? 0} xp
-            </p>
-            <p className="text-pretty text-sm text-muted">{refineLine(item, itemSummary?.stars ?? 0)}</p>
+            {visualOnly ? (
+              <p className="text-pretty text-sm text-muted">
+                Visual-only practice is not scored. No hits, misses, or XP were recorded.
+              </p>
+            ) : (
+              <>
+                <p className="tabular text-muted">
+                  {itemSummary?.stars ?? 0}★ · {Math.round((itemSummary?.accuracy ?? 0) * 100)}% · +{itemSummary?.xp ?? 0} xp
+                </p>
+                <p className="text-pretty text-sm text-muted">{refineLine(item, itemSummary?.stars ?? 0)}</p>
+              </>
+            )}
             <Button size="lg" className="w-full" onClick={goNext}>
               {lastItem ? "See today" : "Next"}
             </Button>
