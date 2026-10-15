@@ -44,7 +44,7 @@ const COPY: Record<DrumTab, { kicker: string; title: string; body: string; hear:
     kicker: "The comma",
     title: "A fill is a breath, not a solo",
     body: "Toms walk you from the end of a phrase back into one. Count it. Land on the kick of the next bar, not in the middle of a thought.",
-    hear: "Kick, snare, tom, tom — then you’re home.",
+    hear: "Kick, snare, tom, tom, snare, hat — then land the next bar yourself.",
   },
 };
 

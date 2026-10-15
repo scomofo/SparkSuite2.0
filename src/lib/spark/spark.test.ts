@@ -604,11 +604,17 @@ describe("polyphonic chord assessment", () => {
     assert.equal(assessChordPitches(analysis, [40, 47]).status, "match");
   });
 
-  it("flags a clearly different chord but keeps a partly masked chord uncertain", () => {
+  it("requires every expected chord tone and rejects a confident partial voicing", () => {
     const wrong = analyzeChordSpectrum(spectrumFor([42, 49, 54, 57, 61, 66]), sampleRate, fftSize);
     assert.equal(assessChordPitches(wrong, em).status, "mismatch");
-    const partlyMasked = analyzeChordSpectrum(spectrumFor([40, 47, 52, 59, 64]), sampleRate, fftSize);
-    assert.equal(assessChordPitches(partlyMasked, em).status, "uncertain");
+
+    const fiveOfSix = analyzeChordSpectrum(spectrumFor([40, 47, 52, 59, 64]), sampleRate, fftSize);
+    const partial = assessChordPitches(fiveOfSix, em);
+    assert.equal(partial.status, "mismatch");
+    assert.deepEqual(partial.missingMidi, [55]);
+
+    const weak = analyzeChordSpectrum(new Float32Array(fftSize / 2).fill(-110), sampleRate, fftSize);
+    assert.equal(assessChordPitches(weak, em).status, "uncertain");
   });
 });
 

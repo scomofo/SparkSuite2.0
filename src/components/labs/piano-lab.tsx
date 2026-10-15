@@ -21,32 +21,32 @@ const TABS: { id: PianoTab; label: string }[] = [
 const COPY: Record<PianoTab, { kicker: string; title: string; body: string; hear: string }> = {
   middlec: {
     kicker: "Home key",
-    title: "Two black keys. C is the left one.",
+    title: "Two black keys. C is just left of them.",
     body: "Find the pair of black keys. The white key immediately left is C. Middle C is the one near the middle of the keyboard. Everything else is measured from here.",
     hear: "Eight C’s. Same pitch. Same finger if you want.",
   },
   triad: {
     kicker: "The chord",
     title: "Skip a tooth, skip a tooth",
-    body: "Root, skip, third, skip, fifth. C–E–G. Play them one at a time, then together. The skip is the shape. The names come later.",
-    hear: "C, E, G, then all three.",
+    body: "Root, skip, third, skip, fifth. Play them one at a time, then together. The skip is the shape. The names come later.",
+    hear: "Root, third, fifth, then all three.",
   },
   invert: {
     kicker: "Same notes, new bass",
     title: "The bottom note is the story",
-    body: "Root position: C on the bottom. First inversion: E. Second: G. Same three pitches. The lowest one decides how heavy it feels.",
-    hear: "C–E–G, then E–G–C, then G–C–E.",
+    body: "Root position: the root on the bottom. First inversion: the third. Second: the fifth. Same three pitches. The lowest one decides how heavy it feels.",
+    hear: "Root position, then first inversion, then second.",
   },
   cadence: {
     kicker: "Gravity",
     title: "G wants to fall into C",
-    body: "The five chord is a step above the home chord’s fifth — that’s why it pulls. Play C, then G, then C. Don’t rush the return. The return is the point.",
+    body: "The five chord is built on the fifth note of the home scale — G in the key of C. Its third, B, sits one key below C and leans toward it; that’s the pull. Play C, then G, then C. Don’t rush the return. The return is the point.",
     hear: "Home. Away. Home.",
   },
   five: {
     kicker: "The hand",
     title: "One finger per white key",
-    body: "Thumb on C, pinky on G. Walk up, walk down. Don’t collapse the unused fingers. The five-finger position is how every beginner piece starts — because it’s true.",
+    body: "Right hand: thumb on C, pinky on G. Left hand mirrors it — pinky on C, thumb on G. Walk up, walk down. Don’t collapse the unused fingers. The five-finger position is how every beginner piece starts — because it’s true.",
     hear: "C D E F G, then back down.",
   },
 };
@@ -114,20 +114,21 @@ function line(
     ];
   }
   if (tab === "cadence") {
+    const home = PIANO_VOICINGS.C ?? [60, 64, 67];
     const g = PIANO_VOICINGS.G ?? [67, 71, 74];
     return [
-      { beat: 0, midis: voicing, label: chord },
-      { beat: 1, midis: voicing, label: chord },
+      { beat: 0, midis: home, label: "C" },
+      { beat: 1, midis: home, label: "C" },
       { beat: 2, midis: g, label: "G" },
       { beat: 3, midis: g, label: "G" },
-      { beat: 4, midis: voicing, label: chord },
-      { beat: 5, midis: voicing, label: chord },
+      { beat: 4, midis: home, label: "C" },
+      { beat: 5, midis: home, label: "C" },
       { beat: 6, midis: g, label: "G" },
-      { beat: 7, midis: voicing, label: chord },
+      { beat: 7, midis: home, label: "C" },
     ];
   }
-  const scale = [60, 62, 64, 65, 67, 65, 64, 62];
-  const names = ["C", "D", "E", "F", "G", "F", "E", "D"];
+  const scale = [60, 62, 64, 65, 67, 65, 64, 60];
+  const names = ["C", "D", "E", "F", "G", "F", "E", "C"];
   return scale.map((m, i) => ({ beat: i, midis: [m], label: names[i] ?? "C" }));
 }
 
@@ -179,7 +180,7 @@ export function PianoLab() {
         <TabRow tabs={TABS} active={tab} onPick={(id) => patch({ tab: id })} />
       </div>
       <div className="px-5 pb-8 pt-5">
-        {tab !== "middlec" && tab !== "five" ? (
+        {tab !== "middlec" && tab !== "five" && tab !== "cadence" ? (
           <>
             <p className="text-[11px] uppercase tracking-[0.18em] text-dim">Chord</p>
             <div className="mt-2 flex flex-wrap gap-1.5">
