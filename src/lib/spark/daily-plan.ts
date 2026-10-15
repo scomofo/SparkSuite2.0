@@ -12,7 +12,7 @@ import {
 } from "./instruments.ts";
 import { feelFor, scaledBpm, type PlanFeel } from "./psychology.ts";
 import { analysisFor, criteriaFor, nextUnlockedProcess, processPromise } from "./nafme.ts";
-import type { DailyPlan, PlanItem, ProgressState } from "./types.ts";
+import { beatsPerBarOf, type DailyPlan, type PlanItem, type ProgressState } from "./types.ts";
 
 function warmupItem(progress: ProgressState, bpm: number, firstDay: boolean, windowMs: number): PlanItem {
   const needsTune = !firstDay && (progress.mastery["lesson_guitar_tuning_01"] ?? 0) < 0.7;
@@ -48,11 +48,12 @@ function fromLesson(lessonId: string, feel: PlanFeel, extra?: Partial<PlanItem>,
       type: lesson.type,
       title: lesson.title,
       subtitle: lesson.why ?? lesson.objectives[0] ?? "",
-      durationSec: Math.round((lesson.bars * 4 * 60) / bpm),
+      durationSec: Math.round((lesson.bars * beatsPerBarOf(lesson) * 60) / bpm),
       lessonId: lesson.id,
       chords: lesson.chords,
       pattern: lesson.pattern,
       bars: lesson.bars,
+      beatsPerBar: lesson.beatsPerBar,
       bpm,
       windowMs: feel.windowMs,
       objectives: lesson.objectives,

@@ -1,6 +1,6 @@
 import { banjoRollBar, lessonExercise, type PracticeCue } from "./lesson-practice.ts";
 import { BANJO_CHORDS } from "./instruments.ts";
-import type { PlanItem } from "./types.ts";
+import { beatsPerBarOf, type PlanItem } from "./types.ts";
 
 /** Labs and Today share the musical specification used by Learn. */
 export function instrumentLabPattern(
@@ -805,7 +805,7 @@ export const VOCAL_DAILY_CUES: Record<string, { beats: number; cues: VocalDailyC
 export function vocalDailyCues(item: PlanItem): PracticeCue[] | undefined {
   const pattern = VOCAL_DAILY_CUES[item.lessonId ?? ""];
   if (!pattern || item.process === "respond" || item.process === "create") return undefined;
-  const total = item.bars * 4;
+  const total = item.bars * beatsPerBarOf(item);
   const cues: PracticeCue[] = [];
   for (let start = 0; start < total; start += pattern.beats) {
     for (const cue of pattern.cues) {
@@ -929,7 +929,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke;
   if (bespoke) {
     const cues: PracticeCue[] = [];
-    const total = item.bars * 4;
+    const total = item.bars * beatsPerBarOf(item);
     for (let start = 0; start < total; start += bespoke.beats) {
       for (const cue of bespoke.cues) {
         const beat = start + cue.beat;
@@ -946,7 +946,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   const violinBespoke = VIOLIN_DAILY_CUES[item.lessonId ?? ""];
   if (violinBespoke) {
     const cues: PracticeCue[] = [];
-    const total = item.bars * 4;
+    const total = item.bars * beatsPerBarOf(item);
     for (let start = 0; start < total; start += violinBespoke.beats) {
       for (const cue of violinBespoke.cues) {
         const beat = start + cue.beat;
@@ -967,7 +967,8 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (vocal) return vocal;
   const exercise = lessonExercise(DAILY_EXERCISES[item.lessonId])!;
   const cues: PracticeCue[] = [];
-  const total = item.bars * 4;
+  const bpb = beatsPerBarOf(item);
+  const total = item.bars * bpb;
   const chordBars = Math.max(1, Math.floor(item.bars / Math.max(1, item.chords.length)));
   for (let bar = 0; bar < item.bars; bar++) {
     const chord = item.chords[Math.floor(bar / chordBars) % item.chords.length] ?? "G";
@@ -1052,9 +1053,13 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
       });
       continue;
     }
-    const cycleBeat = (bar * 4) % exercise.beats;
-    for (const cue of exercise.cues.filter((c) => c.beat >= cycleBeat && c.beat < cycleBeat + 4)) {
-      const next = { ...cue, beat: bar * 4 + cue.beat - cycleBeat };
+    // Generic tiling: each bar shows the next beatsPerBar-wide window of
+    // the exercise phrase, cycling by phrase length. The lesson-id special
+    // cases above stay literal — they encode specific 4/4 music for their
+    // own lessons, not engine geometry.
+    const cycleBeat = (bar * bpb) % exercise.beats;
+    for (const cue of exercise.cues.filter((c) => c.beat >= cycleBeat && c.beat < cycleBeat + bpb)) {
+      const next = { ...cue, beat: bar * bpb + cue.beat - cycleBeat };
       // The daily chop can move from G to C; retain its mute on every backbeat.
       if (item.lessonId === "lesson_mandolin_chop_01") {
         next.chord = chord;

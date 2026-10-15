@@ -1,4 +1,4 @@
-import { JUDGE_WINDOWS, type HitJudge, type ItemResult, type PlanItem } from "./types.ts";
+import { JUDGE_WINDOWS, beatsPerBarOf, type HitJudge, type ItemResult, type PlanItem } from "./types.ts";
 import {
   dailyInstrumentCues,
   drumDailyPattern,
@@ -50,6 +50,7 @@ export function isPluckDrill(item: Pick<PlanItem, "type" | "process"> & { lesson
 
 /** Build an abstract exercise timeline in seconds from bar 0. */
 export function buildTimeline(item: PlanItem): NoteEvent[] {
+  const bpb = beatsPerBarOf(item);
   const musical = dailyInstrumentCues(item);
   let direction: "up" | "down" = "down";
   if (musical) return musical.filter((cue) => cue.notes?.length || cue.muted).map((cue) => {
@@ -58,7 +59,7 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
     return {
     t: cue.beat * 60 / item.bpm,
     kind: direction,
-    bar: Math.floor(cue.beat / 4), beat: cue.beat % 4,
+    bar: Math.floor(cue.beat / bpb), beat: cue.beat % bpb,
     notes: cue.notes, muted: cue.muted, duration: cue.duration, label: cue.label, chord: cue.chord,
     // Judged cues (vocals; violin's fingered notes; lap steel's barred
     // notes) carry expectedMidi onto the event. The voice surface also mirrors it into `string`, that
@@ -89,10 +90,10 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
   if (drill) {
     const n = Math.max(1, item.stringCount ?? 6);
     for (let bar = 0; bar < item.bars; bar++) {
-      for (let beat = 0; beat < 4; beat++) {
-        const string = n - 1 - ((bar * 4 + beat) % n);
+      for (let beat = 0; beat < bpb; beat++) {
+        const string = n - 1 - ((bar * bpb + beat) % n);
         events.push({
-          t: (bar * 4 + beat) * beatSec,
+          t: (bar * bpb + beat) * beatSec,
           kind: "pluck",
           string,
           bar,
@@ -109,9 +110,9 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
     for (let i = 0; i < subdiv; i++) {
       const step = steps[i];
       if (step === "rest") continue;
-      const beat = (i / subdiv) * 4;
+      const beat = (i / subdiv) * bpb;
       events.push({
-        t: bar * 4 * beatSec + i * ((4 * beatSec) / subdiv),
+        t: bar * bpb * beatSec + i * ((bpb * beatSec) / subdiv),
         kind: step === "up" ? "up" : "down",
         chord,
         bar,
@@ -125,6 +126,7 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
 function drumTimeline(item: PlanItem): NoteEvent[] {
   const declared = drumDailyPattern(item.lessonId);
   if (declared) return drumPatternTimeline(item, declared);
+  const bpb = beatsPerBarOf(item);
   const beatSec = 60 / item.bpm;
   const events: NoteEvent[] = [];
   const id = item.lessonId;
@@ -137,7 +139,7 @@ function drumTimeline(item: PlanItem): NoteEvent[] {
     item.type === "song" ||
     createPick.toLowerCase().includes("four");
   for (let bar = 0; bar < item.bars; bar++) {
-    for (let beat = 0; beat < 4; beat++) {
+    for (let beat = 0; beat < bpb; beat++) {
       let pad: number | null = 0;
       if (kickOnly) {
         pad = beat === 0 ? 0 : null;
@@ -148,7 +150,7 @@ function drumTimeline(item: PlanItem): NoteEvent[] {
       }
       if (pad == null) continue;
       events.push({
-        t: (bar * 4 + beat) * beatSec,
+        t: (bar * bpb + beat) * beatSec,
         kind: "pluck",
         string: pad,
         bar,
@@ -165,8 +167,9 @@ function drumTimeline(item: PlanItem): NoteEvent[] {
  * clipped, so plan-level bar changes cannot push events past the end.
  */
 function drumPatternTimeline(item: PlanItem, pattern: DrumDailyPattern): NoteEvent[] {
+  const bpb = beatsPerBarOf(item);
   const beatSec = 60 / item.bpm;
-  const total = item.bars * 4;
+  const total = item.bars * bpb;
   const events: NoteEvent[] = [];
   for (let offset = 0; offset < total; offset += pattern.beats) {
     for (const hit of pattern.hits) {
@@ -177,8 +180,8 @@ function drumPatternTimeline(item: PlanItem, pattern: DrumDailyPattern): NoteEve
           t: absBeat * beatSec,
           kind: "pluck",
           string: pad,
-          bar: Math.floor(absBeat / 4),
-          beat: absBeat % 4,
+          bar: Math.floor(absBeat / bpb),
+          beat: absBeat % bpb,
           label: hit.label,
           detail: hit.detail,
         });
@@ -189,6 +192,7 @@ function drumPatternTimeline(item: PlanItem, pattern: DrumDailyPattern): NoteEve
 }
 
 function keyWarmup(item: PlanItem): NoteEvent[] {
+  const bpb = beatsPerBarOf(item);
   const beatSec = 60 / item.bpm;
   const events: NoteEvent[] = [];
   const holdC =
@@ -199,10 +203,10 @@ function keyWarmup(item: PlanItem): NoteEvent[] {
     item.lessonId.includes("hold");
   const whites = [60, 62, 64, 65, 67, 69, 71];
   for (let bar = 0; bar < item.bars; bar++) {
-    for (let beat = 0; beat < 4; beat++) {
-      const midi = holdC ? 60 : whites[(bar * 4 + beat) % whites.length];
+    for (let beat = 0; beat < bpb; beat++) {
+      const midi = holdC ? 60 : whites[(bar * bpb + beat) % whites.length];
       events.push({
-        t: (bar * 4 + beat) * beatSec,
+        t: (bar * bpb + beat) * beatSec,
         kind: "pluck",
         string: midi,
         bar,
@@ -262,6 +266,21 @@ export function summarizeItem(item: PlanItem, hits: number, misses: number): Ite
   };
 }
 
-export function countInBeats() {
-  return 4;
+/**
+ * Count-in length: one bar of the item's own meter (3 clicks in 3/4,
+ * 4 by default). No argument = the historical fixed 4.
+ */
+export function countInBeats(item?: { beatsPerBar?: number }) {
+  return beatsPerBarOf(item ?? {});
 }
+
+/**
+ * When a pattern lesson's session clock stops: the last bar line, in
+ * seconds. Lives here so the hard stop is unit-testable rather than
+ * inline arithmetic in the session component.
+ */
+export function patternEndSec(item: PlanItem) {
+  return (item.bars * beatsPerBarOf(item) * 60) / item.bpm;
+}
+
+export { beatsPerBarOf };
