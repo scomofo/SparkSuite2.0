@@ -70,7 +70,7 @@ A two-minute setup starts with one bar and a natural pause. A first-bar attempt 
 
 ## Account sync and portable backups
 
-Sign in from **Account & sync** using Google or X to keep a learner profile available on multiple computers. SparkSuite syncs instrument preferences, daily practice progress and history, lesson completion and review scheduling, milestones, saved musical pieces, and valid same-day session checkpoints. Audio is never uploaded, and temporary coach API keys are not part of the synced profile.
+Sign in from **Account & sync** using Google or X to keep a learner profile available on multiple computers. SparkSuite syncs instrument preferences, daily practice progress and history, lesson completion and review scheduling, milestones, saved shared-phrase notes/stages, and valid same-day session checkpoints. Audio is never uploaded, and temporary coach API keys are not part of the synced profile.
 
 The browser keeps a local copy for offline use. Cloud writes are revision-checked; if two computers have diverged, SparkSuite offers an explicit merge, cloud restore, or cloud replacement instead of silently overwriting one copy. The merge combines independent lesson records, mastery and history, and preserves additive XP deltas when a common sync baseline exists.
 
