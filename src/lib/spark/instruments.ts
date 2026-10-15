@@ -2169,7 +2169,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     pattern: "DU",
     bars: 8,
     bpm: 60,
-    prerequisites: ["lesson_violin_first_finger_01"],
+    prerequisites: ["lesson_violin_first_finger_01", "lesson_violin_walk_01"],
     masteryRequired: 0.75,
     why: "The bow keeps moving while the finger changes.",
   },

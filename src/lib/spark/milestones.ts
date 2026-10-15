@@ -347,7 +347,7 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
     variation: "Slur the pairs",
     variationHint:
       "In the first three bars, play D–E in one down-bow, then F♯ alone on an up-bow. End with one held D down-bow.",
-    lessons: ["violin-open-strings-and-bow", "violin-bow-pulse", "violin-first-finger"],
+    lessons: ["violin-open-strings-and-bow", "violin-bow-pulse", "violin-first-finger", "violin-d-tetrachord"],
     bpm: 50,
     beats: 16,
     cues: violin,

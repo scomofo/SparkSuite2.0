@@ -277,7 +277,7 @@ const PATTERNS: Record<string, QuestPattern> = {
   ]},
   "violin-side-advanced": { bpm: 60, cues: [
     n(0,"D string E",64,"First colour."), n(1,"F#",66,"Stay on lower string where possible."), n(2,"G",67,"Warm register."), r(3),
-    n(4,"A string E",76,"Same pitch class in a brighter register/route."), n(5,"F#",78,"Compare colour."), n(6,"G",79,"Compare ease and connection."), r(7),
+    n(4,"E string E",76,"Second colour: the same phrase an octave up, starting on open E."), n(5,"F#",78,"First finger on the E string."), n(6,"G",79,"Second finger low on the E string; compare ease and connection."), r(7),
   ]},
 
   "lapsteel-side-foundations": { bpm: 50, cues: [
