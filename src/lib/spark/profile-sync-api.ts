@@ -37,7 +37,7 @@ const payloadSchema = z.object({
   sharedPhrases: z.partialRecord(sharedPhraseKey, z.object({
     stage: z.number().int().min(0).max(2),
     note: z.string().max(240),
-  }).strict()),
+  }).strict()).default({}),
 }).strict().transform((payload) => payload as unknown as ProfileSnapshot);
 
 const saveSchema = z.object({
