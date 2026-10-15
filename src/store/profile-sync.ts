@@ -9,13 +9,16 @@ export type ProfileSyncStatus =
   | "offline"
   | "error";
 
-type ProfileSyncState = {
+type ProfileSyncData = {
   status: ProfileSyncStatus;
   userId: string | null;
   revision: number;
   lastSyncedAt: string | null;
   message: string;
-  setSyncState: (next: Partial<Omit<ProfileSyncState, "setSyncState">>) => void;
+};
+
+type ProfileSyncState = ProfileSyncData & {
+  setSyncState: (next: Partial<ProfileSyncData>) => void;
 };
 
 export const useProfileSync = create<ProfileSyncState>((set) => ({
