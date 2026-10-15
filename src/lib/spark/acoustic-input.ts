@@ -1,6 +1,8 @@
 import { rmsLevel } from "./strum-detection.ts";
 import { yinPitchFast } from "./tuner.ts";
 
+export type AcousticInputMode = "strum" | "pitch" | "percussion";
+
 export type PitchOnset = {
   onsetMs: number;
   frequencyHz: number;
