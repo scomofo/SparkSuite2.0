@@ -65,7 +65,16 @@ Each learning path also opens one original short piece at `/milestone?instrument
 
 A two-minute setup starts with one bar and a natural pause. A first-bar attempt saves a return point for the whole piece; it cannot save a completed version. A whole-piece attempt plus either reflection allows saving the arrangement's tempo, guide, variation, and an optional 240-character note. These are self-reported attempts and arrangement settings, not audio recordings or instrumental grades. They do not award timing XP, complete daily loops, or complete lessons.
 
-**Music to come back to** in Progress holds one saved version per instrument. A new attempt preserves that version until the learner explicitly saves again. Replay restores its settings and note, waits for the learner to start playback, and leaves the old version available during the new attempt. Saves use the existing browser-local learning key and survive day changes; older v1 learning saves remain readable. No account, microphone, new dependency, or cloud sync is required.
+**Music to come back to** in Progress holds one saved version per instrument. A new attempt preserves that version until the learner explicitly saves again. Replay restores its settings and note, waits for the learner to start playback, and leaves the old version available during the new attempt. Saves use the existing browser-local learning key and survive day changes; older v1 learning saves remain readable. This local save continues to work without signing in or enabling cloud sync.
+
+
+## Account sync and portable backups
+
+Sign in from **Account & sync** using Google or X to keep a learner profile available on multiple computers. SparkSuite syncs instrument preferences, daily practice progress and history, lesson completion and review scheduling, milestones, saved shared-phrase notes/stages, and valid same-day session checkpoints. Audio is never uploaded, and temporary coach API keys are not part of the synced profile.
+
+The browser keeps a local copy for offline use. Cloud writes are revision-checked; if two computers have diverged, SparkSuite offers an explicit merge, cloud restore, or cloud replacement instead of silently overwriting one copy. The merge combines independent lesson records, mastery and history, and preserves additive XP deltas when a common sync baseline exists.
+
+**Account & sync** also exports and imports a portable JSON backup. Importing first keeps a local recovery copy, and an imported backup does not automatically overwrite the cloud profile. Keep an export somewhere you control as an additional recovery option.
 
 The short stages, visible next action, and recoverable place apply [W3C cognitive accessibility guidance](https://www.w3.org/TR/coga-usable/). They are design choices to support attention and memory; actual learner usability still needs feedback from adults with ADHD.
 

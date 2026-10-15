@@ -1,4 +1,5 @@
 import { isDayKey, localDayKey } from "../utils.ts";
+import { notifyProfileChanged } from "./profile-events.ts";
 import { CURRICULUM, learningLesson, learningPath } from "./curriculum.ts";
 import { INSTRUMENTS, type InstrumentId } from "./instruments.ts";
 import { parseProfile, startingLesson, type LearningProfile } from "./learning-profile.ts";
@@ -142,6 +143,7 @@ export function loadLearning(): { data: LearningState; storageOk: boolean } {
 export function saveLearning(data: LearningState): boolean {
   try {
     localStorage.setItem(LEARNING_KEY, JSON.stringify(data));
+    notifyProfileChanged();
     return true;
   } catch {
     return false;

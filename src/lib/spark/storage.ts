@@ -2,6 +2,7 @@ import { isDayKey, localDayKey } from "../utils.ts";
 import { isInstrumentId, type InstrumentId } from "./instruments.ts";
 import { nextStreak } from "./psychology.ts";
 import { isCheckin } from "./udl.ts";
+import { notifyProfileChanged } from "./profile-events.ts";
 import { SAVE_VERSION, type ProgressState } from "./types.ts";
 
 const KEY = "sparksuite.v2";
@@ -113,6 +114,11 @@ function migrateSuite(raw: unknown): SuiteState {
   return { version: SAVE_VERSION, active: "guitar", apps: { guitar: migrateProgress(obj as ProgressState) } };
 }
 
+/** Sanitize imported or cloud-synced state through the same migration path as local saves. */
+export function sanitizeSuite(raw: unknown): SuiteState {
+  return migrateSuite(raw);
+}
+
 export function loadSuite(): SuiteState {
   if (!canUseStorage()) return defaultSuite();
   try {
@@ -145,6 +151,7 @@ export function saveSuite(state: SuiteState) {
       try { JSON.parse(prev); localStorage.setItem(BACKUP, prev); } catch { /* Keep the last usable backup. */ }
     }
     localStorage.setItem(KEY, JSON.stringify(state));
+    notifyProfileChanged();
   } catch {
     /* private mode / quota */
   }
