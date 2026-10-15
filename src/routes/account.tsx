@@ -166,7 +166,7 @@ function AccountPage() {
               </p>
             </div>
             {visibleUser ? <UserButton /> : null}
-            {!isPending && !accountUser ? (
+            {!visiblePending && !visibleUser && authEnabled ? (
               <Link to="/login" className="inline-flex min-h-11 items-center rounded-lg bg-accent px-4 font-medium text-white">
                 Sign in to sync
               </Link>
