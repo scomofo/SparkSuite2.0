@@ -1,4 +1,5 @@
 import { banjoRollBar, lessonExercise, type PracticeCue } from "./lesson-practice.ts";
+import { BANJO_CHORDS } from "./instruments.ts";
 import type { PlanItem } from "./types.ts";
 
 /** Labs and Today share the musical specification used by Learn. */
@@ -18,6 +19,14 @@ const DAILY_EXERCISES: Record<string, string> = {
   lesson_mandolin_tremolo_01: "mandolin-tremolo",
   lesson_banjo_open_01: "banjo-open-g",
   lesson_banjo_roll_01: "banjo-forward-roll",
+  lesson_banjo_gd7_01: "banjo-g-to-d7",
+  lesson_banjo_loop_01: "banjo-three-chord-loop",
+  lesson_banjo_hammer_01: "banjo-hammer-and-slide",
+  lesson_banjo_vamp_01: "banjo-backup-and-break",
+  lesson_banjo_altroll_01: "banjo-forward-roll",
+  lesson_banjo_cripple_01: "banjo-three-chord-loop",
+  lesson_banjo_claw_01: "banjo-open-g",
+  lesson_banjo_closedvamp_01: "banjo-backup-and-break",
   lesson_violin_open_01: "violin-open-strings-and-bow",
   lesson_violin_bow_pulse_01: "violin-bow-pulse",
   lesson_violin_first_finger_01: "violin-first-finger",
@@ -506,6 +515,101 @@ export function vocalDailyCues(item: PlanItem): PracticeCue[] | undefined {
   return cues;
 }
 
+const BANJO_OPEN: number[] = [67, 50, 55, 59, 62];
+const BANJO_STRING_NAMES = ["short g", "4th", "3rd", "2nd", "1st"];
+function banjoPitch(chord: string, string: number): number {
+  return BANJO_OPEN[string] + (BANJO_CHORDS[chord]?.frets[string] ?? 0);
+}
+
+/** The alternating-thumb roll: strings 3–2–5–1 with T–I–T–M, twice per bar. */
+function banjoAltThumbBar(beat: number, chord: string): PracticeCue[] {
+  const order: [number, string][] = [
+    [2, "T"],
+    [3, "I"],
+    [0, "T"],
+    [4, "M"],
+  ];
+  return [...order, ...order].map(([string, finger], index) => ({
+    beat: beat + index / 2,
+    label: finger,
+    notes: [banjoPitch(chord, string)],
+    detail: chord + " · " + BANJO_STRING_NAMES[string] + " string, " + finger,
+    duration: 0.4,
+    chord,
+  }));
+}
+
+const CRIPPLE_NOTE_NAMES: Record<number, string> = {
+  50: "D", 52: "E", 54: "F♯", 55: "G", 57: "A", 59: "B",
+  60: "C", 62: "D", 64: "E", 66: "F♯", 67: "G",
+};
+const CRIPPLE_FINGERING: Record<number, string> = {
+  50: "4th string, open",
+  52: "4th string, fret 2",
+  54: "4th string, fret 4",
+  55: "3rd string, open",
+  57: "3rd string, fret 2",
+  59: "2nd string, open",
+  60: "2nd string, fret 1",
+  62: "1st string, open",
+  64: "1st string, fret 2",
+  66: "1st string, fret 4",
+  67: "short g string, open",
+};
+/** Cripple Creek (traditional), one bar per entry: [offset, midi, duration, chord]. */
+const CRIPPLE_BARS: [number, number, number, string][][] = [
+  [[0, 67, 0.85, "G"], [1, 67, 0.85, "G"], [2, 62, 0.42, "G"], [2.5, 66, 0.42, "G"], [3, 64, 0.42, "G"], [3.5, 62, 0.42, "G"]],
+  [[0, 60, 0.85, "C"], [1, 64, 0.85, "C"], [2, 62, 1.8, "D"]],
+  [[0, 67, 0.85, "G"], [1, 67, 0.85, "G"], [2, 62, 0.42, "G"], [2.5, 64, 0.42, "G"], [3, 62, 0.42, "G"], [3.5, 60, 0.42, "G"]],
+  [[0, 59, 0.42, "D"], [0.5, 55, 0.42, "D"], [1, 57, 0.85, "D"], [2, 55, 1.8, "G"]],
+  [[0, 59, 0.85, "G"], [1, 62, 0.42, "G"], [1.5, 59, 0.42, "G"], [2, 57, 0.85, "G"], [3, 55, 0.85, "G"]],
+  [[0, 57, 0.85, "C"], [1, 59, 0.85, "C"], [2, 50, 1.8, "D"]],
+  [[0, 59, 0.85, "G"], [1, 62, 0.42, "G"], [1.5, 59, 0.42, "G"], [2, 57, 0.85, "G"], [3, 55, 0.85, "G"]],
+  [[0, 52, 0.42, "D"], [0.5, 50, 0.42, "D"], [1, 52, 0.42, "D"], [1.5, 54, 0.42, "D"], [2, 55, 1.8, "G"]],
+];
+function crippleCreekBar(bar: number): PracticeCue[] {
+  const part = bar % 8 < 4 ? "A part" : "B part";
+  return CRIPPLE_BARS[bar % 8].map(([offset, midi, duration, chord], index) => ({
+    beat: bar * 4 + offset,
+    label: CRIPPLE_NOTE_NAMES[midi],
+    notes: [midi],
+    detail: (index === 0 ? part + " · " : "") + chord + " · " + CRIPPLE_FINGERING[midi],
+    duration,
+    chord,
+  }));
+}
+
+/** One bar of frailing on open G: strike, brush, thumb lift — the bum-ditty, twice. */
+function clawhammerBar(beat: number): PracticeCue[] {
+  const unit = (at: number): PracticeCue[] => [
+    {
+      beat: at,
+      label: "Bum",
+      notes: [62],
+      detail: "G · strike the 1st string downward with the back of the fingernail",
+      duration: 0.8,
+      chord: "G",
+    },
+    {
+      beat: at + 1,
+      label: "Dit",
+      notes: [67, 50, 55, 59, 62],
+      detail: "G · brush down across the strings with the same nail",
+      duration: 0.35,
+      chord: "G",
+    },
+    {
+      beat: at + 1.5,
+      label: "Ty",
+      notes: [67],
+      detail: "G · the thumb lifts the short g string",
+      duration: 0.35,
+      chord: "G",
+    },
+  ];
+  return [...unit(beat), ...unit(beat + 2)];
+}
+
 /** Quarter-note positions, with explicit pitches, mutes and bow directions. */
 export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (item.process === "respond" || item.process === "create") return undefined;
@@ -539,6 +643,65 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
     const chord = item.chords[Math.floor(bar / chordBars) % item.chords.length] ?? "G";
     if (item.lessonId === "lesson_banjo_roll_01") {
       cues.push(...banjoRollBar(bar * 4, chord));
+      continue;
+    }
+    if (item.lessonId === "lesson_banjo_altroll_01") {
+      cues.push(...banjoAltThumbBar(bar * 4, chord));
+      continue;
+    }
+    if (item.lessonId === "lesson_banjo_cripple_01") {
+      cues.push(...crippleCreekBar(bar));
+      continue;
+    }
+    if (item.lessonId === "lesson_banjo_claw_01") {
+      cues.push(...clawhammerBar(bar * 4));
+      continue;
+    }
+    if (item.lessonId === "lesson_banjo_closedvamp_01") {
+      // The movable F-shape at +2: strings 4–1 fretted 5–4–3–5, fifth string skipped.
+      const shape = [55, 59, 62, 67];
+      cues.push(
+        {
+          beat: bar * 4,
+          label: "G ↓",
+          detail: "Brush the closed G shape on 1 — every string fretted, none open.",
+          notes: shape,
+          duration: 0.9,
+          chord: "G",
+        },
+        {
+          beat: bar * 4 + 1,
+          label: "Chop",
+          detail: "Keep the shape pressed and strike short; the chop itself is pitched.",
+          muted: true,
+          chord: "G",
+        },
+        {
+          beat: bar * 4 + 2,
+          label: "G ↓",
+          detail: "Brush the closed shape on 3.",
+          notes: shape,
+          duration: 0.9,
+          chord: "G",
+        },
+        {
+          beat: bar * 4 + 3,
+          label: "Chop",
+          detail: "Pitched chop on 4.",
+          muted: true,
+          chord: "G",
+        },
+      );
+      continue;
+    }
+    if (item.lessonId === "lesson_banjo_vamp_01") {
+      // Only the exercise's two vamp bars tile here: window 0 is G, window 4 is D7.
+      const window = (bar % 2) * 4;
+      for (const cue of exercise.cues.filter((c) => c.beat >= window && c.beat < window + 4)) {
+        const next = { ...cue, beat: bar * 4 + cue.beat - window };
+        if (next.duration) next.duration = Math.min(next.duration, total - next.beat);
+        cues.push(next);
+      }
       continue;
     }
     if (item.lessonId === "lesson_violin_walk_01") {
