@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft, Cloud, ShieldCheck } from "lucide-react";
 import { authEnabled, GROK_PROVIDERS, signIn } from "@/lib/auth/client";
@@ -8,9 +8,11 @@ export const Route = createFileRoute("/login")({ component: LoginPage });
 
 function LoginPage() {
   const { user, isPending } = useCurrentUserState();
+  const [mounted, setMounted] = useState(false);
   const [error, setError] = useState("");
+  useEffect(() => setMounted(true), []);
 
-  if (isPending) {
+  if (!mounted || isPending) {
     return (
       <main className="grid min-h-dvh place-items-center p-6">
         <p role="status" className="text-sm text-muted">Checking your account…</p>
