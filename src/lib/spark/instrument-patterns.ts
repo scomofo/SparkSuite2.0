@@ -431,6 +431,30 @@ export function judgeViolinFingeredCues(cues: PracticeCue[]): PracticeCue[] {
       ? { ...cue, expectedMidi: cue.notes[0] }
       : cue,
   );
+}
+
+/** Lap steel's open strings — the only pitches that are not bar placements. */
+const LAPSTEEL_OPEN_MIDIS: ReadonlySet<number> = new Set([48, 52, 55, 57, 60, 64]);
+
+/**
+ * Cents judging for lap steel's barred daily cues, transplanted from the
+ * vocals/violin build on Scott's ruling: a single-note cue whose pitch is
+ * not an open string can only be produced by placing the bar, so it declares
+ * `expectedMidi` and the session judges it on the tracker's unrounded
+ * frequency at the 20-cent standard (vocal-judge.ts). Open-string cues
+ * carry no expectedMidi — their accuracy is the tuning, not the bar — and
+ * neither do multi-note cues (brushes, harmony pairs, slant grips): the
+ * chord-spectrum path reports rounded pitch classes only
+ * (analyzeChordSpectrum rounds every peak to an integer MIDI and
+ * assessChordPitches matches within a semitone), so no cents verdict on a
+ * brush would be truthful; brushes keep the chord-tone check they have.
+ */
+export function judgeLapSteelBarCues(cues: PracticeCue[]): PracticeCue[] {
+  return cues.map((cue) =>
+    cue.notes?.length === 1 && !LAPSTEEL_OPEN_MIDIS.has(cue.notes[0]) && cue.expectedMidi === undefined
+      ? { ...cue, expectedMidi: cue.notes[0] }
+      : cue,
+  );
 };
 
 const NOTE_NAME: Record<number, string> = {
@@ -901,7 +925,8 @@ function clawhammerBar(beat: number): PracticeCue[] {
 /** Quarter-note positions, with explicit pitches, mutes and bow directions. */
 export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (item.process === "respond" || item.process === "create") return undefined;
-  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? LAPSTEEL_DAILY_CUES[item.lessonId ?? ""];
+  const lapsteelBespoke = LAPSTEEL_DAILY_CUES[item.lessonId ?? ""];
+  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke;
   if (bespoke) {
     const cues: PracticeCue[] = [];
     const total = item.bars * 4;
@@ -916,7 +941,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
         });
       }
     }
-    return cues;
+    return lapsteelBespoke ? judgeLapSteelBarCues(cues) : cues;
   }
   const violinBespoke = VIOLIN_DAILY_CUES[item.lessonId ?? ""];
   if (violinBespoke) {
@@ -1045,6 +1070,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
     }
   }
   if (item.lessonId?.startsWith("lesson_violin_")) return judgeViolinFingeredCues(cues);
+  if (item.lessonId?.startsWith("lesson_lapsteel_")) return judgeLapSteelBarCues(cues);
   return cues;
 }
 

@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { ChordDiagram } from "@/components/chord-diagram";
 import { BeatStrip, Chip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
 import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
+import { PitchMatch } from "@/components/tuner-panel";
 import { ghostNote, pianoHold, strum, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, LAPSTEEL_CHORDS, midiToFreq } from "@/lib/spark/instruments";
+import { cn } from "@/lib/utils";
 
-export type LapSteelTab = "bar" | "slide" | "vibrato" | "block" | "positions" | "slant";
+export type LapSteelTab = "bar" | "slide" | "vibrato" | "block" | "positions" | "slant" | "pitch";
 const CHORDS = ["C", "F", "G", "D"] as const;
 type LapSteelChord = (typeof CHORDS)[number];
 
@@ -17,6 +20,7 @@ const TABS: { id: LapSteelTab; label: string }[] = [
   { id: "block", label: "Block" },
   { id: "positions", label: "Positions" },
   { id: "slant", label: "Slant" },
+  { id: "pitch", label: "Pitch" },
 ];
 
 const COPY: Record<LapSteelTab, { kicker: string; title: string; body: string; hear: string }> = {
@@ -56,7 +60,25 @@ const COPY: Record<LapSteelTab, { kicker: string; title: string; body: string; h
     body: "Strings 4 and 2 above fret 2 with string 1 above fret 1 sounds A–D–F: D minor, a chord no straight bar can make in C6. Pick strings 4, 2 and 1; the others stay quiet.",
     hear: "Open C, then the slant to D minor. Twice.",
   },
+  pitch: {
+    kicker: "Twenty cents",
+    title: "Land the bar inside the note",
+    body: "Pick a target below, hear it, then play it on the string named. The needle shows how far your pitch sits from the target, in cents — inside 20 counts as in tune, the same standard the daily lessons use with the mic on. The open strings are the reference for every bar position: tune them first.",
+    hear: "The target, twice. Then your turn.",
+  },
 };
+
+/** Bar placements the daily path teaches, open strings included as references. */
+const PITCH_TARGETS: { midi: number; name: string; place: string }[] = [
+  { midi: 60, name: "C4", place: "2nd string · open" },
+  { midi: 62, name: "D4", place: "2nd string · fret 2" },
+  { midi: 64, name: "E4", place: "1st string · open" },
+  { midi: 65, name: "F4", place: "1st string · fret 1" },
+  { midi: 67, name: "G4", place: "1st string · fret 3" },
+  { midi: 69, name: "A4", place: "1st string · fret 5" },
+  { midi: 71, name: "B4", place: "1st string · fret 7" },
+  { midi: 72, name: "C5", place: "2nd string · fret 12" },
+];
 
 function parseTab(raw: string): LapSteelTab {
   if (
@@ -65,7 +87,8 @@ function parseTab(raw: string): LapSteelTab {
     raw === "vibrato" ||
     raw === "block" ||
     raw === "positions" ||
-    raw === "slant"
+    raw === "slant" ||
+    raw === "pitch"
   )
     return raw;
   return "bar";
@@ -95,6 +118,11 @@ export function LapSteelLab() {
   const copy = COPY[tab];
   const head = usePlayhead();
   const beatSec = 60 / 72;
+  // The Pitch tab's target: the reference pattern presents this note and
+  // PitchMatch judges against this same note — presented and judged are
+  // the same pitch by construction.
+  const [pitchTarget, setPitchTarget] = useState(69);
+  const target = PITCH_TARGETS.find((t) => t.midi === pitchTarget) ?? PITCH_TARGETS[5];
 
   const patch = (next: Partial<{ tab: string; chord: string }>) => {
     void navigate({ search: { tab: next.tab ?? tab, chord: next.chord ?? chord }, replace: true });
@@ -132,6 +160,11 @@ export function LapSteelLab() {
         beat,
         sound: (w: number) => strum(beat % 4 === 0 ? openPair : dmSlant, w),
       }));
+    } else if (tab === "pitch") {
+      hits = [0, 4].map((beat) => ({
+        beat,
+        sound: (w: number) => pianoHold(midiToFreq(target.midi), beatSec * 1.8, w, 0.22),
+      }));
     } else {
       const order = ["C", "C", "F", "F", "G", "G", "C", "C"];
       hits = order.map((c, i) => ({ beat: i, sound: (w) => strum(chordFreqs(c), w) }));
@@ -156,6 +189,12 @@ export function LapSteelLab() {
         beat,
         top: beat % 2 === 0 ? "↓" : "hold",
         bot: beat < 2 || (beat >= 4 && beat < 6) ? "C · open" : "Dm · slant",
+      };
+    if (tab === "pitch")
+      return {
+        beat,
+        top: beat % 4 === 0 ? target.name : "·",
+        bot: beat % 4 === 0 ? "target" : "you",
       };
     return { beat, top: "↓", bot: chord };
   });
@@ -203,9 +242,40 @@ export function LapSteelLab() {
             <ChordDiagram shape={shape(chord)} />
           </section>
         ) : null}
+        {tab === "pitch" ? (
+          <>
+            <div
+              className="mt-6 grid w-full gap-2"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(4.5rem, 1fr))" }}
+              role="group"
+              aria-label="Pitch targets"
+            >
+              {PITCH_TARGETS.map((t) => (
+                <button
+                  key={t.midi}
+                  type="button"
+                  aria-pressed={t.midi === target.midi}
+                  onClick={() => setPitchTarget(t.midi)}
+                  className={cn(
+                    "flex h-12 flex-col items-center justify-center rounded-lg border text-sm font-medium transition-colors",
+                    t.midi === target.midi
+                      ? "border-ember bg-raised text-ember shadow-xs"
+                      : "border-border bg-surface text-fg hover:border-ember/50 hover:bg-raised",
+                  )}
+                >
+                  <span>{t.name}</span>
+                  <span className="text-[10px] text-dim">{t.place}</span>
+                </button>
+              ))}
+            </div>
+            <section className="mt-6">
+              <PitchMatch targetFreq={midiToFreq(target.midi)} targetName={target.name} />
+            </section>
+          </>
+        ) : null}
         <p className="mt-6 text-xs leading-relaxed text-muted">
           References are synthesized tones, not a lap steel; slides are approximated by the arrival
-          chord. Nothing here listens to your playing.
+          chord. Only the Pitch tab listens to your playing; the other tabs play references.
         </p>
       </div>
     </AppShell>

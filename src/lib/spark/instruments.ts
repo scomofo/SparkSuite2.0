@@ -2599,6 +2599,10 @@ const LAPSTEEL_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_lapsteel_slide_01"],
     masteryRequired: 0.7,
+    criteria: [
+      "With the mic on: barred notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "Vibrato is the steel's voice. Let the note speak first.",
   },
   {
@@ -2615,6 +2619,10 @@ const LAPSTEEL_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_lapsteel_vibrato_01"],
     masteryRequired: 0.7,
+    criteria: [
+      "With the mic on: barred notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "One string and three positions make a melody.",
   },
   {
@@ -2665,7 +2673,12 @@ const LAPSTEEL_LESSONS: Lesson[] = [
     masteryRequired: 0.7,
     process: "perform",
     repertoire: "Home Sweet Home",
-    criteria: ["The tune finishes", "The high phrase stays on the 2nd string"],
+    criteria: [
+      "The tune finishes",
+      "The high phrase stays on the 2nd string",
+      "With the mic on: barred notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "Bishop's 1823 air, in C — the first tune steel players have learned for a century, in the waltz time the old tune books print.",
     interpret: "Three beats to the tune's bar. Let the held notes ring.",
   },
