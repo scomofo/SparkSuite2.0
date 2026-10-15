@@ -359,6 +359,7 @@ export function SessionPlayer() {
       if (phase !== "play" || !item) return;
       const fromMic = detectedAtMs !== undefined;
       if (requiresMicInput && !fromMic) return;
+      if (fromMic) setMicFeedback(null);
       if (hasInstrumentPattern(item) && !fromMic) {
         kind = "strum";
         stringIndex = undefined;
@@ -416,7 +417,10 @@ export function SessionPlayer() {
           onJudge("miss", false);
           return;
         }
-        setMicFeedback(`${evidence.direction.direction === "down" ? "Downstroke" : "Upstroke"} detected.`);
+        setMicFeedback((previous) => {
+          const directionMessage = `${evidence.direction!.direction === "down" ? "Downstroke" : "Upstroke"} detected.`;
+          return previous ? `${previous} ${directionMessage}` : directionMessage;
+        });
       }
       // Pluck/pad/key notes carry an expected string/pad/midi. Timing alone
       // is not enough — a wrong string, key, or pad is a miss.
