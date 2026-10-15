@@ -262,7 +262,7 @@ function Lab({ search, patch }: { search: Search; patch: (n: Partial<Search>) =>
       {search.tab === "walk" ? (
         <p className="mt-5 flex items-start gap-2 text-sm text-muted">
           <Repeat className="mt-0.5 size-4 shrink-0 text-dim" />
-          Em walks up to G. Switch the chord chip to G and the line walks into C.
+          Each chord chip gets a walk into its own root: state it, step below, climb back in. Em keeps the original climb into G.
         </p>
       ) : null}
 

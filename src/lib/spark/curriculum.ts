@@ -356,7 +356,7 @@ const guitar = path("guitar", [
     ],
     answer: 1,
     feedback:
-      "Keeping other choices steady lets you hear what the rhythm changed. Your finished miniature is a starting point for further refinement.",
+      "Keeping other choices steady lets you hear what the rhythm changed. That finished miniature is the version the next one gets compared against.",
   },
 ]);
 
@@ -740,11 +740,11 @@ const bass = path("bass", [
     title: "Find one note and its silence",
     outcome: "Name E–A–D–G and stop a note deliberately.",
     explanation:
-      "Standard four-string bass tuning is E–A–D–G, thickest to thinnest. An open string has no fret pressed. Muting means stopping unwanted vibration with a light touch. The end of a bass note is part of the groove.",
+      "Standard four-string bass tuning is E–A–D–G, thickest to thinnest. An open string has no fret pressed. Muting means stopping unwanted vibration with a light touch. The end of a bass note is part of the groove. Before you play, tune each string to its note with a tuner; every later lesson assumes the strings are right.",
     example:
       "Pluck open E, then gently touch the string to stop it. Sound and silence are two separate actions.",
     practice: [
-      "Find and name the four open strings slowly.",
+      "Use a tuner to bring each string to its note, E–A–D–G, naming the four open strings as you tune them.",
       "Pluck E once and stop it with a light touch after two counted beats.",
       "Repeat four times, listening for a clean space after the note.",
     ],
@@ -769,7 +769,7 @@ const bass = path("bass", [
     example: "Count 1–2–3–4 and play open E once on each number. Four bars is sixteen notes.",
     practice: [
       "Count four evenly twice before playing.",
-      "Play open E on the four numbers, using a light pluck.",
+      "Play open E on the four numbers, using a light pluck and alternating index and middle fingers; the lab's Alt tab drills this stroke.",
       "Continue for four bars; if a note is late, rejoin the next number.",
     ],
     question: "How many quarter-note beats are in four bars of 4/4?",
@@ -827,7 +827,7 @@ const bass = path("bass", [
     explanation:
       "Straight eighth notes divide a beat in half: number, and. Syncopation emphasizes a weaker part of the beat. An offbeat bass note still belongs to the same steady grid; counting the silent strong beats helps keep its place.",
     example:
-      "Play E on 1, and-of-2, and 4. Keep counting all eight syllables: 1-and-2-and-3-and-4-and.",
+      "Play E on 1, and-of-2, and on beat 4. Keep counting all eight syllables: 1-and-2-and-3-and-4-and.",
     practice: [
       "Tap the example on your knee while saying the full count.",
       "Play it on open E for two bars, leaving the other positions silent.",
@@ -1194,6 +1194,7 @@ const vocals = path("vocals", [
     answer: 1,
     feedback:
       "A comfortable octave or listening keeps the musical task accessible. Matching a reference never requires forcing your voice.",
+    demo: { label: "Hum two counts, rest two", notes: [[60], [60], [], []] },
   },
   {
     slug: "pitch-direction",
@@ -1238,6 +1239,7 @@ const vocals = path("vocals", [
     answer: 0,
     feedback:
       "The rest creates space and a breathing opportunity. Its beat still belongs to the ongoing pulse.",
+    demo: { label: "Here, we, go — then rest", notes: [[60], [60], [60], []] },
   },
   {
     slug: "thirds",
@@ -1277,6 +1279,10 @@ const vocals = path("vocals", [
     answer: 2,
     feedback:
       "The and of 2 is the midpoint between quarter-note beats 2 and 3. Counting the earlier silence prepares the entrance.",
+    demo: {
+      label: "Come on and-of-2, back on 3, home on 4",
+      notes: [[], [], [], [60], [60], [], [60], []],
+    },
   },
   {
     slug: "harmony-line",
@@ -1329,6 +1335,10 @@ const vocals = path("vocals", [
     answer: 1,
     feedback:
       "Keeping the phrase and timing steady lets you hear what the stressed word contributes to meaning.",
+    demo: {
+      label: "Same notes twice — stress I, then home",
+      notes: [[60], [60], [60], [60], [60], [60], [60], [60]],
+    },
   },
   {
     slug: "performance-plan",
@@ -1353,6 +1363,10 @@ const vocals = path("vocals", [
     answer: 2,
     feedback:
       "A specific, changeable observation gives the next attempt a clear task. Broad judgments do not tell you what to practise.",
+    demo: {
+      label: "Two phrases — words on 1-and, 2, 3; rest on 4",
+      notes: [[60], [60], [62], [], [64], [], [], [], [64], [64], [62], [], [60], [], [], []],
+    },
   },
 ]);
 

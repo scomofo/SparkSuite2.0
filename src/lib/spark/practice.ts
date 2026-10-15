@@ -18,6 +18,11 @@ export type NoteEvent = {
   duration?: number;
   label?: string;
   detail?: string;
+  /** Bespoke vocals cues: pitch judged on unrounded cents when the mic is live. */
+  expectedMidi?: number;
+  /** Bespoke vocals hold cues: beats the expected pitch must be sustained. */
+  holdBeats?: number;
+
 };
 
 export function patternBeats(pattern: string): ("down" | "up" | "rest")[] {
@@ -55,6 +60,10 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
     kind: direction,
     bar: Math.floor(cue.beat / 4), beat: cue.beat % 4,
     notes: cue.notes, muted: cue.muted, duration: cue.duration, label: cue.label, chord: cue.chord,
+    // Only bespoke vocals cues carry these; other instruments' events stay
+    // exactly as before (no new keys on the object).
+    ...(cue.expectedMidi !== undefined ? { expectedMidi: cue.expectedMidi, string: cue.expectedMidi } : {}),
+    ...(cue.holdBeats !== undefined ? { holdBeats: cue.holdBeats } : {}),
     };
   });
   if (item.surface === "pads") return drumTimeline(item);

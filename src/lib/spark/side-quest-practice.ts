@@ -90,24 +90,24 @@ const PATTERNS: Record<string, QuestPattern> = {
   ]},
 
   "bass-side-foundations": { bpm: 60, cues: [
-    n(0,"Long E",40,"Let E ring almost a full beat.",0.95), n(1,"Long E",40,"Same pitch, connected.",0.95),
-    n(2,"Long E",40,"Feel the legato weight.",0.95), n(3,"Long E",40,"Last long note.",0.95),
-    n(4,"Short E",40,"Now stop it quickly.",0.25), n(5,"Short E",40,"Silence is part of the groove.",0.25),
-    n(6,"Short E",40,"Keep the attack identical.",0.25), n(7,"Short E",40,"Compare the feel.",0.25),
+    n(0,"Long E",28,"Let E ring almost a full beat.",0.95), n(1,"Long E",28,"Same pitch, connected.",0.95),
+    n(2,"Long E",28,"Feel the legato weight.",0.95), n(3,"Long E",28,"Last long note.",0.95),
+    n(4,"Short E",28,"Now stop it quickly.",0.25), n(5,"Short E",28,"Silence is part of the groove.",0.25),
+    n(6,"Short E",28,"Keep the attack identical.",0.25), n(7,"Short E",28,"Compare the feel.",0.25),
   ]},
   "bass-side-beginner": { bpm: 70, cues: [
-    n(0,"E + kick",40,"Root lands with the imagined kick."), r(1), n(2,"E + kick",40,"Lock again."), r(3),
-    n(4,"E + kick",40,"Stay attached to the downbeat."), n(5,"F#",42,"Passing tone between kicks."),
-    n(6,"G + kick",43,"Arrive on the next root."), r(7,"Leave space after the landing."),
+    n(0,"E + kick",28,"Root lands with the imagined kick."), r(1), n(2,"E + kick",28,"Lock again."), r(3),
+    n(4,"E + kick",28,"Stay attached to the downbeat."), n(5,"F#",30,"Passing tone between kicks."),
+    n(6,"G + kick",31,"Arrive on the next root."), r(7,"Leave space after the landing."),
   ]},
   "bass-side-intermediate": { bpm: 60, cues: [
-    n(0,"G",43,"Target root G."), n(1,"F#",42,"Approach G from below."), n(2,"G",43,"Land."),
-    n(3,"Ab",44,"Approach G from above."), n(4,"G",43,"Land again."),
-    n(5,"C#",49,"Approach D from below."), n(6,"D",50,"New root."), r(7),
+    n(0,"G",31,"Target root G."), n(1,"F#",30,"Approach G from below."), n(2,"G",31,"Land."),
+    n(3,"Ab",32,"Approach G from above."), n(4,"G",31,"Land again."),
+    n(5,"C#",37,"Approach D from below."), n(6,"D",38,"New root."), r(7),
   ]},
   "bass-side-advanced": { bpm: 60, cues: [
-    n(0,"Active E",40,"Root."), n(1,"G",43,"Colour tone."), n(2,"A",45,"Motion."), n(3,"B",47,"Lead onward."),
-    n(4,"Simple E",40,"Now one long root.",1.8), r(5), n(6,"Simple G",43,"Another deliberate root.",1.8), r(7),
+    n(0,"Active E",28,"Root."), n(1,"G",31,"Colour tone."), n(2,"A",33,"Motion."), n(3,"B",35,"Lead onward."),
+    n(4,"Simple E",28,"Now one long root.",1.8), r(5), n(6,"Simple G",31,"Another deliberate root.",1.8), r(7),
   ]},
 
   "drums-side-foundations": { bpm: 80, cues: [
@@ -140,21 +140,39 @@ const PATTERNS: Record<string, QuestPattern> = {
     d(8,"Kick + snare",[0,1],"Beat 1 — the landing."),
   ]},
 
-  "vocals-side-foundations": { bpm: 60, cues: [
+  "vocals-side-foundations": { bpm: 60, beats: 20, cues: [
     n(0,"Speak",60,"Speak the syllable in time; pitch is only a reference."), r(1),
     n(2,"Speak",60,"Repeat with clear consonants."), r(3),
-    n(4,"Sing",60,"Now sustain the same syllable on C.",1.5), r(6), n(7,"Release",60,"Easy final onset.",0.6),
+    n(4,"Speak",60,"Bar two: same syllable, same time."), r(5),
+    n(6,"Speak",60,"Keep the consonants clear."), r(7),
+    n(8,"Speak",60,"Bar three: stay in time."), r(9),
+    n(10,"Speak",60,"Words first; pitch can wait."), r(11),
+    n(12,"Speak",60,"Last spoken bar."), r(13),
+    n(14,"Speak",60,"One more in time, then sing."), r(15),
+    n(16,"Sing",60,"Now sustain the same syllable on C.",1.5), r(18), n(19,"Release",60,"Easy final onset.",0.6),
   ]},
   "vocals-side-beginner": { bpm: 50, cues: [
     n(0,"Gentle",60,"Breathy-light onset, no push.",1.2), r(2),
     n(3,"Clean",60,"Balanced onset: air and tone together.",1.2), r(5),
     n(6,"Firm",60,"Slightly firmer onset without extra volume.",1.2), r(7),
   ]},
-  "vocals-side-intermediate": { bpm: 60, cues: [
-    n(0,"Melody C",60,"Reference melody note."), n(1,"Harmony E",64,"Hold a chord tone instead of following."),
-    n(2,"Melody D",62,"Melody moves."), n(3,"Harmony F",65,"Harmony moves less."),
-    n(4,"Melody E",64,"Hear vertical blend."), n(5,"Harmony G",67,"Choose stable chord tone."),
-    n(6,"Melody G",67,"Final melody target."), n(7,"Harmony C",60,"Settle below.",1.5),
+  "vocals-side-intermediate": { bpm: 60, beats: 16, cues: [
+    n(0,"You hold E",64,"Phrase one: your note is E, the third of the C chord. Start it and keep it going — the melody is about to move underneath.",7.6),
+    n(1,"Melody · C",60,"Reference melody — listen, don't follow."),
+    n(2,"Melody · D",62,"The melody steps up. Your E stays."),
+    n(3,"Melody · E",64,"The melody lands on your note — hear it blend."),
+    n(4,"Melody · D",62,"It steps away again. You don't."),
+    n(5,"Melody · C",60,"The melody comes home. Your E is still holding."),
+    n(6,"Still E",64,"Last beats of the phrase: check your E hasn't drifted.",1.6),
+    r(7,"Release and breathe. The next phrase holds a different note."),
+    n(8,"You hold C",60,"Phrase two: your note is C, the root itself. Sustain it while a new melody moves overhead.",7.6),
+    n(9,"Melody · G",67,"Reference melody, starting high — listen, don't follow."),
+    n(10,"Melody · F",65,"The melody steps down. Your C stays."),
+    n(11,"Melody · E",64,"Still moving. You're still on C."),
+    n(12,"Melody · D",62,"Now the melody passes below you."),
+    n(13,"Melody · C",60,"It lands on your note — root and melody meet."),
+    n(14,"Still C",60,"Hold to the end of the phrase.",1.6),
+    r(15,"Release. Notice where your note blended and where it rubbed — that was the quest."),
   ]},
   "vocals-side-advanced": { bpm: 60, cues: [
     n(0,"Intimate",60,"Same pitch: softer onset, longer vowel.",1.2), r(2),
