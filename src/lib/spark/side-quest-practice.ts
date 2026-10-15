@@ -42,10 +42,10 @@ const PATTERNS: Record<string, QuestPattern> = {
     n(4,"E",64,"Answer begins somewhere else."), n(5,"G",67,"Keep the rhythm recognizable."), n(6,"A",69,"Resolve the answer."), r(7,"Let the answer breathe."),
   ]},
   "guitar-side-advanced": { bpm: 60, cues: [
-    n(0,"Em full",[52,55,59],"Full voicing."), n(1,"G full",[55,59,62],"Full voicing."),
-    n(2,"Em full",[52,55,59],"Keep it dense."), n(3,"G full",[55,59,62],"End version one."),
-    n(4,"Em top",[64,67],"Now remove low voices."), r(5,"Let the thinner texture breathe."),
-    n(6,"G top",[67,71],"Fewer notes, same harmony."), r(7,"Notice whether subtraction creates more space."),
+    n(0,"Em full",[40,47,52,55,59,64],"Full voicing."), n(1,"G full",[43,47,50,55,59,67],"Full voicing."),
+    n(2,"Em full",[40,47,52,55,59,64],"Keep it dense."), n(3,"G full",[43,47,50,55,59,67],"End version one."),
+    n(4,"Em top",[59,64],"Now remove low voices."), r(5,"Let the thinner texture breathe."),
+    n(6,"G top",[59,67],"Fewer notes, same harmony."), r(7,"Notice whether subtraction creates more space."),
   ]},
 
   "piano-side-foundations": { bpm: 50, cues: [

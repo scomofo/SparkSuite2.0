@@ -184,10 +184,10 @@ const guitar = path("guitar", [
     title: "Your first clear sound",
     outcome: "Name the six strings and make one note ring.",
     explanation:
-      "A string played without pressing a fret is open. In standard tuning, the thickest to thinnest strings are E–A–D–G–B–E. A fret is a metal divider; pressing just behind it shortens the vibrating string and raises the pitch.",
+      "A string played without pressing a fret is open. In standard tuning, the thickest to thinnest strings are E–A–D–G–B–E. A fret is a metal divider; pressing just behind it shortens the vibrating string and raises the pitch. Before you play, tune each string to its note with a tuner; every later lesson assumes the strings are right.",
     example: "Open low E → first fret F → open E. Use only enough pressure to get a clear sound.",
     practice: [
-      "Rest the guitar securely and find the thickest string.",
+      "Rest the guitar securely, find the thickest string, and use a tuner to bring each string to its note, E–A–D–G–B–E.",
       "Pluck it open, then press just behind the first fret and pluck again.",
       "Release, repeat three times, and notice which note sounds higher.",
     ],
@@ -242,7 +242,7 @@ const guitar = path("guitar", [
     options: ["E–G♯–B", "G–B–D", "E–G–B"],
     answer: 2,
     feedback: "Em is E–G–B. G is its minor third; E–G♯–B would be E major.",
-    demo: { label: "Em then G", notes: [[52, 55, 59], [], [55, 59, 62], []] },
+    demo: { label: "Em then G", notes: [[52, 55, 59], [], [43, 47, 50, 55, 59, 67], []] },
   },
   {
     slug: "eighths",
@@ -295,9 +295,9 @@ const guitar = path("guitar", [
     explanation:
       "A minor pentatonic uses A–C–D–E–G: five notes, with room for silence. A motif is a short idea you repeat or vary. A phrase can answer an earlier phrase by keeping its rhythm and changing the ending.",
     example:
-      "On high E: fret 5 is A and 8 is C. On B: fret 5 is E and 8 is G. Try A–C–A, rest; E–G–A, rest.",
+      "On high E: fret 5 is A and 8 is C. On B: fret 3 is D, 5 is E and 8 is G. Try A–C–A, rest; E–G–A, rest.",
     practice: [
-      "Find the four positions in the example and play each slowly.",
+      "Find the five positions in the example and play each slowly.",
       "Play A–C–A over four counted beats, leaving beat 4 silent.",
       "Answer with E–G–A in the next bar. Repeat the pair twice.",
     ],
@@ -320,7 +320,7 @@ const guitar = path("guitar", [
     explanation:
       "A dominant seventh chord combines a major triad with a minor seventh. E7 is E–G♯–B–D. In C major, E7 borrows G♯ to point toward Am: G♯ rises a semitone to A. This is a secondary dominant, often written V7/vi.",
     example:
-      "C → E7 → Am → G. Guitar E7: 0–2–0–1–0–0 from low E to high E. Am: x–0–2–2–1–0; x means omit that string.",
+      "C → E7 → Am → G. Shapes from low E to high E — C: x–3–2–0–1–0; E7: 0–2–0–1–0–0; Am: x–0–2–2–1–0; x means omit that string.",
     practice: [
       "Play E7 then Am slowly, using the example shapes.",
       "Isolate the G string: fret 1 to fret 2, G♯ to A.",
@@ -331,7 +331,7 @@ const guitar = path("guitar", [
     answer: 0,
     feedback:
       "G♯ is outside C major and leads upward to A. That directed motion helps E7 briefly point toward Am.",
-    demo: { label: "E7 resolving to Am", notes: [[52, 56, 59, 62], [], [57, 60, 64], []] },
+    demo: { label: "E7 resolving to Am", notes: [[40, 47, 50, 56, 59, 64], [], [57, 60, 64], []] },
   },
   {
     slug: "arrangement",
