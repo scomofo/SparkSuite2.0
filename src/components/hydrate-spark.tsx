@@ -178,7 +178,8 @@ export function HydrateSpark() {
       if (
         event.key === "sparksuite.v2" ||
         event.key === "sparksuite.learning.v1" ||
-        event.key?.startsWith("sparksuite.loop.")
+        event.key?.startsWith("sparksuite.loop.") ||
+        event.key?.startsWith("shared-phrase-v1:")
       ) onProfileChanged();
     };
     window.addEventListener("storage", onStorage);
