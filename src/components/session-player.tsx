@@ -29,7 +29,7 @@ import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
 import { StrumOnsetDetector } from "@/lib/spark/strum-detection";
-import { PercussionOnsetDetector, PitchOnsetDetector, type AcousticInputMode } from "@/lib/spark/acoustic-input";
+import { acousticInputModeFor, PercussionOnsetDetector, PitchOnsetDetector, type AcousticInputMode } from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
@@ -55,25 +55,6 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Play your real drum kit on the cue. Timing and a rough kick/snare distinction are checked.";
   }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
-}
-
-function acousticModeFor(
-  instrument: InstrumentId,
-  item: PlanItem | null,
-  surface: NonNullable<PlanItem["surface"]>,
-): AcousticInputMode {
-  if (surface === "pads") return "percussion";
-  if (surface === "voice") return "pitch";
-  if (surface === "keys") return item && isPluckDrill(item) ? "pitch" : "strum";
-  if (surface === "strings") {
-    if (
-      instrument === "bass" ||
-      instrument === "violin" ||
-      (item !== null && (isPluckDrill(item) || hasInstrumentPattern(item)))
-    ) return "pitch";
-    return "strum";
-  }
-  return "pitch";
 }
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
@@ -179,7 +160,12 @@ export function SessionPlayer() {
   const [visualOnly, setVisualOnly] = useState(false);
   const micSurface = item?.surface ?? inst.surface;
   const requiresMicInput = item !== null;
-  const micMode = acousticModeFor(instrument, item, micSurface);
+  const micMode = acousticInputModeFor({
+    instrument,
+    surface: micSurface,
+    pluckDrill: item !== null && isPluckDrill(item),
+    hasPattern: item !== null && hasInstrumentPattern(item),
+  });
   const notesRef = useRef<NoteEvent[]>([]);
   const consumed = useRef<Set<number>>(new Set());
   const startRef = useRef(0);
