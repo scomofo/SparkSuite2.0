@@ -597,6 +597,13 @@ describe("polyphonic chord assessment", () => {
     assert.equal(assessChordPitches(analysis, em).status, "uncertain");
   });
 
+  it("can verify a clear two-note chord without inventing extra notes", () => {
+    const analysis = analyzeChordSpectrum(spectrumFor([40, 47]), sampleRate, fftSize);
+    assert.ok(analysis.midiNotes.includes(40));
+    assert.ok(analysis.midiNotes.includes(47));
+    assert.equal(assessChordPitches(analysis, [40, 47]).status, "match");
+  });
+
   it("flags a clearly different chord but keeps a partly masked chord uncertain", () => {
     const wrong = analyzeChordSpectrum(spectrumFor([42, 49, 54, 57, 61, 66]), sampleRate, fftSize);
     assert.equal(assessChordPitches(wrong, em).status, "mismatch");
