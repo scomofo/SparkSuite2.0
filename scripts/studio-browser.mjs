@@ -63,10 +63,11 @@ try {
     "Enter must activate the focused demo, not start the exercise",
   );
   await page.clock.runFor(4000);
-  await page.getByRole("button", { name: "Count me in", exact: true }).click();
+  await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
   await page.clock.runFor(3500);
   await page.keyboard.press("6");
   await page.clock.runFor(31000);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page
     .locator("header")
     .getByText(/2 \/ 3/)
@@ -158,7 +159,7 @@ try {
   await page.getByRole("button", { name: "Pause and leave session", exact: true }).click();
   for (const instrument of ["piano", "mandolin", "banjo", "violin", "lapsteel", "bass", "drums", "vocals", "guitar"]) {
     await page.getByLabel("Instrument", { exact: true }).selectOption(instrument);
-    await page.getByRole("button", { name: "Start today's loop", exact: true }).click();
+    await page.getByRole("button", { name: /^(Start today's loop|Play it again|Resume your loop)$/ }).click();
     await page.getByRole("button", { name: "Enable microphone", exact: true }).waitFor();
     assert.equal(
       await page.getByRole("button", { name: "Count me in", exact: true }).isEnabled(),
