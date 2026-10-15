@@ -3,6 +3,27 @@ import { yinPitchFast } from "./tuner.ts";
 
 export type AcousticInputMode = "strum" | "pitch" | "percussion";
 
+export function acousticInputModeFor(input: {
+  instrument: string;
+  surface: "strings" | "keys" | "pads" | "voice";
+  pluckDrill: boolean;
+  hasPattern: boolean;
+}): AcousticInputMode {
+  if (input.surface === "pads") return "percussion";
+  if (input.surface === "voice") return "pitch";
+  if (input.surface === "keys") return input.pluckDrill ? "pitch" : "strum";
+  if (input.surface === "strings") {
+    if (
+      input.instrument === "bass" ||
+      input.instrument === "violin" ||
+      input.pluckDrill ||
+      input.hasPattern
+    ) return "pitch";
+    return "strum";
+  }
+  return "pitch";
+}
+
 export type PitchOnset = {
   onsetMs: number;
   frequencyHz: number;
