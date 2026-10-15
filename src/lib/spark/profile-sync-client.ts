@@ -67,24 +67,14 @@ export async function synchronizeProfile(
     const cloudRow = await getCloudProfile();
     const cloud = cloudSnapshot(cloudRow.payload);
 
-    if (cloudRow.exists && !cloud) {
-      return {
-        status: "error",
-        revision: cloudRow.revision,
-        updatedAt: cloudRow.updatedAt,
-        applied: false,
-        message: "The cloud profile could not be read safely. Your local progress has been left untouched.",
-      };
-    }
-
     if (choice === "use-cloud") {
       if (!cloud) {
         return {
-          status: "error",
+          status: "conflict",
           revision: cloudRow.revision,
           updatedAt: cloudRow.updatedAt,
           applied: false,
-          message: "There is no cloud profile to restore.",
+          message: "The cloud copy cannot be read safely. Your local progress is preserved; replace the cloud copy with this device to recover.",
         };
       }
       const applied = applyIfChanged(cloud, local);
@@ -118,6 +108,16 @@ export async function synchronizeProfile(
         updatedAt: result.updatedAt,
         applied,
         message: "This computer's profile replaced the cloud copy.",
+      };
+    }
+
+    if (cloudRow.exists && !cloud) {
+      return {
+        status: "conflict",
+        revision: cloudRow.revision,
+        updatedAt: cloudRow.updatedAt,
+        applied: false,
+        message: "The cloud profile could not be read safely. Your local progress is untouched; choose Replace cloud with this device to recover.",
       };
     }
 
