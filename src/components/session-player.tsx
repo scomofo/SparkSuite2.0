@@ -29,7 +29,7 @@ import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
 import { StrumOnsetDetector } from "@/lib/spark/strum-detection";
-import { acousticInputModeFor, PercussionOnsetDetector, PitchOnsetDetector, type AcousticInputMode } from "@/lib/spark/acoustic-input";
+import { acousticInputModeFor, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
@@ -45,6 +45,9 @@ function acousticInstrumentLabel(instrument: InstrumentId, name: string) {
 
 function acousticInputDescription(instrument: InstrumentId, name: string, mode: AcousticInputMode) {
   const label = acousticInstrumentLabel(instrument, name);
+  if (instrument === "vocals") {
+    return "Sing or hum the target pitch on the cue. Held notes are checked at each beat.";
+  }
   if (mode === "strum" && instrument === "piano") {
     return "Play the chord on your real piano when the cue arrives. Timing is scored; individual chord notes are not yet graded.";
   }
@@ -185,6 +188,8 @@ export function SessionPlayer() {
   const micOpenFreqRef = useRef(inst.openFreq);
   const micStringNamesRef = useRef(inst.stringNames);
   const micRequiresOpenStringRef = useRef(Boolean(item && micSurface === "strings" && isPluckDrill(item)));
+  const micItemIdRef = useRef(item?.id ?? "");
+  const micWindowMsRef = useRef(item?.windowMs ?? 230);
   const micStopRef = useRef<(() => void) | null>(null);
   const micFrameRef = useRef(0);
   const micRequestRef = useRef(0);
@@ -197,6 +202,8 @@ export function SessionPlayer() {
   micOpenFreqRef.current = inst.openFreq;
   micStringNamesRef.current = inst.stringNames;
   micRequiresOpenStringRef.current = Boolean(item && micSurface === "strings" && isPluckDrill(item));
+  micItemIdRef.current = item?.id ?? "";
+  micWindowMsRef.current = item?.windowMs ?? 230;
 
   useEffect(() => () => {
     pauseSession();
@@ -417,10 +424,12 @@ export function SessionPlayer() {
     mic.analyser.smoothingTimeConstant = 0.2;
     const strumDetector = new StrumOnsetDetector();
     const pitchDetector = new PitchOnsetDetector();
+    const voicePitchTracker = new PitchTracker();
     const percussionDetector = new PercussionOnsetDetector();
     const timeData = new Float32Array(mic.analyser.fftSize);
     const spectrumData = new Float32Array(mic.analyser.frequencyBinCount);
     let activeMode = micModeRef.current;
+    let activeItemId = micItemIdRef.current;
     micStopRef.current = () => {
       cancelAnimationFrame(micFrameRef.current);
       mic.stop();
@@ -431,11 +440,14 @@ export function SessionPlayer() {
       if (request !== micRequestRef.current) return;
       if (phaseRef.current === "play" && requiresMicInputRef.current && !visualOnlyRef.current) {
         const mode = micModeRef.current;
-        if (mode !== activeMode) {
+        const itemId = micItemIdRef.current;
+        if (mode !== activeMode || itemId !== activeItemId) {
           strumDetector.reset();
           pitchDetector.reset();
+          voicePitchTracker.reset();
           percussionDetector.reset();
           activeMode = mode;
+          activeItemId = itemId;
         }
         mic.analyser.getFloatTimeDomainData(timeData);
         mic.analyser.getFloatFrequencyData(spectrumData);
@@ -459,31 +471,67 @@ export function SessionPlayer() {
             : micInstrumentRef.current === "vocals"
               ? 900
               : 1200;
-          const onset = pitchDetector.process(
-            timeData,
-            mic.ctx.sampleRate,
-            ts,
-            2,
-            minimumHz,
-            maximumHz,
-          );
-          if (onset) {
-            let inputIndex = onset.midi;
-            if (micSurfaceRef.current === "strings") {
-              const nearest = nearestString(
-                onset.frequencyHz,
-                micOpenFreqRef.current,
-                micStringNamesRef.current,
+
+          if (micInstrumentRef.current === "vocals") {
+            const sample = voicePitchTracker.process(
+              timeData,
+              mic.ctx.sampleRate,
+              ts,
+              2,
+              minimumHz,
+              maximumHz,
+            );
+            if (sample) {
+              const elapsed = (ts - startRef.current) / 1000;
+              const windowSec = Math.min(100, micWindowMsRef.current) / 1000;
+              const upcoming = notesRef.current.find((note, i) =>
+                !consumed.current.has(i) && Math.abs(note.t - elapsed) <= windowSec,
               );
-              // Open-string drills should not count a random room sound or the
-              // metronome as a played string.
-              if (micRequiresOpenStringRef.current && Math.abs(nearest.cents) > 180) {
-                micFrameRef.current = requestAnimationFrame(loop);
-                return;
+              const expectedMidi = upcoming?.string ?? upcoming?.notes?.[0];
+              if (upcoming && expectedMidi !== undefined) {
+                const samePitchClass = ((sample.midi - expectedMidi) % 12 + 12) % 12 === 0;
+                if (samePitchClass) {
+                  attemptRef.current?.("pluck", sample.midi, ts, sample.midi);
+                }
+              } else {
+                const onset = pitchDetector.process(
+                  timeData,
+                  mic.ctx.sampleRate,
+                  ts,
+                  2,
+                  minimumHz,
+                  maximumHz,
+                );
+                if (onset) attemptRef.current?.("pluck", onset.midi, onset.onsetMs, onset.midi);
               }
-              inputIndex = nearest.index;
             }
-            attemptRef.current?.("pluck", inputIndex, onset.onsetMs, onset.midi);
+          } else {
+            const onset = pitchDetector.process(
+              timeData,
+              mic.ctx.sampleRate,
+              ts,
+              2,
+              minimumHz,
+              maximumHz,
+            );
+            if (onset) {
+              let inputIndex = onset.midi;
+              if (micSurfaceRef.current === "strings") {
+                const nearest = nearestString(
+                  onset.frequencyHz,
+                  micOpenFreqRef.current,
+                  micStringNamesRef.current,
+                );
+                // Open-string drills should not count a random room sound or the
+                // metronome as a played string.
+                if (micRequiresOpenStringRef.current && Math.abs(nearest.cents) > 180) {
+                  micFrameRef.current = requestAnimationFrame(loop);
+                  return;
+                }
+                inputIndex = nearest.index;
+              }
+              attemptRef.current?.("pluck", inputIndex, onset.onsetMs, onset.midi);
+            }
           }
         } else {
           const onset = percussionDetector.process(
