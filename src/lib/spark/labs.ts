@@ -27,8 +27,8 @@ export function labSearchFor(id: InstrumentId): LabSearch {
   }
 }
 
-export function usesTechLab(id: InstrumentId) {
-  return id !== "guitar";
+export function usesTechLab(_id: InstrumentId) {
+  return true;
 }
 
 export type LabCard = {

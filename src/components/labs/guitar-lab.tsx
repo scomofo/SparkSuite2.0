@@ -7,7 +7,7 @@ import { bassLegato, ghostNote, pluck, strum, strumUp, unlockAudio } from "@/lib
 import { CHORDS, OPEN_FREQ } from "@/lib/spark/guitar";
 
 export type GuitarTab = "down" | "up" | "chuck" | "hammer" | "travis";
-const GCHORDS = ["Em", "G", "C", "D"] as const;
+const GCHORDS = ["Em", "G", "C", "D", "Am", "Fmaj7", "F"] as const;
 type GChord = (typeof GCHORDS)[number];
 
 const TABS: { id: GuitarTab; label: string }[] = [

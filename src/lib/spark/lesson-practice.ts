@@ -756,7 +756,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 16,
     goal: "Alternate upper-string C and Am/C triads for four bars, changing only one pitch.",
     setup:
-      "Use only the G, B, and high-E strings. C is 5–5–3; Am/C is 5–5–5. Reset if the small barre feels tense.",
+      "Use only the G, B, and high-E strings. C is 5–5–3; Am/C is 5–5–5. Reset if the shape feels tense.",
     hint: "Loop only the high-E note from fret 3 to fret 5 and back at 40 BPM, then restore the two shared notes.",
     retryLabel: "The three-note change feels awkward",
     takeaway:
