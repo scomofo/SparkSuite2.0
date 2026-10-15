@@ -1173,6 +1173,51 @@ const hatFootBar: DrumPatternHit[] = [
   drumHitCue(3, [2], "Left foot: chick under the snare."),
 ];
 
+/**
+ * The waltz family: three beats to the bar. Kick lands on 1 and the
+ * bar turns a beat sooner than everything above — the patterns below
+ * only play correctly in a session whose meter is 3 (beatsPerBar on
+ * their lessons), which is what makes them an honest 3/4 presence
+ * rather than 4/4 patterns with a beat missing.
+ */
+const waltzBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(1, [2], "Hat on 2."),
+  drumHitCue(2, [2], "Hat on 3."),
+];
+
+const waltzSnareBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(1, [1], "Snare on 2."),
+  drumHitCue(2, [1], "Snare on 3."),
+];
+
+const waltzEighthsBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(0.5, [2], "Hat — right hand."),
+  drumHitCue(1, [1, 2], "Snare on 2 — the hat keeps going."),
+  drumHitCue(1.5, [2], "Hat."),
+  drumHitCue(2, [1, 2], "Snare on 3 — the hat keeps going."),
+  drumHitCue(2.5, [2], "Hat."),
+];
+
+const waltzFillPhrase: DrumPatternHit[] = [
+  ...drumBar(waltzEighthsBar, 0),
+  ...drumBar(waltzEighthsBar, 3),
+  drumHitCue(6, [1], "Fill: start on the snare."),
+  drumHitCue(6.5, [1], "Snare."),
+  drumHitCue(7, [3], "Tom."),
+  drumHitCue(7.5, [3], "Tom."),
+  drumHitCue(8, [1], "Snare."),
+  drumHitCue(8.5, [3], "Last fill hit — get ready to land."),
+  drumHitCue(9, [0], "Land on 1."),
+  drumHitCue(9.5, [2], "Hat — the groove is back."),
+  drumHitCue(10, [1, 2], "Snare on 2 — the hat keeps going."),
+  drumHitCue(10.5, [2], "Hat."),
+  drumHitCue(11, [1, 2], "Snare on 3 — the hat keeps going."),
+  drumHitCue(11.5, [2], "Hat."),
+];
+
 const DRUM_DAILY_PATTERNS: Record<string, DrumDailyPattern> = {
   lesson_drums_hats_eighths_01: { beats: 4, hits: hatsGrooveBar },
   lesson_drums_fill_land_01: { beats: 20, hits: fillPhrase },
@@ -1193,6 +1238,10 @@ const DRUM_DAILY_PATTERNS: Record<string, DrumDailyPattern> = {
   },
   lesson_drums_shuffle_01: { beats: 4, hits: shuffleBar },
   lesson_drums_hat_foot_01: { beats: 4, hits: hatFootBar },
+  lesson_drums_waltz_01: { beats: 3, hits: waltzBar },
+  lesson_drums_waltz_snare_01: { beats: 3, hits: waltzSnareBar },
+  lesson_drums_waltz_eighths_01: { beats: 3, hits: waltzEighthsBar },
+  lesson_drums_waltz_fill_01: { beats: 12, hits: waltzFillPhrase },
 };
 
 /** Declared pad pattern for a daily drums lesson, if it has one. */
