@@ -90,24 +90,24 @@ const PATTERNS: Record<string, QuestPattern> = {
   ]},
 
   "bass-side-foundations": { bpm: 60, cues: [
-    n(0,"Long E",40,"Let E ring almost a full beat.",0.95), n(1,"Long E",40,"Same pitch, connected.",0.95),
-    n(2,"Long E",40,"Feel the legato weight.",0.95), n(3,"Long E",40,"Last long note.",0.95),
-    n(4,"Short E",40,"Now stop it quickly.",0.25), n(5,"Short E",40,"Silence is part of the groove.",0.25),
-    n(6,"Short E",40,"Keep the attack identical.",0.25), n(7,"Short E",40,"Compare the feel.",0.25),
+    n(0,"Long E",28,"Let E ring almost a full beat.",0.95), n(1,"Long E",28,"Same pitch, connected.",0.95),
+    n(2,"Long E",28,"Feel the legato weight.",0.95), n(3,"Long E",28,"Last long note.",0.95),
+    n(4,"Short E",28,"Now stop it quickly.",0.25), n(5,"Short E",28,"Silence is part of the groove.",0.25),
+    n(6,"Short E",28,"Keep the attack identical.",0.25), n(7,"Short E",28,"Compare the feel.",0.25),
   ]},
   "bass-side-beginner": { bpm: 70, cues: [
-    n(0,"E + kick",40,"Root lands with the imagined kick."), r(1), n(2,"E + kick",40,"Lock again."), r(3),
-    n(4,"E + kick",40,"Stay attached to the downbeat."), n(5,"F#",42,"Passing tone between kicks."),
-    n(6,"G + kick",43,"Arrive on the next root."), r(7,"Leave space after the landing."),
+    n(0,"E + kick",28,"Root lands with the imagined kick."), r(1), n(2,"E + kick",28,"Lock again."), r(3),
+    n(4,"E + kick",28,"Stay attached to the downbeat."), n(5,"F#",30,"Passing tone between kicks."),
+    n(6,"G + kick",31,"Arrive on the next root."), r(7,"Leave space after the landing."),
   ]},
   "bass-side-intermediate": { bpm: 60, cues: [
-    n(0,"G",43,"Target root G."), n(1,"F#",42,"Approach G from below."), n(2,"G",43,"Land."),
-    n(3,"Ab",44,"Approach G from above."), n(4,"G",43,"Land again."),
-    n(5,"C#",49,"Approach D from below."), n(6,"D",50,"New root."), r(7),
+    n(0,"G",31,"Target root G."), n(1,"F#",30,"Approach G from below."), n(2,"G",31,"Land."),
+    n(3,"Ab",32,"Approach G from above."), n(4,"G",31,"Land again."),
+    n(5,"C#",37,"Approach D from below."), n(6,"D",38,"New root."), r(7),
   ]},
   "bass-side-advanced": { bpm: 60, cues: [
-    n(0,"Active E",40,"Root."), n(1,"G",43,"Colour tone."), n(2,"A",45,"Motion."), n(3,"B",47,"Lead onward."),
-    n(4,"Simple E",40,"Now one long root.",1.8), r(5), n(6,"Simple G",43,"Another deliberate root.",1.8), r(7),
+    n(0,"Active E",28,"Root."), n(1,"G",31,"Colour tone."), n(2,"A",33,"Motion."), n(3,"B",35,"Lead onward."),
+    n(4,"Simple E",28,"Now one long root.",1.8), r(5), n(6,"Simple G",31,"Another deliberate root.",1.8), r(7),
   ]},
 
   "drums-side-foundations": { bpm: 80, cues: [

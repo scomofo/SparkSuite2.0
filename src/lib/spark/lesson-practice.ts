@@ -235,14 +235,14 @@ const bassHighG: BassPos = { string: 2, fret: 5, name: "G", role: "8" };
 const bassE: BassPos = { string: 0, fret: 0, name: "E", role: "R" };
 const bassFSharp: BassPos = { string: 0, fret: 2, name: "F♯", role: "ap" };
 const bassWalkingD: BassPos = { string: 1, fret: 5, name: "D", role: "R" };
-const bassWalkingF: BassPos = { string: 2, fret: 3, name: "F", role: "ap" };
+const bassWalkingF: BassPos = { string: 2, fret: 3, name: "F", role: "ct" };
 const bassWalkingFSharp: BassPos = { string: 2, fret: 4, name: "F♯", role: "ap" };
 const bassWalkingG: BassPos = { string: 2, fret: 5, name: "G", role: "R" };
 const bassWalkingA: BassPos = { string: 3, fret: 2, name: "A", role: "5" };
 const bassWalkingBHigh: BassPos = { string: 3, fret: 4, name: "B", role: "ap" };
 const bassWalkingB: BassPos = { string: 1, fret: 2, name: "B", role: "ap" };
 const bassWalkingC: BassPos = { string: 1, fret: 3, name: "C", role: "R" };
-const bassWalkingE: BassPos = { string: 2, fret: 2, name: "E", role: "ap" };
+const bassWalkingE: BassPos = { string: 2, fret: 2, name: "E", role: "ct" };
 
 function advancedProject(
   buildBeats: number,
