@@ -1,4 +1,5 @@
 import { rmsLevel } from "./strum-detection.ts";
+import { yinPitchFast } from "./tuner.ts";
 
 export type PitchOnset = {
   onsetMs: number;
@@ -65,7 +66,6 @@ export class PitchOnsetDetector {
 
     // Avoid the quadratic pitch estimate when there is no useful signal.
     if (overallRms < this.minimumLevel) return null;
-    const { yinPitchFast } = pitchFunctions();
     const frequencyHz = yinPitchFast(samples, sampleRate, 0.14, decimate);
     if (!Number.isFinite(frequencyHz) || frequencyHz < minimumHz || frequencyHz > maximumHz) {
       return null;
@@ -158,9 +158,3 @@ export class PercussionOnsetDetector {
   }
 }
 
-// Kept behind a function so the DSP module is loaded once, not from an audio callback.
-function pitchFunctions() {
-  return { yinPitchFast: yinPitchFastCached };
-}
-
-import { yinPitchFast as yinPitchFastCached } from "./tuner.ts";
