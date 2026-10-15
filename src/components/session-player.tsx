@@ -27,13 +27,54 @@ import { DrumPads } from "@/components/drum-pads";
 import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
-import { PitchMatch } from "@/components/tuner-panel";
+import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
+import { StrumDirectionDetector, StrumOnsetDetector, type StrumDirectionEstimate } from "@/lib/spark/strum-detection";
+import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
+import { practiceShape } from "@/lib/spark/lesson-practice";
 import type { ChordShape, HitJudge, ItemResult } from "@/lib/spark/types";
 
 type Phase = "intro" | "countin" | "play" | "itemdone";
+
+type AcousticHitEvidence = {
+  spectrumDb?: Float32Array;
+  sampleRate?: number;
+  fftSize?: number;
+  direction?: StrumDirectionEstimate;
+};
+type AttemptFn = (kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number, detectedMidi?: number, evidence?: AcousticHitEvidence) => void;
+
+function supportsMicrophoneInput(surface: string): boolean {
+  return surface === "strings" || surface === "keys" || surface === "pads" || surface === "voice";
+}
+
+function acousticInstrumentLabel(instrument: InstrumentId, name: string) {
+  if (instrument === "vocals") return "voice";
+  if (instrument === "drums") return "drum kit";
+  return name.toLowerCase();
+}
+
+function acousticInputDescription(instrument: InstrumentId, name: string, mode: AcousticInputMode) {
+  const label = acousticInstrumentLabel(instrument, name);
+  if (instrument === "vocals") {
+    return "Sing or hum the target pitch on the cue. Held notes are checked at each beat.";
+  }
+  if (mode === "strum" && instrument === "piano") {
+    return "Play the chord on your real piano. Timing and sounding notes are checked when the microphone can separate them clearly.";
+  }
+  if (mode === "strum") {
+    return `Strum your real ${label} on the cue. The mic checks timing and chord-note coverage, and grades down/up direction only when the signal is clear. It cannot see finger placement.`;
+  }
+  if (mode === "percussion") {
+    return "Play your real drum kit on the cue. The mic classifies kick, snare, hi-hat/cymbal, or tom when confidence is high; ambiguous hits are not guessed.";
+  }
+  if (mode === "attack") {
+    return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; muted-chop quality and exact voicing are not graded yet.";
+  }
+  return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
+}
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
 
@@ -107,6 +148,19 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
   strum(freqs);
 }
 
+function chordMidiNotes(instrument: InstrumentId, chord: string, inst = instrumentById(instrument)) {
+  if (instrument === "piano") return PIANO_VOICINGS[chord] ?? [];
+  const shape = practiceShape(instrument, chord);
+  if (!shape) return [];
+  return shape.frets.flatMap((fret, index) => {
+    if (fret === null) return [];
+    const openHz = inst.openFreq[index];
+    if (!Number.isFinite(openHz) || openHz <= 0) return [];
+    const frequencyHz = openHz * Math.pow(2, fret / 12);
+    return [Math.round(69 + 12 * Math.log2(frequencyHz / 440))];
+  });
+}
+
 export function SessionPlayer() {
   const navigate = useNavigate();
   const instrument = useSpark((s) => s.instrument);
@@ -133,6 +187,19 @@ export function SessionPlayer() {
   const [modeling, setModeling] = useState(false);
   const [createPick, setCreatePick] = useState<string | null>(null);
   const [listenPick, setListenPick] = useState<"same" | "different" | null>(null);
+  const [micStatus, setMicStatus] = useState<"off" | "starting" | "listening" | "blocked">("off");
+  const [micError, setMicError] = useState<string | null>(null);
+  const [micFeedback, setMicFeedback] = useState<string | null>(null);
+  const [visualOnly, setVisualOnly] = useState(false);
+  const micSurface = item?.surface ?? inst.surface;
+  const requiresMicInput = supportsMicrophoneInput(micSurface);
+  const micMode = acousticInputModeFor({
+    instrument,
+    surface: micSurface,
+    pluckDrill: item !== null && isPluckDrill(item),
+    hasPattern: item !== null && hasInstrumentPattern(item),
+    lessonId: item?.lessonId,
+  });
   const notesRef = useRef<NoteEvent[]>([]);
   const consumed = useRef<Set<number>>(new Set());
   const startRef = useRef(0);
@@ -143,10 +210,39 @@ export function SessionPlayer() {
   const missesRef = useRef(0);
   const modelTimers = useRef<number[]>([]);
   const needsPickRef = useRef(false);
+  const visualOnlyRef = useRef(false);
+  const phaseRef = useRef<Phase>("intro");
+  const requiresMicInputRef = useRef(false);
+  const micModeRef = useRef<AcousticInputMode>("strum");
+  const micSurfaceRef = useRef(micSurface);
+  const micInstrumentRef = useRef(instrument);
+  const micOpenFreqRef = useRef(inst.openFreq);
+  const micStringNamesRef = useRef(inst.stringNames);
+  const micRequiresOpenStringRef = useRef(Boolean(item && micSurface === "strings" && isPluckDrill(item)));
+  const micItemIdRef = useRef(item?.id ?? "");
+  const micWindowMsRef = useRef(item?.windowMs ?? 230);
+  const micStopRef = useRef<(() => void) | null>(null);
+  const micFrameRef = useRef(0);
+  const micRequestRef = useRef(0);
+  const attemptRef = useRef<AttemptFn | null>(null);
+  phaseRef.current = phase;
+  requiresMicInputRef.current = requiresMicInput;
+  micModeRef.current = micMode;
+  micSurfaceRef.current = micSurface;
+  micInstrumentRef.current = instrument;
+  micOpenFreqRef.current = inst.openFreq;
+  micStringNamesRef.current = inst.stringNames;
+  micRequiresOpenStringRef.current = Boolean(item && micSurface === "strings" && isPluckDrill(item));
+  micItemIdRef.current = item?.id ?? "";
+  micWindowMsRef.current = item?.windowMs ?? 230;
 
   useEffect(() => () => {
     pauseSession();
+    micRequestRef.current += 1;
+    micStopRef.current?.();
+    micStopRef.current = null;
     cancelAnimationFrame(raf.current);
+    cancelAnimationFrame(micFrameRef.current);
     for (const id of modelTimers.current) window.clearTimeout(id);
   }, [pauseSession]);
 
@@ -163,11 +259,14 @@ export function SessionPlayer() {
     setCount(4);
     setBeatN(1);
     setItemSummary(null);
+    setMicFeedback(null);
     setExpectedString(null);
     setLiveChord(item?.chords[0] ?? "");
     setModeling(false);
     setCreatePick(null);
     setListenPick(null);
+    setVisualOnly(false);
+    visualOnlyRef.current = false;
     consumed.current = new Set();
     notesRef.current = [];
     lastBeat.current = -1;
@@ -196,6 +295,7 @@ export function SessionPlayer() {
 
   const beginPlay = useCallback(() => {
     if (!effectiveItem) return;
+    if (requiresMicInput && micStatus !== "listening" && !visualOnlyRef.current) return;
     unlockAudio();
     notesRef.current = buildTimeline(effectiveItem);
     consumed.current = new Set();
@@ -207,7 +307,7 @@ export function SessionPlayer() {
     setPhase("countin");
     setCount(4);
     setLiveChord(effectiveItem.chords[0] ?? "");
-  }, [effectiveItem]);
+  }, [effectiveItem, micStatus, requiresMicInput]);
 
   useEffect(() => {
     if (phase !== "countin" || !item) return;
@@ -233,9 +333,9 @@ export function SessionPlayer() {
   }, [item, phase]);
 
   const onJudge = useCallback(
-    (judge: HitJudge) => {
+    (judge: HitJudge, soundFeedback = true) => {
       setFlash(judge);
-      hitSfx(judge);
+      if (soundFeedback) hitSfx(judge);
       window.setTimeout(() => setFlash(null), 140);
       if (judge === "miss") {
         setCombo(0);
@@ -244,7 +344,7 @@ export function SessionPlayer() {
       } else {
         setCombo((c) => {
           const n = c + 1;
-          if (isComboGate(n)) comboSting(n);
+          if (soundFeedback && isComboGate(n)) comboSting(n);
           return n;
         });
         hitsRef.current += 1;
@@ -255,38 +355,103 @@ export function SessionPlayer() {
   );
 
   const attempt = useCallback(
-    (kind: "strum" | "pluck", stringIndex?: number) => {
+    (kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number, detectedMidi?: number, evidence?: AcousticHitEvidence) => {
       if (phase !== "play" || !item) return;
-      if (hasInstrumentPattern(item)) {
+      const fromMic = detectedAtMs !== undefined;
+      if (requiresMicInput && !fromMic) return;
+      if (fromMic) setMicFeedback(null);
+      if (hasInstrumentPattern(item) && !fromMic) {
         kind = "strum";
         stringIndex = undefined;
       }
-      const t = (performance.now() - startRef.current) / 1000;
+      const t = ((detectedAtMs ?? performance.now()) - startRef.current) / 1000;
       const pending = notesRef.current.filter((_, i) => !consumed.current.has(i));
       const res = consumeHit(pending, t, item.windowMs ?? 230);
 
       if (kind === "pluck" && stringIndex !== undefined) {
-        if (instrument === "drums") drumHit(stringIndex);
-        else if (instrument === "piano" || instrument === "vocals") pianoTone(midiToFreq(stringIndex));
-        else if (instrument === "bass") bassTone(inst.openFreq[stringIndex] ?? 41.2);
-        else pluck(inst.openFreq[stringIndex] ?? OPEN_FREQ[stringIndex] ?? 110);
+        if (!fromMic) {
+          if (instrument === "drums") drumHit(stringIndex);
+          else if (instrument === "piano" || instrument === "vocals") pianoTone(midiToFreq(stringIndex));
+          else if (instrument === "bass") bassTone(inst.openFreq[stringIndex] ?? 41.2);
+          else pluck(inst.openFreq[stringIndex] ?? OPEN_FREQ[stringIndex] ?? 110);
+        }
         setActiveString(stringIndex);
       }
 
       if (!res.hit || !res.note) {
-        onJudge("miss");
+        onJudge("miss", !fromMic);
         return;
+      }
+      if (kind !== "pluck" && fromMic && !res.note.muted && evidence?.spectrumDb && evidence.sampleRate && evidence.fftSize) {
+        const expectedChord = res.note.notes?.length
+          ? res.note.notes
+          : res.note.chord
+            ? chordMidiNotes(instrument, res.note.chord, inst)
+            : [];
+        if (expectedChord.length >= 2) {
+          const spectrum = analyzeChordSpectrum(evidence.spectrumDb, evidence.sampleRate, evidence.fftSize);
+          const assessment = assessChordPitches(spectrum, expectedChord);
+          if (assessment.status === "match") {
+            setMicFeedback("Chord tones detected.");
+          } else if (assessment.status === "mismatch") {
+            setMicFeedback(`Chord check: ${assessment.missingMidi.length} expected note(s) were not clearly detected.`);
+            onJudge("miss", false);
+            return;
+          } else {
+            setMicFeedback("Timing counted; the microphone could not separate enough chord tones to grade the chord reliably.");
+          }
+        }
+      }
+      const expectedDirection = res.note.kind;
+      if (
+        kind !== "pluck" &&
+        fromMic &&
+        (instrument === "guitar" || instrument === "ukulele" || instrument === "mandolin" || instrument === "banjo" || instrument === "lapsteel") &&
+        (expectedDirection === "down" || expectedDirection === "up") &&
+        evidence?.direction &&
+        evidence.direction.confidence >= 0.65 &&
+        evidence.direction.direction !== "unknown"
+      ) {
+        if (evidence.direction.direction !== expectedDirection) {
+          setMicFeedback(`Strum direction sounded like an ${evidence.direction.direction}stroke; the cue asked for an ${expectedDirection}stroke.`);
+          onJudge("miss", false);
+          return;
+        }
+        setMicFeedback((previous) => {
+          const directionMessage = `${evidence.direction!.direction === "down" ? "Downstroke" : "Upstroke"} detected.`;
+          return previous ? `${previous} ${directionMessage}` : directionMessage;
+        });
       }
       // Pluck/pad/key notes carry an expected string/pad/midi. Timing alone
       // is not enough — a wrong string, key, or pad is a miss.
       if (res.note.string !== undefined && stringIndex !== res.note.string) {
-        onJudge("miss");
-        return;
+        const octaveFlexibleVoiceMatch =
+          fromMic &&
+          instrument === "vocals" &&
+          detectedMidi !== undefined &&
+          ((detectedMidi - res.note.string) % 12 + 12) % 12 === 0;
+        if (!octaveFlexibleVoiceMatch) {
+          onJudge("miss", !fromMic);
+          return;
+        }
+      }
+      if (fromMic && detectedMidi !== undefined && res.note.notes?.length) {
+        const pitchMatches = res.note.notes.some((expected) =>
+          Math.abs(expected - detectedMidi) <= 1 ||
+          (res.note!.notes!.length > 1 && Math.abs(Math.abs(expected - detectedMidi) - 12) <= 1),
+        );
+        if (!pitchMatches) {
+          onJudge("miss", false);
+          return;
+        }
       }
       const realIndex = notesRef.current.indexOf(res.note);
       consumed.current.add(realIndex);
       if (kind !== "pluck") {
-        if (res.note.notes || res.note.muted) {
+        if (fromMic) {
+          // Do not play a synthetic chord or hit sound back into the open mic.
+          if (res.note.chord) setLiveChord(res.note.chord);
+        } else if (res.note.notes || res.note.muted) {
           playMusicalEvent(res.note, item.bpm);
           if (res.note.chord) setLiveChord(res.note.chord);
         } else if (res.note.chord) {
@@ -304,10 +469,199 @@ export function SessionPlayer() {
       } else if (res.note.chord) {
         setLiveChord(res.note.chord);
       }
-      onJudge(res.judge);
+      onJudge(res.judge, !fromMic);
     },
-    [inst, instrument, item, onJudge, phase],
+    [inst, instrument, item, onJudge, phase, requiresMicInput],
   );
+
+  attemptRef.current = attempt;
+
+  const startAcousticMic = useCallback(async () => {
+    if (!requiresMicInput) return;
+    const request = ++micRequestRef.current;
+    micStopRef.current?.();
+    micStopRef.current = null;
+    setMicStatus("starting");
+    setMicError(null);
+    unlockAudio();
+
+    // 8192 samples improves low-note and chord resolution; onset timestamps use the rolling window's newest chunk.
+    const mic = await startMicAnalyser(8192);
+    if (request !== micRequestRef.current) {
+      mic?.stop();
+      return;
+    }
+    if (!mic) {
+      setMicStatus("blocked");
+      setMicError("Microphone access was blocked or unavailable. Allow access in your browser and try again.");
+      return;
+    }
+
+    mic.analyser.smoothingTimeConstant = 0.2;
+    const strumDetector = new StrumOnsetDetector();
+    const directionDetector = new StrumDirectionDetector();
+    const pitchDetector = new PitchOnsetDetector();
+    const voicePitchTracker = new PitchTracker();
+    const percussionDetector = new PercussionOnsetDetector();
+    const timeData = new Float32Array(mic.analyser.fftSize);
+    const spectrumData = new Float32Array(mic.analyser.frequencyBinCount);
+    let activeMode = micModeRef.current;
+    let activeItemId = micItemIdRef.current;
+    micStopRef.current = () => {
+      cancelAnimationFrame(micFrameRef.current);
+      mic.stop();
+    };
+    setMicStatus("listening");
+
+    const loop = (ts: number) => {
+      if (request !== micRequestRef.current) return;
+      if (phaseRef.current === "play" && requiresMicInputRef.current && !visualOnlyRef.current) {
+        const mode = micModeRef.current;
+        const itemId = micItemIdRef.current;
+        if (mode !== activeMode || itemId !== activeItemId) {
+          strumDetector.reset();
+          directionDetector.reset();
+          pitchDetector.reset();
+          voicePitchTracker.reset();
+          percussionDetector.reset();
+          activeMode = mode;
+          activeItemId = itemId;
+        }
+        mic.analyser.getFloatTimeDomainData(timeData);
+        mic.analyser.getFloatFrequencyData(spectrumData);
+
+        if (mode === "strum") {
+          directionDetector.process(spectrumData, mic.ctx.sampleRate, mic.analyser.fftSize, ts);
+          const onset = strumDetector.process(
+            timeData,
+            spectrumData,
+            mic.ctx.sampleRate,
+            mic.analyser.fftSize,
+            ts,
+          );
+          if (onset) {
+            const direction = directionDetector.classify(onset.onsetMs);
+            attemptRef.current?.("strum", undefined, onset.onsetMs, undefined, {
+              spectrumDb: spectrumData,
+              sampleRate: mic.ctx.sampleRate,
+              fftSize: mic.analyser.fftSize,
+              direction,
+            });
+          }
+        } else if (mode === "pitch") {
+          const lowestReference = Math.min(...micOpenFreqRef.current);
+          const minimumHz = micSurfaceRef.current === "voice"
+            ? 70
+            : Math.max(30, Math.min(160, lowestReference * 0.65));
+          const maximumHz = micInstrumentRef.current === "bass"
+            ? 500
+            : micInstrumentRef.current === "vocals"
+              ? 900
+              : 1200;
+
+          if (micInstrumentRef.current === "vocals") {
+            const sample = voicePitchTracker.process(
+              timeData,
+              mic.ctx.sampleRate,
+              ts,
+              2,
+              minimumHz,
+              maximumHz,
+            );
+            if (sample) {
+              const elapsed = (ts - startRef.current) / 1000;
+              const windowSec = Math.min(100, micWindowMsRef.current) / 1000;
+              const upcoming = notesRef.current.find((note, i) =>
+                !consumed.current.has(i) && Math.abs(note.t - elapsed) <= windowSec,
+              );
+              const expectedMidi = upcoming?.string ?? upcoming?.notes?.[0];
+              if (upcoming && expectedMidi !== undefined) {
+                const samePitchClass = ((sample.midi - expectedMidi) % 12 + 12) % 12 === 0;
+                if (samePitchClass) {
+                  attemptRef.current?.("pluck", sample.midi, ts, sample.midi);
+                }
+              } else {
+                const onset = pitchDetector.process(
+                  timeData,
+                  mic.ctx.sampleRate,
+                  ts,
+                  2,
+                  minimumHz,
+                  maximumHz,
+                );
+                if (onset) attemptRef.current?.("pluck", onset.midi, onset.onsetMs, onset.midi);
+              }
+            }
+          } else {
+            const onset = pitchDetector.process(
+              timeData,
+              mic.ctx.sampleRate,
+              ts,
+              2,
+              minimumHz,
+              maximumHz,
+            );
+            if (onset) {
+              let inputIndex = onset.midi;
+              if (micSurfaceRef.current === "strings") {
+                const nearest = nearestString(
+                  onset.frequencyHz,
+                  micOpenFreqRef.current,
+                  micStringNamesRef.current,
+                );
+                // Open-string drills should not count a random room sound or the
+                // metronome as a played string.
+                if (micRequiresOpenStringRef.current && Math.abs(nearest.cents) > 180) {
+                  micFrameRef.current = requestAnimationFrame(loop);
+                  return;
+                }
+                inputIndex = nearest.index;
+              }
+              attemptRef.current?.("pluck", inputIndex, onset.onsetMs, onset.midi);
+            }
+          }
+        } else {
+          const onset = percussionDetector.process(
+            timeData,
+            spectrumData,
+            mic.ctx.sampleRate,
+            mic.analyser.fftSize,
+            ts,
+          );
+          if (onset) {
+            if (mode === "percussion") attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
+            else attemptRef.current?.("strum", undefined, onset.onsetMs);
+          }
+        }
+      }
+      micFrameRef.current = requestAnimationFrame(loop);
+    };
+    micFrameRef.current = requestAnimationFrame(loop);
+  }, [requiresMicInput]);
+
+  const stopAcousticMic = useCallback(() => {
+    if (phaseRef.current === "play" && requiresMicInputRef.current) {
+      // Stopping mid-exercise ends scoring for this item rather than turning
+      // every remaining beat into a miss.
+      visualOnlyRef.current = true;
+      setVisualOnly(true);
+      hitsRef.current = 0;
+      missesRef.current = 0;
+      setCombo(0);
+    }
+    micRequestRef.current += 1;
+    micStopRef.current?.();
+    micStopRef.current = null;
+    setMicStatus("off");
+    setMicError(null);
+  }, []);
+
+  const beginVisualOnly = useCallback(() => {
+    if (!requiresMicInput || needsPickRef.current || modeling) return;
+    visualOnlyRef.current = true;
+    setVisualOnly(true);
+    beginPlay();
+  }, [beginPlay, modeling, requiresMicInput]);
 
   useEffect(() => {
     if (phase !== "play" || !item) return;
@@ -324,11 +678,13 @@ export function SessionPlayer() {
         if (upcoming?.string !== undefined) setExpectedString(upcoming.string);
         if (upcoming?.chord) setLiveChord(upcoming.chord);
       }
-      for (let i = 0; i < notesRef.current.length; i++) {
-        if (consumed.current.has(i)) continue;
-        if (elapsed - notesRef.current[i].t > (item.windowMs ?? 230) / 1000) {
-          consumed.current.add(i);
-          onJudge("miss");
+      if (!visualOnlyRef.current) {
+        for (let i = 0; i < notesRef.current.length; i++) {
+          if (consumed.current.has(i)) continue;
+          if (elapsed - notesRef.current[i].t > (item.windowMs ?? 230) / 1000) {
+            consumed.current.add(i);
+            onJudge("miss");
+          }
         }
       }
       const last = notesRef.current[notesRef.current.length - 1];
@@ -379,27 +735,38 @@ export function SessionPlayer() {
   }, [pauseSession, attempt, beginPlay, inst.stringNames.length, inst.surface, item?.surface, modeling, navigate, phase]);
 
   const goNext = useCallback(() => {
-    finishItem();
+    if (visualOnlyRef.current) skipCurrent();
+    else finishItem();
     const s = useSpark.getState().session;
+    const nextItem = s ? currentItem(s) : null;
+    const nextSurface = nextItem?.surface ?? inst.surface;
+    const nextNeedsMic = nextItem !== null &&
+      (nextSurface === "strings" || nextSurface === "keys" || nextSurface === "pads" || nextSurface === "voice");
+    if (!nextNeedsMic && micStatus === "listening") stopAcousticMic();
     if (!s || isSessionDone(s)) {
       finishDay();
       void navigate({ to: "/results" });
     } else {
       resetItem();
     }
-  }, [finishDay, finishItem, navigate, resetItem]);
+  }, [finishDay, finishItem, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
 
   const skipThis = useCallback(() => {
     setCombo(0);
     skipCurrent();
     const s = useSpark.getState().session;
+    const nextItem = s ? currentItem(s) : null;
+    const nextSurface = nextItem?.surface ?? inst.surface;
+    const nextNeedsMic = nextItem !== null &&
+      (nextSurface === "strings" || nextSurface === "keys" || nextSurface === "pads" || nextSurface === "voice");
+    if (!nextNeedsMic && micStatus === "listening") stopAcousticMic();
     if (!s || isSessionDone(s)) {
       finishDay();
       void navigate({ to: "/results" });
     } else {
       resetItem();
     }
-  }, [finishDay, navigate, resetItem, skipCurrent]);
+  }, [finishDay, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
 
   const leave = useCallback(() => {
     pauseSession();
@@ -471,10 +838,10 @@ export function SessionPlayer() {
   );
 
   useEffect(() => {
-    if (phase !== "itemdone") return;
+    if (phase !== "itemdone" || visualOnly) return;
     const id = window.setTimeout(() => goNext(), AUTO_ADVANCE_MS);
     return () => window.clearTimeout(id);
-  }, [goNext, phase]);
+  }, [goNext, phase, visualOnly]);
 
   if (!session || !item) return null;
 
@@ -605,7 +972,52 @@ export function SessionPlayer() {
                 )}
               </div>
             ) : null}
-            <Button size="xl" className="w-full" onClick={beginPlay} disabled={modeling || Boolean(needsPick)}>
+            {requiresMicInput ? (
+              <section className="w-full rounded-lg border border-border bg-surface p-4">
+                <p role="status" className="text-sm leading-relaxed text-muted">
+                  {micStatus === "listening"
+                    ? `Microphone ready. ${acousticInputDescription(instrument, inst.name, micMode)}`
+                    : micStatus === "starting"
+                      ? "Requesting microphone access…"
+                      : micError ?? `Enable the microphone to score real ${acousticInstrumentLabel(instrument, inst.name)} input. Audio is analyzed locally, never recorded or uploaded.`}
+                </p>
+                <div className="mt-3 grid gap-2">
+                  <Button
+                    variant={micStatus === "listening" ? "secondary" : "primary"}
+                    disabled={micStatus === "starting"}
+                    onClick={() => (micStatus === "listening" ? stopAcousticMic() : void startAcousticMic())}
+                  >
+                    {micStatus === "starting"
+                      ? "Opening microphone…"
+                      : micStatus === "listening"
+                        ? "Stop microphone"
+                        : "Enable microphone"}
+                  </Button>
+                  {micStatus !== "listening" ? (
+                    <Button
+                      variant="ghost"
+                      disabled={modeling || Boolean(needsPick) || micStatus === "starting"}
+                      onClick={beginVisualOnly}
+                    >
+                      Continue without mic (unscored)
+                    </Button>
+                  ) : null}
+                </div>
+                <p className="mt-3 text-xs leading-relaxed text-dim">
+                  Headphones help prevent the metronome from being picked up by the mic. Audio is never recorded or uploaded.
+                </p>
+              </section>
+            ) : null}
+            <Button
+              size="xl"
+              className="w-full"
+              onClick={beginPlay}
+              disabled={
+                modeling ||
+                Boolean(needsPick) ||
+                (requiresMicInput && micStatus !== "listening" && !visualOnly)
+              }
+            >
               Count me in
             </Button>
             {item.process === "respond" ? null : (
@@ -625,6 +1037,9 @@ export function SessionPlayer() {
               {count}
             </p>
             <p className="text-sm uppercase tracking-[0.2em] text-dim">{item.bpm} bpm</p>
+            {requiresMicInput && micStatus === "listening" ? (
+              <p className="text-xs text-good">Microphone on · acoustic input starts with the first cue.</p>
+            ) : null}
           </div>
         ) : null}
 
@@ -659,13 +1074,12 @@ export function SessionPlayer() {
                 expectedMidi={expectedString}
                 chordPcs={chordPcs.length ? chordPcs : surface === "voice" ? [0] : []}
                 onPlay={(midi) => attempt("pluck", midi)}
+                disabled={requiresMicInput}
               />
             ) : null}
 
-            {surface === "voice" ? <PitchMatch targetFreq={midiToFreq(60)} targetName="C4" /> : null}
-
             {surface === "pads" ? (
-              <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} />
+              <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} disabled={requiresMicInput} />
             ) : null}
 
             {surface === "strings" && isWarm ? (
@@ -674,6 +1088,7 @@ export function SessionPlayer() {
                 active={activeString}
                 expected={expectedString}
                 onPluck={(i) => attempt("pluck", i)}
+                disabled={requiresMicInput}
               />
             ) : null}
 
@@ -691,8 +1106,48 @@ export function SessionPlayer() {
 
             <p className="text-center font-display text-sm tabular text-dim">beat {beatN}</p>
             <p className="text-center text-sm text-muted">{item.interpret ?? coachCue(item)}</p>
-            <p className="text-center text-sm text-dim">{musicalPattern ? "Tap with each note or muted click. Taps practise timing; they do not assess your instrument playing." : patternInWords(item.pattern)}</p>
-            {expectsSpecific ? (
+            <p className="text-center text-sm text-dim">
+              {requiresMicInput
+                ? acousticInputDescription(instrument, inst.name, micMode)
+                : musicalPattern
+                  ? "Tap with each note or muted click. Taps practise timing; they do not assess your instrument playing."
+                  : patternInWords(item.pattern)}
+            </p>
+            {requiresMicInput ? (
+              <section className="w-full rounded-lg border border-border bg-surface p-4">
+                <p role="status" className="text-center text-sm font-medium text-muted">
+                  {visualOnly
+                    ? "Visual-only practice. This attempt will not be scored."
+                    : micStatus === "listening"
+                      ? micMode === "percussion"
+                        ? "Listening for your drum hits…"
+                        : micMode === "attack"
+                          ? "Listening for ringing strokes and muted chops…"
+                          : micMode === "pitch"
+                            ? `Listening for notes from your ${acousticInstrumentLabel(instrument, inst.name)}…`
+                            : `Listening for ${acousticInstrumentLabel(instrument, inst.name)} strums…`
+                      : "Microphone unavailable. This attempt will not be scored."}
+                </p>
+                <p className="mt-2 text-center text-xs leading-relaxed text-dim">
+                  {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
+                </p>
+                {micFeedback ? (
+                  <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
+                    {micFeedback}
+                  </p>
+                ) : null}
+                {!visualOnly && micStatus === "listening" ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={stopAcousticMic}
+                  >
+                    Stop mic and continue unscored
+                  </Button>
+                ) : null}
+              </section>
+            ) : expectsSpecific ? (
               <p className="text-center text-sm text-muted">Tap the highlighted pad, key, or string — pitch and timing both count.</p>
             ) : (
               <Button
@@ -730,12 +1185,25 @@ export function SessionPlayer() {
               {session.index + 1} / {session.plan.items.length}
             </p>
             <p className="font-display text-4xl font-semibold">
-              {itemCloseCopy(itemSummary?.stars ?? 0, lastItem)}
+              {visualOnly ? "Pattern complete" : itemCloseCopy(itemSummary?.stars ?? 0, lastItem)}
             </p>
-            <p className="tabular text-muted">
-              {itemSummary?.stars ?? 0}★ · {Math.round((itemSummary?.accuracy ?? 0) * 100)}% · +{itemSummary?.xp ?? 0} xp
-            </p>
-            <p className="text-pretty text-sm text-muted">{refineLine(item, itemSummary?.stars ?? 0)}</p>
+            {visualOnly ? (
+              <p className="text-pretty text-sm text-muted">
+                Visual-only practice is not scored. No hits, misses, or XP were recorded.
+              </p>
+            ) : (
+              <>
+                <p className="tabular text-muted">
+                  {itemSummary?.stars ?? 0}★ · {Math.round((itemSummary?.accuracy ?? 0) * 100)}% · +{itemSummary?.xp ?? 0} xp
+                </p>
+                <p className="text-pretty text-sm text-muted">{refineLine(item, itemSummary?.stars ?? 0)}</p>
+              </>
+            )}
+            {micStatus === "listening" ? (
+              <Button variant="ghost" className="w-full" onClick={stopAcousticMic}>
+                Stop microphone
+              </Button>
+            ) : null}
             <Button size="lg" className="w-full" onClick={goNext}>
               {lastItem ? "See today" : "Next"}
             </Button>

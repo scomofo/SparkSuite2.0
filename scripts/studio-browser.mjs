@@ -63,16 +63,17 @@ try {
     "Enter must activate the focused demo, not start the exercise",
   );
   await page.clock.runFor(4000);
-  await page.getByRole("button", { name: "Count me in", exact: true }).click();
+  await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
   await page.clock.runFor(3500);
   await page.keyboard.press("6");
   await page.clock.runFor(31000);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
   await page
     .locator("header")
     .getByText(/2 \/ 3/)
     .waitFor();
   await page.getByRole("button", { name: "Pause and leave session", exact: true }).click();
-  await page.getByText("1 of 3 exercises finished.", { exact: false }).waitFor();
+  await page.getByText("0 of 3 exercises finished.", { exact: false }).waitFor();
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Resume your loop", exact: true }).waitFor();
   await page.getByRole("link", { name: "Studio", exact: true }).click();
@@ -98,20 +99,90 @@ try {
   await page.getByRole("button", { name: "Skip this one", exact: true }).click();
   await page.getByRole("link", { name: "Back to today", exact: true }).click();
   await page.getByRole("link", { name: "Progress", exact: true }).click();
-  await page.getByRole("table", { name: "Recent Guitar sessions" }).waitFor();
-  const rows = await page
-    .getByRole("table", { name: "Recent Guitar sessions" })
-    .getByRole("row")
-    .count();
-  assert.equal(rows, 2, "Finishing the recovered loop awards one history entry");
-  await page.screenshot({ path: `${output}/progress-${label}-earned.png`, fullPage: true });
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await page.getByRole("table", { name: "Recent Guitar sessions" }).waitFor();
+  const history = page.getByRole("table", { name: "Recent Guitar sessions" });
   assert.equal(
-    await page.getByRole("table", { name: "Recent Guitar sessions" }).getByRole("row").count(),
-    rows,
-    "Reload cannot award the loop twice",
+    await history.count(),
+    0,
+    "Unscored/skipped practice must not create a scored session history entry",
   );
+  await page.screenshot({ path: `${output}/progress-${label}-unscored.png`, fullPage: true });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  assert.equal(
+    await page.getByRole("table", { name: "Recent Guitar sessions" }).count(),
+    0,
+    "Reload must not turn unscored practice into a completed session",
+  );
+
+  // Ukulele strumming is real acoustic input, not a tap on a synthetic Strum button.
+  await page.getByLabel("Instrument", { exact: true }).selectOption("ukulele");
+  await page.getByRole("link", { name: "Today", exact: true }).click();
+  await page.getByRole("button", { name: "Start today's loop", exact: true }).click();
+  await page.getByRole("button", { name: "Skip this one", exact: true }).click();
+  await page.getByRole("button", { name: "Enable microphone", exact: true }).waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: "Strum", exact: true }).count(),
+    0,
+    "Ukulele strum exercises must not expose a manual Strum scoring button",
+  );
+  assert.equal(
+    await page.getByRole("button", { name: "Count me in", exact: true }).isEnabled(),
+    false,
+    "A scored ukulele strum exercise requires microphone access",
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException("denied", "NotAllowedError");
+        },
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
+  await page
+    .getByText("Microphone access was blocked or unavailable. Allow access in your browser and try again.", { exact: true })
+    .waitFor();
+  await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
+  await page.clock.runFor(4000);
+  await page
+    .getByText("Visual-only practice. This attempt will not be scored.", { exact: true })
+    .waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: "Strum", exact: true }).count(),
+    0,
+    "The ukulele play phase must never score a button press as a strum",
+  );
+
+  // Finish the unscored ukulele item without awarding progress so the instrument picker is available.
+  await page.clock.runFor(31000);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByRole("button", { name: "Skip this one", exact: true }).click();
+  await page.getByRole("link", { name: "Back to today", exact: true }).click();
+
+  // The same physical-input gate must be present for every other instrument.
+  const otherInstruments = [
+    ["piano", "Piano"], // keys and chord attacks
+    ["drums", "Drums"], // percussion transients
+    ["vocals", "Vocals"], // sustained pitch
+  ];
+  for (const [instrument, label] of otherInstruments) {
+    await page.goto(new URL("/", url).toString(), { waitUntil: "domcontentloaded" });
+    await page.getByRole("button", { name: `Practise ${label}`, exact: true }).click();
+    await page.getByRole("button", { name: /^(Start today's loop|Play it again|Resume your loop)$/ }).click();
+    await page.getByRole("button", { name: "Enable microphone", exact: true }).waitFor();
+    assert.equal(
+      await page.getByRole("button", { name: "Count me in", exact: true }).isEnabled(),
+      false,
+      `${instrument} scored practice must wait for real microphone input or the unscored fallback`,
+    );
+    await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).waitFor();
+    // The ukulele path above exercises denied permission and the full unscored
+    // fallback. For the other instruments, verify the shared microphone gate
+    // and safe fallback, then leave without advancing or awarding progress.
+    await page.goto(new URL("/", url).toString(), { waitUntil: "domcontentloaded" });
+  }
+
   assert.deepEqual(errors, [], "Browser console and runtime errors");
   writeFileSync(
     `${output}/studio-${label}-checks.json`,
@@ -126,7 +197,9 @@ try {
           "completed exercise recovery",
           "instrument switching",
           "direct practice reload",
-          "single finalization",
+          "unscored fallback does not award session history",
+          "ukulele acoustic-input gating and denied-microphone fallback",
+          "microphone-first input for piano, guitar, bass, mandolin, banjo, violin, lap steel, drums, and vocals",
         ],
       },
       null,
