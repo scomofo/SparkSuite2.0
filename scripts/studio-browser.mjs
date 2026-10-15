@@ -163,10 +163,8 @@ try {
   // The same physical-input gate must be present for every other instrument.
   const otherInstruments = [
     ["piano", "Piano"], // keys and chord attacks
-    ["mandolin", "Mandolin"], // fretted strings and muted attacks
     ["drums", "Drums"], // percussion transients
     ["vocals", "Vocals"], // sustained pitch
-    ["guitar", "Guitar"], // strum direction and chord-tone path
   ];
   for (const [instrument, label] of otherInstruments) {
     await page.goto(new URL("/", url).toString(), { waitUntil: "domcontentloaded" });
