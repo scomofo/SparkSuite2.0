@@ -29,13 +29,30 @@ import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
 import { StrumOnsetDetector } from "@/lib/spark/strum-detection";
-import { frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, type AcousticInputMode } from "@/lib/spark/acoustic-input";
+import { PercussionOnsetDetector, PitchOnsetDetector, type AcousticInputMode } from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
 import type { ChordShape, HitJudge, ItemResult, PlanItem } from "@/lib/spark/types";
 
 type Phase = "intro" | "countin" | "play" | "itemdone";
+
+function acousticInstrumentLabel(instrument: InstrumentId, name: string) {
+  if (instrument === "vocals") return "voice";
+  if (instrument === "drums") return "drum kit";
+  return name.toLowerCase();
+}
+
+function acousticInputDescription(instrument: InstrumentId, name: string, mode: AcousticInputMode) {
+  const label = acousticInstrumentLabel(instrument, name);
+  if (mode === "strum") {
+    return `Strum your real ${label} on the cue. Timing is scored; chord fingering and down/up direction are not yet graded.`;
+  }
+  if (mode === "percussion") {
+    return "Play your real drum kit on the cue. Timing and a rough kick/snare distinction are checked.";
+  }
+  return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
+}
 
 function acousticModeFor(
   instrument: InstrumentId,
@@ -318,11 +335,13 @@ export function SessionPlayer() {
       const pending = notesRef.current.filter((_, i) => !consumed.current.has(i));
       const res = consumeHit(pending, t, item.windowMs ?? 230);
 
-      if (kind === "pluck" && stringIndex !== undefined && !fromMic) {
-        if (instrument === "drums") drumHit(stringIndex);
-        else if (instrument === "piano" || instrument === "vocals") pianoTone(midiToFreq(stringIndex));
-        else if (instrument === "bass") bassTone(inst.openFreq[stringIndex] ?? 41.2);
-        else pluck(inst.openFreq[stringIndex] ?? OPEN_FREQ[stringIndex] ?? 110);
+      if (kind === "pluck" && stringIndex !== undefined) {
+        if (!fromMic) {
+          if (instrument === "drums") drumHit(stringIndex);
+          else if (instrument === "piano" || instrument === "vocals") pianoTone(midiToFreq(stringIndex));
+          else if (instrument === "bass") bassTone(inst.openFreq[stringIndex] ?? 41.2);
+          else pluck(inst.openFreq[stringIndex] ?? OPEN_FREQ[stringIndex] ?? 110);
+        }
         setActiveString(stringIndex);
       }
 
@@ -577,38 +596,34 @@ export function SessionPlayer() {
     else finishItem();
     const s = useSpark.getState().session;
     const nextItem = s ? currentItem(s) : null;
-    const nextNeedsMic =
-      instrument === "ukulele" &&
-      nextItem !== null &&
-      !isPluckDrill(nextItem) &&
-      (nextItem.surface ?? inst.surface) === "strings";
-    if (!nextNeedsMic && micStatus === "listening") stopUkuleleMic();
+    const nextSurface = nextItem?.surface ?? inst.surface;
+    const nextNeedsMic = nextItem !== null &&
+      (nextSurface === "strings" || nextSurface === "keys" || nextSurface === "pads" || nextSurface === "voice");
+    if (!nextNeedsMic && micStatus === "listening") stopAcousticMic();
     if (!s || isSessionDone(s)) {
       finishDay();
       void navigate({ to: "/results" });
     } else {
       resetItem();
     }
-  }, [finishDay, finishItem, instrument, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopUkuleleMic]);
+  }, [finishDay, finishItem, instrument, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
 
   const skipThis = useCallback(() => {
     setCombo(0);
     skipCurrent();
     const s = useSpark.getState().session;
     const nextItem = s ? currentItem(s) : null;
-    const nextNeedsMic =
-      instrument === "ukulele" &&
-      nextItem !== null &&
-      !isPluckDrill(nextItem) &&
-      (nextItem.surface ?? inst.surface) === "strings";
-    if (!nextNeedsMic && micStatus === "listening") stopUkuleleMic();
+    const nextSurface = nextItem?.surface ?? inst.surface;
+    const nextNeedsMic = nextItem !== null &&
+      (nextSurface === "strings" || nextSurface === "keys" || nextSurface === "pads" || nextSurface === "voice");
+    if (!nextNeedsMic && micStatus === "listening") stopAcousticMic();
     if (!s || isSessionDone(s)) {
       finishDay();
       void navigate({ to: "/results" });
     } else {
       resetItem();
     }
-  }, [finishDay, instrument, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopUkuleleMic]);
+  }, [finishDay, instrument, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
 
   const leave = useCallback(() => {
     pauseSession();
@@ -814,20 +829,20 @@ export function SessionPlayer() {
                 )}
               </div>
             ) : null}
-            {requiresUkuleleMic ? (
+            {requiresMicInput ? (
               <section className="w-full rounded-lg border border-border bg-surface p-4">
                 <p role="status" className="text-sm leading-relaxed text-muted">
                   {micStatus === "listening"
-                    ? "Microphone ready. Play your real ukulele; acoustic strum timing will be scored."
+                    ? `Microphone ready. ${acousticInputDescription(instrument, inst.name, micMode)}`
                     : micStatus === "starting"
                       ? "Requesting microphone access…"
-                      : micError ?? "Enable the microphone to score real ukulele strums. Audio is analyzed locally, never recorded or uploaded."}
+                      : micError ?? `Enable the microphone to score real ${acousticInstrumentLabel(instrument, inst.name)} input. Audio is analyzed locally, never recorded or uploaded.`}
                 </p>
                 <div className="mt-3 grid gap-2">
                   <Button
                     variant={micStatus === "listening" ? "secondary" : "primary"}
                     disabled={micStatus === "starting"}
-                    onClick={() => (micStatus === "listening" ? stopUkuleleMic() : void startUkuleleMic())}
+                    onClick={() => (micStatus === "listening" ? stopAcousticMic() : void startAcousticMic())}
                   >
                     {micStatus === "starting"
                       ? "Opening microphone…"
@@ -846,7 +861,7 @@ export function SessionPlayer() {
                   ) : null}
                 </div>
                 <p className="mt-3 text-xs leading-relaxed text-dim">
-                  Headphones help keep the metronome out of the microphone. The detector checks strum timing, not chord fingering or down/up direction.
+                  Headphones help prevent the metronome from being picked up by the mic. Audio is never recorded or uploaded.
                 </p>
               </section>
             ) : null}
@@ -857,7 +872,7 @@ export function SessionPlayer() {
               disabled={
                 modeling ||
                 Boolean(needsPick) ||
-                (requiresUkuleleMic && micStatus !== "listening" && !visualOnly)
+                (requiresMicInput && micStatus !== "listening" && !visualOnly)
               }
             >
               Count me in
@@ -879,8 +894,8 @@ export function SessionPlayer() {
               {count}
             </p>
             <p className="text-sm uppercase tracking-[0.2em] text-dim">{item.bpm} bpm</p>
-            {requiresUkuleleMic && micStatus === "listening" ? (
-              <p className="text-xs text-good">Microphone on · strum detection starts with the first cue.</p>
+            {requiresMicInput && micStatus === "listening" ? (
+              <p className="text-xs text-good">Microphone on · acoustic input starts with the first cue.</p>
             ) : null}
           </div>
         ) : null}
@@ -916,13 +931,12 @@ export function SessionPlayer() {
                 expectedMidi={expectedString}
                 chordPcs={chordPcs.length ? chordPcs : surface === "voice" ? [0] : []}
                 onPlay={(midi) => attempt("pluck", midi)}
+                disabled={requiresMicInput}
               />
             ) : null}
 
-            {surface === "voice" ? <PitchMatch targetFreq={midiToFreq(60)} targetName="C4" /> : null}
-
             {surface === "pads" ? (
-              <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} />
+              <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} disabled={requiresMicInput} />
             ) : null}
 
             {surface === "strings" && isWarm ? (
@@ -931,6 +945,7 @@ export function SessionPlayer() {
                 active={activeString}
                 expected={expectedString}
                 onPluck={(i) => attempt("pluck", i)}
+                disabled={requiresMicInput}
               />
             ) : null}
 
@@ -949,30 +964,34 @@ export function SessionPlayer() {
             <p className="text-center font-display text-sm tabular text-dim">beat {beatN}</p>
             <p className="text-center text-sm text-muted">{item.interpret ?? coachCue(item)}</p>
             <p className="text-center text-sm text-dim">
-              {requiresUkuleleMic
-                ? "Strum your actual ukulele when the cue arrives. The microphone scores attack timing, not chord accuracy."
+              {requiresMicInput
+                ? acousticInputDescription(instrument, inst.name, micMode)
                 : musicalPattern
                   ? "Tap with each note or muted click. Taps practise timing; they do not assess your instrument playing."
                   : patternInWords(item.pattern)}
             </p>
-            {requiresUkuleleMic ? (
+            {requiresMicInput ? (
               <section className="w-full rounded-lg border border-border bg-surface p-4">
                 <p role="status" className="text-center text-sm font-medium text-muted">
                   {visualOnly
                     ? "Visual-only practice. This attempt will not be scored."
                     : micStatus === "listening"
-                      ? "Listening for your ukulele strums…"
+                      ? micMode === "percussion"
+                        ? "Listening for your drum hits…"
+                        : micMode === "pitch"
+                          ? `Listening for notes from your ${acousticInstrumentLabel(instrument, inst.name)}…`
+                          : `Listening for ${acousticInstrumentLabel(instrument, inst.name)} strums…`
                       : "Microphone unavailable. This attempt will not be scored."}
                 </p>
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
-                  Play the shown chord on the beat. Use headphones for the click; no audio is recorded or uploaded.
+                  {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
                 </p>
                 {!visualOnly && micStatus === "listening" ? (
                   <Button
                     variant="ghost"
                     size="sm"
                     className="mt-2 w-full"
-                    onClick={stopUkuleleMic}
+                    onClick={stopAcousticMic}
                   >
                     Stop mic and continue unscored
                   </Button>
@@ -1031,7 +1050,7 @@ export function SessionPlayer() {
               </>
             )}
             {micStatus === "listening" ? (
-              <Button variant="ghost" className="w-full" onClick={stopUkuleleMic}>
+              <Button variant="ghost" className="w-full" onClick={stopAcousticMic}>
                 Stop microphone
               </Button>
             ) : null}
