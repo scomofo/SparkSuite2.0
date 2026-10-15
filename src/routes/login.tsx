@@ -18,7 +18,7 @@ function LoginPage() {
     );
   }
 
-  if (user) {
+  if (authEnabled && user && !user.isDevFallback) {
     return (
       <main className="grid min-h-dvh place-items-center p-6">
         <section className="w-full max-w-md rounded-2xl border border-border bg-surface p-7">
