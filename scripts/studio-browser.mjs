@@ -193,7 +193,6 @@ try {
     await page.clock.runFor(31000);
     await page.getByRole("button", { name: "Next", exact: true }).click();
     await page.getByRole("button", { name: "Skip this one", exact: true }).click();
-    await page.getByRole("link", { name: "Back to today", exact: true }).click();
   }
 
   assert.deepEqual(errors, [], "Browser console and runtime errors");
