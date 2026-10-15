@@ -109,7 +109,7 @@ function AccountPage() {
       reload();
       reloadLearning();
       setNotice(
-        user
+        accountUser
           ? "Backup restored locally. Choose Merge to combine it with the cloud, or Replace cloud only if you intend this backup to become the account copy."
           : "Backup restored on this computer. Sign in when you want to sync it with other computers.",
       );
@@ -194,7 +194,7 @@ function AccountPage() {
             </div>
           </div>
 
-          {accountUser && !user.isDevFallback ? (
+          {accountUser ? (
             <div className="mt-5 flex flex-wrap gap-2">
               <Button onClick={() => requestProfileSync()} disabled={busy}>
                 <RefreshCw className="mr-2 size-4" aria-hidden="true" /> {busy ? "Syncing…" : "Sync now"}
