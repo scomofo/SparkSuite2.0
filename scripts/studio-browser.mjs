@@ -16,9 +16,17 @@ try {
     timezoneId: "America/Edmonton",
     locale: "en-CA",
   });
+  const authRequests = [];
+  const failedRequests = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
+  });
+  page.on("request", (request) => {
+    if (request.url().includes("/api/auth/")) authRequests.push(request.url());
+  });
+  page.on("requestfailed", (request) => {
+    failedRequests.push({ url: request.url(), error: request.failure()?.errorText });
   });
 
   // Hold a client session lookup open, when one is made, to prove local practice
@@ -37,7 +45,17 @@ try {
   await page.goto(url, { waitUntil: "domcontentloaded" });
   try {
     await Promise.race([authRequest, new Promise((resolve) => setTimeout(resolve, 5000))]);
-    await page.getByRole("heading", { name: "Make room for music." }).waitFor({ timeout: 5000 });
+    try {
+      await page.getByRole("heading", { name: "Make room for music." }).waitFor({ timeout: 5000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => ({
+        title: document.title,
+        readyState: document.readyState,
+        bodyText: document.body.innerText.slice(0, 1800),
+        rootHtml: document.querySelector("#root")?.innerHTML.slice(0, 1200) ?? null,
+      }));
+      throw new Error(`Studio did not hydrate: ${JSON.stringify({ diagnostic, errors, authRequests, failedRequests, cause: error instanceof Error ? error.message : String(error) })}`);
+    }
   } finally {
     releaseSession();
   }
