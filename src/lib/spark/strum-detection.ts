@@ -106,7 +106,7 @@ function prominentPeakCount(
 }
 
 /** Rejects the narrow, sustained metronome tone as well as broadband clicks. */
-export function isUkuleleStrumSpectrum(
+export function isHarmonicStrumSpectrum(
   spectrumDb: Float32Array,
   sampleRate: number,
   fftSize: number,
@@ -164,7 +164,7 @@ export class StrumOnsetDetector {
         );
         if (
           sustained &&
-          isUkuleleStrumSpectrum(
+          isHarmonicStrumSpectrum(
             spectrumDb,
             sampleRate,
             fftSize,
@@ -180,7 +180,7 @@ export class StrumOnsetDetector {
       const threshold = Math.max(
         this.options.minimumLevel,
         this.noiseFloor * 2.6,
-        this.previousRms * 1.65,
+        this.previousRms * 1.3,
       );
       if (
         level >= threshold &&
