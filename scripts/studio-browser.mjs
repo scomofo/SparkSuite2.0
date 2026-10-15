@@ -154,8 +154,13 @@ try {
     "The ukulele play phase must never score a button press as a strum",
   );
 
+  // Finish the unscored ukulele item without awarding progress so the instrument selector is available.
+  await page.clock.runFor(31000);
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByRole("button", { name: "Skip this one", exact: true }).click();
+  await page.getByRole("link", { name: "Back to today", exact: true }).click();
+
   // The same physical-input gate must be present for every other instrument.
-  await page.getByRole("button", { name: "Pause and leave session", exact: true }).click();
   for (const instrument of ["piano", "mandolin", "banjo", "violin", "lapsteel", "bass", "drums", "vocals", "guitar"]) {
     await page.getByLabel("Instrument", { exact: true }).selectOption(instrument);
     await page.getByRole("button", { name: /^(Start today's loop|Play it again|Resume your loop)$/ }).click();
@@ -166,7 +171,12 @@ try {
       `${instrument} scored practice must wait for real microphone input or the unscored fallback`,
     );
     await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).waitFor();
-    await page.getByRole("button", { name: "Pause and leave session", exact: true }).click();
+    for (let skipped = 0; skipped < 3; skipped++) {
+      await page.getByRole("button", { name: "Skip this one", exact: true }).click();
+      if (skipped < 2) await page.getByRole("button", { name: "Enable microphone", exact: true }).waitFor();
+    }
+    await page.getByRole("link", { name: "Back to today", exact: true }).waitFor();
+    await page.getByRole("link", { name: "Back to today", exact: true }).click();
   }
 
   assert.deepEqual(errors, [], "Browser console and runtime errors");
