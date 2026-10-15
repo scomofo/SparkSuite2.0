@@ -355,7 +355,7 @@ const guitar = path("guitar", [
     ],
     answer: 1,
     feedback:
-      "Keeping other choices steady lets you hear what the rhythm changed. Your finished miniature is a starting point for further refinement.",
+      "Keeping other choices steady lets you hear what the rhythm changed. That finished miniature is the version the next one gets compared against.",
   },
 ]);
 

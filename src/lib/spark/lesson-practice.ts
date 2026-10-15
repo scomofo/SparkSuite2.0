@@ -300,7 +300,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     setup: "Use the thickest string. F is just behind fret 1. Leave beat 4 quiet.",
     hint: "Try only open E and F once, without the guide. Press just behind the fret with enough pressure for a clear note.",
     takeaway:
-      "The first fret raises open E to F. Keep exploring a clear sound before adding speed.",
+      "The first fret raises open E to F. A clear sound comes before speed.",
     cues: repeat(
       [
         note(0, "E", [40], "Low E string, open"),
