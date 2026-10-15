@@ -154,6 +154,21 @@ try {
     "The ukulele play phase must never score a button press as a strum",
   );
 
+  // The same physical-input gate must be present for every other instrument.
+  await page.getByRole("button", { name: "Pause and leave session", exact: true }).click();
+  for (const instrument of ["piano", "mandolin", "banjo", "violin", "lapsteel", "bass", "drums", "vocals", "guitar"]) {
+    await page.getByLabel("Instrument", { exact: true }).selectOption(instrument);
+    await page.getByRole("button", { name: "Start today's loop", exact: true }).click();
+    await page.getByRole("button", { name: "Enable microphone", exact: true }).waitFor();
+    assert.equal(
+      await page.getByRole("button", { name: "Count me in", exact: true }).isEnabled(),
+      false,
+      `${instrument} scored practice must wait for real microphone input or the unscored fallback`,
+    );
+    await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).waitFor();
+    await page.getByRole("button", { name: "Pause and leave session", exact: true }).click();
+  }
+
   assert.deepEqual(errors, [], "Browser console and runtime errors");
   writeFileSync(
     `${output}/studio-${label}-checks.json`,
@@ -170,6 +185,7 @@ try {
           "direct practice reload",
           "single finalization",
           "ukulele acoustic-input gating and denied-microphone fallback",
+          "microphone-first input for piano, guitar, bass, mandolin, banjo, violin, lap steel, drums, and vocals",
         ],
       },
       null,
