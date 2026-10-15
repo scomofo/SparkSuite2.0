@@ -18,8 +18,11 @@ page.on("pageerror", (error) => errors.push(error.message));
 page.on("console", (message) => {
   if (message.type() === "error") errors.push(`${message.text()} (${message.location().url})`);
 });
+await page.route("**/api/auth/get-session**", (route) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
+);
 try {
-  await page.goto(new URL("/account", url).toString(), { waitUntil: "domcontentloaded" });
+  await page.goto(new URL("/account", url).toString(), { waitUntil: "networkidle" });
   await page.getByRole("heading", { name: "Account & sync", exact: true }).waitFor();
 
   const backup = {
