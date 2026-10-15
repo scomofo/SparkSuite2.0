@@ -43,6 +43,9 @@ function watchErrors(target) {
   });
 }
 watchErrors(page);
+await page.route("**/api/auth/get-session**", (route) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
+);
 // Observe native Web Audio calls; no fake AudioContext, clock, or playback implementation.
 await page.addInitScript(() => {
   window.__phraseAudio = { starts: [], disconnects: 0, state: () => "not-created" };
@@ -105,7 +108,7 @@ async function play(name, beats, bpm) {
 }
 const allBeats = [0, 1, 2, 3, 4, 5, 5.5, 6, 7, 8, 9, 10, 11, 12, 13, 13.5, 14];
 try {
-  await page.goto(`${url}/learn`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${url}/learn`, { waitUntil: "networkidle" });
   await openPhrase();
   assert.equal(await button("Hear").getAttribute("aria-pressed"), "true");
   assert.equal(await note.inputValue(), "");
@@ -113,7 +116,7 @@ try {
   await button("Try").press("Enter");
   await note.fill("I kept the final beat silent.");
   await button("Save and pause").click();
-  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.reload({ waitUntil: "networkidle" });
   await openPhrase();
   assert.equal(
     await button("Try").getAttribute("aria-pressed"),
@@ -146,7 +149,7 @@ try {
   assert.equal(await phrase.getByRole("list", { name: "Four-bar count" }).count(), 0);
   await button("Show count").click();
   await phrase.getByRole("list", { name: "Four-bar count" }).waitFor();
-  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.reload({ waitUntil: "networkidle" });
   await openPhrase();
   assert.equal(await button("Use").getAttribute("aria-pressed"), "true");
   assert.equal(await note.inputValue(), "I kept the final beat silent.");
@@ -173,7 +176,7 @@ try {
   assert.equal(await note.inputValue(), "I kept the final beat silent.");
   assert.equal(await button("Use").getAttribute("aria-pressed"), "true");
   await page.getByRole("combobox", { name: "Learning instrument" }).selectOption("piano");
-  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.reload({ waitUntil: "networkidle" });
   await openPhrase();
   assert.equal(await note.inputValue(), "One key, with room to breathe.");
   assert.equal(await button("Try").getAttribute("aria-pressed"), "true");
@@ -247,7 +250,7 @@ try {
   const review = await browser.newPage({ timezoneId: "America/Edmonton" });
   watchErrors(review);
   await review.clock.install({ time: new Date("2026-10-04T18:00:00Z") });
-  await review.goto(url, { waitUntil: "domcontentloaded" });
+  await review.goto(url, { waitUntil: "networkidle" });
   await review.evaluate(() =>
     localStorage.setItem(
       "sparksuite.learning.v1",
@@ -270,13 +273,13 @@ try {
       }),
     ),
   );
-  await review.goto(`${url}/learn`, { waitUntil: "domcontentloaded" });
+  await review.goto(`${url}/learn`, { waitUntil: "networkidle" });
   await review.getByRole("radio", { name: "The pitch stays E", exact: true }).check();
   const finish = review.getByRole("button", { name: "Wrap up this lesson", exact: true });
   assert.equal(await finish.isDisabled(), true);
   const correct = review.getByRole("radio", { name: "The pitch rises from E to F", exact: true });
   await correct.check();
-  await review.reload({ waitUntil: "domcontentloaded" });
+  await review.reload({ waitUntil: "networkidle" });
   await correct.waitFor();
   assert.equal(await correct.isChecked(), true);
   await finish.click();
@@ -299,7 +302,7 @@ try {
     window.AudioContext = undefined;
     window.webkitAudioContext = undefined;
   });
-  await silent.goto(`${url}/learn`, { waitUntil: "domcontentloaded" });
+  await silent.goto(`${url}/learn`, { waitUntil: "networkidle" });
   await silent.getByRole("button", { name: "Learning path", exact: true }).click();
   await silent
     .getByText("Two-minute option · A pulse with room to breathe", { exact: true })
