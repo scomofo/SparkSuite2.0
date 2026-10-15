@@ -28,14 +28,23 @@ import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
-import { StrumOnsetDetector } from "@/lib/spark/strum-detection";
-import { acousticInputModeFor, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
+import { StrumDirectionDetector, StrumOnsetDetector, type StrumDirectionEstimate } from "@/lib/spark/strum-detection";
+import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
+import { practiceShape } from "@/lib/spark/lesson-practice";
 import type { ChordShape, HitJudge, ItemResult } from "@/lib/spark/types";
 
 type Phase = "intro" | "countin" | "play" | "itemdone";
+
+type AcousticHitEvidence = {
+  spectrumDb?: Float32Array;
+  sampleRate?: number;
+  fftSize?: number;
+  direction?: StrumDirectionEstimate;
+};
+type AttemptFn = (kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number, detectedMidi?: number, evidence?: AcousticHitEvidence) => void;
 
 function supportsMicrophoneInput(surface: string): boolean {
   return surface === "strings" || surface === "keys" || surface === "pads" || surface === "voice";
@@ -139,6 +148,19 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
   strum(freqs);
 }
 
+function chordMidiNotes(instrument: InstrumentId, chord: string, inst = instrumentById(instrument)) {
+  if (instrument === "piano") return PIANO_VOICINGS[chord] ?? [];
+  const shape = practiceShape(instrument, chord);
+  if (!shape) return [];
+  return shape.frets.flatMap((fret, index) => {
+    if (fret === null) return [];
+    const openHz = inst.openFreq[index];
+    if (!Number.isFinite(openHz) || openHz <= 0) return [];
+    const frequencyHz = openHz * Math.pow(2, fret / 12);
+    return [Math.round(69 + 12 * Math.log2(frequencyHz / 440))];
+  });
+}
+
 export function SessionPlayer() {
   const navigate = useNavigate();
   const instrument = useSpark((s) => s.instrument);
@@ -167,6 +189,7 @@ export function SessionPlayer() {
   const [listenPick, setListenPick] = useState<"same" | "different" | null>(null);
   const [micStatus, setMicStatus] = useState<"off" | "starting" | "listening" | "blocked">("off");
   const [micError, setMicError] = useState<string | null>(null);
+  const [micFeedback, setMicFeedback] = useState<string | null>(null);
   const [visualOnly, setVisualOnly] = useState(false);
   const micSurface = item?.surface ?? inst.surface;
   const requiresMicInput = supportsMicrophoneInput(micSurface);
@@ -201,7 +224,7 @@ export function SessionPlayer() {
   const micStopRef = useRef<(() => void) | null>(null);
   const micFrameRef = useRef(0);
   const micRequestRef = useRef(0);
-  const attemptRef = useRef<((kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number, detectedMidi?: number) => void) | null>(null);
+  const attemptRef = useRef<AttemptFn | null>(null);
   phaseRef.current = phase;
   requiresMicInputRef.current = requiresMicInput;
   micModeRef.current = micMode;
@@ -236,6 +259,7 @@ export function SessionPlayer() {
     setCount(4);
     setBeatN(1);
     setItemSummary(null);
+    setMicFeedback(null);
     setExpectedString(null);
     setLiveChord(item?.chords[0] ?? "");
     setModeling(false);
@@ -331,7 +355,7 @@ export function SessionPlayer() {
   );
 
   const attempt = useCallback(
-    (kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number, detectedMidi?: number) => {
+    (kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number, detectedMidi?: number, evidence?: AcousticHitEvidence) => {
       if (phase !== "play" || !item) return;
       const fromMic = detectedAtMs !== undefined;
       if (requiresMicInput && !fromMic) return;
@@ -356,6 +380,43 @@ export function SessionPlayer() {
       if (!res.hit || !res.note) {
         onJudge("miss", !fromMic);
         return;
+      }
+      if (kind !== "pluck" && fromMic && !res.note.muted && evidence?.spectrumDb && evidence.sampleRate && evidence.fftSize) {
+        const expectedChord = res.note.notes?.length
+          ? res.note.notes
+          : res.note.chord
+            ? chordMidiNotes(instrument, res.note.chord, inst)
+            : [];
+        if (expectedChord.length >= 2) {
+          const spectrum = analyzeChordSpectrum(evidence.spectrumDb, evidence.sampleRate, evidence.fftSize);
+          const assessment = assessChordPitches(spectrum, expectedChord);
+          if (assessment.status === "match") {
+            setMicFeedback("Chord tones detected.");
+          } else if (assessment.status === "mismatch") {
+            setMicFeedback(`Chord check: ${assessment.missingMidi.length} expected note(s) were not clearly detected.`);
+            onJudge("miss", false);
+            return;
+          } else {
+            setMicFeedback("Timing counted; the microphone could not separate enough chord tones to grade the chord reliably.");
+          }
+        }
+      }
+      const expectedDirection = res.note.kind;
+      if (
+        kind !== "pluck" &&
+        fromMic &&
+        (instrument === "guitar" || instrument === "ukulele" || instrument === "mandolin" || instrument === "banjo" || instrument === "lapsteel") &&
+        (expectedDirection === "down" || expectedDirection === "up") &&
+        evidence?.direction &&
+        evidence.direction.confidence >= 0.65 &&
+        evidence.direction.direction !== "unknown"
+      ) {
+        if (evidence.direction.direction !== expectedDirection) {
+          setMicFeedback(`Strum direction sounded like an ${evidence.direction.direction}stroke; the cue asked for an ${expectedDirection}stroke.`);
+          onJudge("miss", false);
+          return;
+        }
+        setMicFeedback(`${evidence.direction.direction === "down" ? "Downstroke" : "Upstroke"} detected.`);
       }
       // Pluck/pad/key notes carry an expected string/pad/midi. Timing alone
       // is not enough — a wrong string, key, or pad is a miss.
@@ -421,7 +482,7 @@ export function SessionPlayer() {
     unlockAudio();
 
     // 4096 samples resolves the bass low E while keeping attack latency practical.
-    const mic = await startMicAnalyser(4096);
+    const mic = await startMicAnalyser(8192);
     if (request !== micRequestRef.current) {
       mic?.stop();
       return;
@@ -434,6 +495,7 @@ export function SessionPlayer() {
 
     mic.analyser.smoothingTimeConstant = 0.2;
     const strumDetector = new StrumOnsetDetector();
+    const directionDetector = new StrumDirectionDetector();
     const pitchDetector = new PitchOnsetDetector();
     const voicePitchTracker = new PitchTracker();
     const percussionDetector = new PercussionOnsetDetector();
@@ -454,6 +516,7 @@ export function SessionPlayer() {
         const itemId = micItemIdRef.current;
         if (mode !== activeMode || itemId !== activeItemId) {
           strumDetector.reset();
+          directionDetector.reset();
           pitchDetector.reset();
           voicePitchTracker.reset();
           percussionDetector.reset();
@@ -464,6 +527,7 @@ export function SessionPlayer() {
         mic.analyser.getFloatFrequencyData(spectrumData);
 
         if (mode === "strum") {
+          directionDetector.process(spectrumData, mic.ctx.sampleRate, mic.analyser.fftSize, ts);
           const onset = strumDetector.process(
             timeData,
             spectrumData,
@@ -471,7 +535,15 @@ export function SessionPlayer() {
             mic.analyser.fftSize,
             ts,
           );
-          if (onset) attemptRef.current?.("strum", undefined, onset.onsetMs);
+          if (onset) {
+            const direction = directionDetector.classify(onset.onsetMs);
+            attemptRef.current?.("strum", undefined, onset.onsetMs, undefined, {
+              spectrumDb: spectrumData,
+              sampleRate: mic.ctx.sampleRate,
+              fftSize: mic.analyser.fftSize,
+              direction,
+            });
+          }
         } else if (mode === "pitch") {
           const lowestReference = Math.min(...micOpenFreqRef.current);
           const minimumHz = micSurfaceRef.current === "voice"
