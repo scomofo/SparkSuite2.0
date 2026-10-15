@@ -286,10 +286,10 @@ const PATTERNS: Record<string, QuestPattern> = {
     n(6,"A again",69,"Repeat the arrival without staring at the marker.",1.4), r(7),
   ]},
   "lapsteel-side-beginner": { bpm: 60, cues: [
-    n(0,"Long C",[60,64],"Let it ring.",0.95), n(1,"Short C",[60,64],"Palm-block quickly.",0.25),
-    n(2,"Long C",[60,64],"Ring."), n(3,"Short C",[60,64],"Block."),
-    n(4,"Long F",[65,69],"New position, same contrast.",0.95), n(5,"Short F",[65,69],"Block."),
-    n(6,"Long F",[65,69],"Ring."), n(7,"Short F",[65,69],"Clean edge.",0.25),
+    n(0,"Long C",[60,64],"Let it ring.",0.95), n(1,"Long C",[60,64],"Ring."),
+    n(2,"Long F",[65,69],"New position, same ring.",0.95), n(3,"Long F",[65,69],"Ring."),
+    n(4,"Short C",[60,64],"Palm-block quickly.",0.25), n(5,"Short C",[60,64],"Block."),
+    n(6,"Short F",[65,69],"New position, same block."), n(7,"Short F",[65,69],"Clean edge.",0.25),
   ]},
   "lapsteel-side-intermediate": { bpm: 50, subdivision: 2, cues: [
     n(0,"G",67,"Start below target."), n(1,"A",69,"Normal arrival."),
@@ -298,7 +298,7 @@ const PATTERNS: Record<string, QuestPattern> = {
   ]},
   "lapsteel-side-advanced": { bpm: 60, cues: [
     n(0,"Hum C",60,"Imagine the vocal question."), n(1,"E",64,"Question rises."), n(2,"G",67,"Question peaks."), r(3,"Singer leaves space."),
-    n(4,"Steel E",64,"Answer begins differently."), n(5,"G",67,"Move through familiar position."), n(6,"A",69,"Answer reaches out."), n(7,"C",72,"Resolve the reply.",1.5),
+    n(4,"Steel E",64,"Answer begins differently."), n(5,"G",67,"Move through familiar position."), n(6,"A",69,"Answer reaches out."), n(7,"C",60,"Resolve the reply — open 2nd string.",1.5),
   ]},
 };
 

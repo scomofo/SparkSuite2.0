@@ -2095,11 +2095,11 @@ const lapsteel = path("lapsteel", [
     title: "Six strings, one chord",
     outcome: "Name the C6 strings and hear that the open strings make a chord.",
     explanation:
-      "A lap steel lies flat on your lap. The strings are tuned to C6, low to high C–E–G–A–C–E, so the open strings already sound a C major chord with an added sixth. Nothing is fretted: a steel bar held in the left hand rests on the strings to change pitch, and the right hand picks with a thumb pick and finger picks.",
+      "A lap steel lies flat on your lap. The strings are tuned to C6, low to high C–E–G–A–C–E, so the open strings already sound a C major chord with an added sixth. Before you play, tune each string to its note with a tuner; every later lesson assumes the strings are right — and because C6 is a retuning, a steel still in another tuning has to be brought to C–E–G–A–C–E first. Nothing is fretted: a steel bar held in the left hand rests on the strings to change pitch, and the right hand picks with a thumb pick and finger picks.",
     example:
       "Pick each open string from thickest to thinnest: C, E, G, A, C, E. Then brush all six.",
     practice: [
-      "Set the instrument flat and find the thickest string with the thumb pick.",
+      "Set the instrument flat, then tune each string to C–E–G–A–C–E with a tuner; if the steel is in another tuning, retune first.",
       "Pick each string once, low to high, naming the notes.",
       "Brush all six and listen for one chord.",
     ],
@@ -2139,6 +2139,19 @@ const lapsteel = path("lapsteel", [
     answer: 0,
     feedback:
       "Blocking is how a lap steel makes silence. It does not change pitch, and the bar still handles positions.",
+    demo: {
+      label: "Brushes on 1 and 3; the blocked beats are silent",
+      notes: [
+        [48, 52, 55, 57, 60, 64],
+        [],
+        [48, 52, 55, 57, 60, 64],
+        [],
+        [48, 52, 55, 57, 60, 64],
+        [],
+        [48, 52, 55, 57, 60, 64],
+        [],
+      ],
+    },
   },
   {
     slug: "straight-bar",
@@ -2259,13 +2272,13 @@ const lapsteel = path("lapsteel", [
     title: "Two strings under one bar",
     outcome: "Harmonise a melody by picking two strings at the same bar position.",
     explanation:
-      "Because the bar is straight, any two strings picked together move in parallel. Strings 2 and 1 (C and E) give a third; strings 3 and 1 (G and E) give a sixth. Picking a pair while playing the melody positions harmonises the line automatically. The choice of pair is the musical choice.",
+      "Because the bar is straight, any two strings picked together move in parallel. Strings 2 and 1 (C and E) give a third; strings 4 and 1 (G and E) give a sixth — that pair skips a string, so the picking hand reaches past the 3rd string to find it. Picking a pair while playing the melody positions harmonises the line automatically. The choice of pair is the musical choice.",
     example:
-      "The first-string melody with the 2nd string added: E+C, G+E♭, A+F. Then the same with the 3rd string for sixths.",
+      "The first-string melody with the 2nd string added: E+C, G+E♭, A+F. Then the same with the 4th string for sixths.",
     practice: [
       "Pick strings 2 and 1 together at the open position; both should speak at once.",
       "Play the melody positions with the pair, listening for the harmony moving with the tune.",
-      "Repeat with strings 3 and 1 and compare the two sounds.",
+      "Repeat with strings 4 and 1 and compare the two sounds.",
     ],
     question: "Why do two strings under a straight bar stay in harmony as it moves?",
     options: [
@@ -2294,7 +2307,7 @@ const lapsteel = path("lapsteel", [
     explanation:
       "An arrangement decides how positions, slides, and melody share time. Brushed chords, one slide, a single-string phrase, and a return to open C give contrast without new material. An ending that lands on open C tells the listener the piece is finished. Choose one criterion to revise after each attempt; a finished lesson is a practice milestone, not a performance grade.",
     example:
-      "Bar 1: brush C twice. Bar 2: F sliding to G. Bar 3: E G A G on the 1st string. Bar 4: brush G, then land on open C.",
+      "Bar 1: brush C twice. Bar 2: F sliding to G. Bar 3: E G A G on the 1st string. Bar 4: brush G, then land on open C on the next beat 1.",
     practice: [
       "Play the chord bars, then the melody bar, at one steady tempo.",
       "Add the final open C on the next beat 1 and let it ring for a full count.",
@@ -2309,6 +2322,21 @@ const lapsteel = path("lapsteel", [
     answer: 1,
     feedback:
       "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+    demo: {
+      label: "C twice, F sliding to G, the melody, G, then home",
+      notes: [
+        [48, 52, 55, 57, 60, 64],
+        [48, 52, 55, 57, 60, 64],
+        [53, 57, 60, 62, 65, 69],
+        [55, 59, 62, 64, 67, 71],
+        [64],
+        [67],
+        [69],
+        [67],
+        [55, 59, 62, 64, 67, 71],
+        [48, 52, 55, 57, 60, 64],
+      ],
+    },
   },
 ]);
 

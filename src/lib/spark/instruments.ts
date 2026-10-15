@@ -2638,7 +2638,7 @@ export function firstLessonIds(id: InstrumentId): [string, string, string] {
     mandolin: ["lesson_mandolin_open_01", "lesson_mandolin_g_01", "lesson_mandolin_c_01"],
     banjo: ["lesson_banjo_open_01", "lesson_banjo_g_01", "lesson_banjo_d7_01"],
     violin: ["lesson_violin_open_01", "lesson_violin_first_finger_01", "lesson_violin_walk_01"],
-    lapsteel: ["lesson_lapsteel_open_01", "lesson_lapsteel_c_01", "lesson_lapsteel_cf_01"],
+    lapsteel: ["lesson_lapsteel_open_01", "lesson_lapsteel_c_01", "lesson_lapsteel_f_01"],
   };
   return map[id];
 }
