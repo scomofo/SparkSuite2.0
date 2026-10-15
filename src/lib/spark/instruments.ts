@@ -1033,6 +1033,30 @@ const VOCAL_LESSONS: Lesson[] = [
     why: "Five notes is a scale you can hold in your head. Everything bigger is this, extended.",
     interpret: "Climb to G, turn around, come home to C.",
   },
+  {
+    id: "lesson_vocals_song_01",
+    title: "Frère Jacques",
+    skill: "first_song",
+    trackId: "track_vocals_pitch",
+    order: 11,
+    type: "song",
+    objectives: ["Sing Frère Jacques — your first real song", "Phrase by phrase, every note on its target"],
+    chords: ["C"],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_vocals_scale_01"],
+    masteryRequired: 0.7,
+    process: "perform",
+    repertoire: "Frère Jacques",
+    criteria: [
+      "With the mic on: each note is judged against its target — inside 20 cents counts",
+      "The long notes (vous, don) are judged on the sustain, like the held C",
+      "No mic? Sing along anyway — it just isn't scored",
+    ],
+    why: "A traditional French lullaby. 'Frère Jacques' is 'Brother John', and the song asks him if he's sleeping. Every note is one you've already sung: steps of your scale, the thirds' A, the low G from the range finder.",
+    interpret: "One phrase per bar. Breathe on the long notes.",
+  },
 ];
 
 const MANDOLIN_LESSONS: Lesson[] = [

@@ -16,6 +16,7 @@ import {
   VocalHoldJudge,
   VOCAL_CENTS_TOLERANCE,
 } from "./vocal-judge.ts";
+import { sideQuestExercise } from "./side-quest-practice.ts";
 
 function itemFor(instrument: InstrumentId, lessonId: string): PlanItem {
   const lesson = lessonsFor(instrument).find((l) => l.id === lessonId)!;
@@ -208,6 +209,42 @@ describe("bespoke vocals cue timelines", () => {
     assert.equal(consumeHit(notes, 0, 230).hit, true);
     assert.equal(consumeHit(notes, 4.1, 230).hit, true);
   });
+
+  it("Frère Jacques: the whole song, once through, note for note", () => {
+    const notes = buildTimeline(itemFor("vocals", "lesson_vocals_song_01"));
+    // 32 cues in a single 32-beat pass — the pattern must not loop.
+    assert.equal(notes.length, 32);
+    assert.deepEqual(
+      notes.map((n) => n.expectedMidi),
+      [
+        60, 62, 64, 60, // Frè-re Jac-ques
+        60, 62, 64, 60, // Frè-re Jac-ques
+        64, 65, 67, // Dor-mez-vous
+        64, 65, 67, // Dor-mez-vous
+        67, 69, 67, 65, 64, 60, // Son-nez les ma-ti-nes
+        67, 69, 67, 65, 64, 60, // Son-nez les ma-ti-nes
+        60, 55, 60, // Din din don
+        60, 55, 60, // Din din don
+      ],
+    );
+    assert.deepEqual(
+      notes.map((n) => n.t),
+      [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 16, 16.5, 17, 17.5, 18, 19, 20, 20.5, 21, 21.5,
+        22, 23, 24, 25, 26, 28, 29, 30,
+      ],
+    );
+    // The melody's range is G3–A4.
+    assert.equal(Math.min(...notes.map((n) => n.expectedMidi!)), 55);
+    assert.equal(Math.max(...notes.map((n) => n.expectedMidi!)), 69);
+    // Only the four half notes are holds; every other cue is a plain note.
+    const holds = notes.filter((n) => n.holdBeats !== undefined);
+    assert.deepEqual(holds.map((n) => n.t), [10, 14, 26, 30]);
+    for (const n of holds) {
+      assert.equal(n.holdBeats, 2);
+      assert.equal(n.duration, 2);
+    }
+  });
 });
 
 describe("legacy vocals timelines are untouched", () => {
@@ -241,14 +278,14 @@ describe("legacy vocals timelines are untouched", () => {
   });
 });
 
-describe("vocals daily curriculum after tier 2a", () => {
+describe("vocals daily curriculum after tiers 2a–2b", () => {
   const lessons = lessonsFor("vocals");
 
-  it("has ten daily lessons, orders 1–10 unique", () => {
-    assert.equal(lessons.length, 10);
+  it("has eleven daily lessons, orders 1–11 unique", () => {
+    assert.equal(lessons.length, 11);
     assert.deepEqual(
       lessons.map((l) => l.order).sort((a, b) => a - b),
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
     );
   });
 
@@ -281,5 +318,67 @@ describe("vocals daily curriculum after tier 2a", () => {
     const copy = [...range.objectives, ...(range.criteria ?? [])].join(" ");
     assert.ok(!/cent|judged|scored/i.test(copy), copy);
     assert.ok(range.criteria?.some((c) => c.includes("stops feeling easy")));
+  });
+
+  it("the song lesson closes the path: order 11, after the scale, named as the first song", () => {
+    const song = lessons.find((l) => l.id === "lesson_vocals_song_01")!;
+    assert.equal(song.order, 11);
+    assert.equal(song.type, "song");
+    assert.equal(song.repertoire, "Frère Jacques");
+    assert.deepEqual(song.prerequisites, ["lesson_vocals_scale_01"]);
+    assert.ok(song.why?.includes("Brother John"), song.why);
+  });
+});
+
+describe("sideways-harmony side quest holds one tone per phrase", () => {
+  const exercise = sideQuestExercise("vocals-side-intermediate")!;
+
+  it("runs two 8-beat phrases", () => {
+    assert.equal(exercise.beats, 16);
+    assert.ok(exercise.cues.every((cue) => cue.beat >= 0 && cue.beat < 16));
+  });
+
+  it("phrase 1 holds E while the reference melody moves C–D–E–D–C", () => {
+    const hold = exercise.cues.find((cue) => cue.label === "You hold E")!;
+    assert.equal(hold.beat, 0);
+    assert.deepEqual(hold.notes, [64]);
+    assert.equal(hold.duration, 7.6);
+    const melody = exercise.cues.filter(
+      (cue) => cue.label.startsWith("Melody") && cue.beat < 8,
+    );
+    assert.deepEqual(
+      melody.map((cue) => cue.notes?.[0]),
+      [60, 62, 64, 62, 60],
+    );
+    // Nothing the singer is asked to sustain in phrase 1 moves off E.
+    const sung = exercise.cues.filter(
+      (cue) => (cue.label.startsWith("You hold") || cue.label.startsWith("Still")) && cue.beat < 8,
+    );
+    assert.ok(sung.length >= 2);
+    for (const cue of sung) assert.deepEqual(cue.notes, [64]);
+  });
+
+  it("phrase 2 holds C while the reference melody moves G–F–E–D–C", () => {
+    const hold = exercise.cues.find((cue) => cue.label === "You hold C")!;
+    assert.equal(hold.beat, 8);
+    assert.deepEqual(hold.notes, [60]);
+    assert.equal(hold.duration, 7.6);
+    const melody = exercise.cues.filter(
+      (cue) => cue.label.startsWith("Melody") && cue.beat >= 8,
+    );
+    assert.deepEqual(
+      melody.map((cue) => cue.notes?.[0]),
+      [67, 65, 64, 62, 60],
+    );
+    const sung = exercise.cues.filter(
+      (cue) => (cue.label.startsWith("You hold") || cue.label.startsWith("Still")) && cue.beat >= 8,
+    );
+    assert.ok(sung.length >= 2);
+    for (const cue of sung) assert.deepEqual(cue.notes, [60]);
+  });
+
+  it("no cue asks the singer to follow the melody a third above (the old pattern)", () => {
+    const following = exercise.cues.filter((cue) => cue.label.startsWith("Harmony"));
+    assert.equal(following.length, 0);
   });
 });

@@ -74,7 +74,12 @@ export function VoiceLab() {
   const tab = parseTab(search.tab);
   const copy = COPY[tab];
   const head = usePlayhead();
-  const t = target(tab);
+  // The 8ve pattern presents C4 and C5 in turn, so the mic target — and the
+  // reference keyboard's expected note — follow the note the pattern is
+  // currently presenting (head.mark). Idle, or after any other tap, the tab
+  // falls back to its home target from target().
+  const t =
+    tab === "octave" && head.mark === 72 ? { midi: 72, name: "C5" } : target(tab);
 
   const patch = (next: VoiceTab) => {
     void navigate({ search: { tab: next, chord: "C" }, replace: true });
