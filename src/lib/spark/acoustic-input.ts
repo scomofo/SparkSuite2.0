@@ -370,7 +370,7 @@ export function classifyDrumSpectrum(
       confidence: Math.min(1, 0.48 + f.highRatio * 0.35 + f.flatness * 0.2 + Math.max(0, f.centroidHz - 2200) / 18000),
     });
   }
-  if (f.lowMidRatio >= 0.28 && f.centroidHz >= 120 && f.centroidHz < 850) {
+  if (f.lowMidRatio >= 0.28 && f.centroidHz >= 150 && f.centroidHz < 850 && f.lowRatio < 0.55) {
     candidates.push({
       drumClass: "tom",
       padIndex: 3,
