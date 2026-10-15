@@ -69,6 +69,55 @@ export function isTonalStrumSpectrum(
   return spectralFlatness(spectrumDb, sampleRate, fftSize) <= maxFlatness;
 }
 
+function prominentPeakCount(
+  spectrumDb: Float32Array,
+  sampleRate: number,
+  fftSize: number,
+): number {
+  const binHz = sampleRate / fftSize;
+  const first = Math.max(1, Math.ceil(150 / binHz));
+  const last = Math.min(spectrumDb.length - 2, Math.floor(1200 / binHz));
+  const levels: number[] = [];
+  for (let i = first; i <= last; i++) {
+    if (Number.isFinite(spectrumDb[i])) levels.push(spectrumDb[i]);
+  }
+  if (levels.length < 3) return 0;
+  levels.sort((a, b) => a - b);
+  const floorDb = levels[Math.floor(levels.length * 0.55)] ?? -100;
+  const thresholdDb = Math.max(-78, floorDb + 12);
+  let count = 0;
+  let lastPeakHz = Number.NEGATIVE_INFINITY;
+
+  for (let i = first + 1; i < last; i++) {
+    const db = spectrumDb[i];
+    const hz = i * binHz;
+    if (
+      Number.isFinite(db) &&
+      db >= thresholdDb &&
+      db >= spectrumDb[i - 1] + 3 &&
+      db >= spectrumDb[i + 1] + 3 &&
+      hz - lastPeakHz >= 30
+    ) {
+      count++;
+      lastPeakHz = hz;
+    }
+  }
+  return count;
+}
+
+/** Rejects the narrow, sustained metronome tone as well as broadband clicks. */
+export function isUkuleleStrumSpectrum(
+  spectrumDb: Float32Array,
+  sampleRate: number,
+  fftSize: number,
+  maxFlatness = 0.7,
+): boolean {
+  return (
+    isTonalStrumSpectrum(spectrumDb, sampleRate, fftSize, maxFlatness) &&
+    prominentPeakCount(spectrumDb, sampleRate, fftSize) >= 2
+  );
+}
+
 /**
  * Detects acoustic strum attacks from microphone frames. A transient is only
  * accepted when the following frame still contains energy and a reasonably
@@ -115,7 +164,7 @@ export class StrumOnsetDetector {
         );
         if (
           sustained &&
-          isTonalStrumSpectrum(
+          isUkuleleStrumSpectrum(
             spectrumDb,
             sampleRate,
             fftSize,
