@@ -15,12 +15,29 @@ const instrumentId = z.enum([
   "violin",
   "lapsteel",
 ]);
+const sharedPhraseKey = z.enum([
+  "guitar",
+  "piano",
+  "ukulele",
+  "bass",
+  "drums",
+  "vocals",
+  "mandolin",
+  "banjo",
+  "violin",
+  "lapsteel",
+  "theory",
+]);
 
 const payloadSchema = z.object({
   version: z.literal(1),
   suite: z.record(z.string(), z.unknown()),
   learning: z.record(z.string(), z.unknown()),
   checkpoints: z.partialRecord(instrumentId, z.string().max(100_000)),
+  sharedPhrases: z.partialRecord(sharedPhraseKey, z.object({
+    stage: z.number().int().min(0).max(2),
+    note: z.string().max(240),
+  }).strict()),
 }).strict().transform((payload) => payload as unknown as ProfileSnapshot);
 
 const saveSchema = z.object({
