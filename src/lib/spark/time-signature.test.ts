@@ -62,6 +62,19 @@ describe("beats per bar — the meter helper", () => {
     assert.equal(patternEndSec(itemFor("drums", "lesson_drums_hats_eighths_01")), (8 * 4 * 60) / 88);
   });
 
+  it("Home Sweet Home: the lap steel waltz declares 3, in 9 bars of it", () => {
+    // The rider on the beats-per-bar build: the tune's phrase was authored
+    // on a 4-grid (7 bars), but the tune is a waltz — the lesson declares
+    // its meter and re-expresses the span as 9 bars, so the session end
+    // resolves to 9 × 3 beats (27 seconds at the lesson's 60 bpm).
+    const lesson = lessonsFor("lapsteel").find((l) => l.id === "lesson_lapsteel_hsh_01")!;
+    assert.equal(lesson.beatsPerBar, 3);
+    assert.equal(lesson.bars, 9);
+    const item = itemFor("lapsteel", "lesson_lapsteel_hsh_01");
+    assert.equal(beatsPerBarOf(item), 3);
+    assert.equal(patternEndSec(item), (9 * 3 * 60) / 60);
+  });
+
   it("the daily plan copies the meter onto the item and prices durationSec in it", () => {
     const progress = defaultProgress();
     progress.history = [{ date: "2026-10-14", accuracy: 0.9, xp: 10 }];

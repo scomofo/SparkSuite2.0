@@ -11,7 +11,7 @@ import {
   withSurface,
   type InstrumentId,
 } from "./instruments.ts";
-import type { PlanItem } from "./types.ts";
+import { beatsPerBarOf, type PlanItem } from "./types.ts";
 import { centsFromExpected, pitchWithinTolerance, VOCAL_CENTS_TOLERANCE } from "./vocal-judge.ts";
 
 function itemFor(instrument: InstrumentId, lessonId: string): PlanItem {
@@ -22,11 +22,12 @@ function itemFor(instrument: InstrumentId, lessonId: string): PlanItem {
       type: lesson.type,
       title: lesson.title,
       subtitle: "",
-      durationSec: (lesson.bars * 4 * 60) / lesson.bpm,
+      durationSec: Math.round((lesson.bars * beatsPerBarOf(lesson) * 60) / lesson.bpm),
       lessonId: lesson.id,
       chords: lesson.chords,
       pattern: lesson.pattern,
       bars: lesson.bars,
+      beatsPerBar: lesson.beatsPerBar,
       bpm: lesson.bpm,
       process: lesson.process,
     } satisfies PlanItem,
