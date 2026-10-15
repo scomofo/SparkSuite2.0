@@ -58,6 +58,7 @@ try {
     }
   } finally {
     releaseSession();
+  }
   const studioHeading = page.getByRole("heading", { name: "Make room for music." });
   try {
     await studioHeading.waitFor({ timeout: 10000 });

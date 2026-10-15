@@ -136,6 +136,8 @@ const MANDOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }
       { beat: 7, label: "Hold", detail: "Let the fifth ring to the end of the bar" },
     ],
   },
+};
+
 const NOTE_NAME: Record<number, string> = {
   41: "F", 43: "G", 48: "C", 50: "D", 52: "E", 53: "F", 55: "G", 57: "A", 59: "B",
   60: "C", 62: "D", 64: "E", 65: "F", 67: "G", 69: "A", 71: "B", 72: "C", 74: "D",
@@ -300,9 +302,10 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
   return (
     item.process !== "respond" &&
     item.process !== "create" &&
-    (!!DAILY_EXERCISES[item.lessonId ?? ""] || !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
-    (!!DAILY_EXERCISES[item.lessonId ?? ""] || !!PIANO_DAILY_CUES[item.lessonId ?? ""])
-    (!!DAILY_EXERCISES[item.lessonId ?? ""] || !!VOCAL_DAILY_CUES[item.lessonId ?? ""])
+    (!!DAILY_EXERCISES[item.lessonId ?? ""] ||
+      !!PIANO_DAILY_CUES[item.lessonId ?? ""] ||
+      !!VOCAL_DAILY_CUES[item.lessonId ?? ""] ||
+      !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
   );
 }
 
