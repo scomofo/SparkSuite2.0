@@ -59,6 +59,7 @@ try {
         focus: {},
       },
       checkpoints: {},
+      sharedPhrases: { guitar: { stage: 1, note: "Keep the chord ringing." } },
     },
   };
 
@@ -72,9 +73,15 @@ try {
   await page.getByText("Backup restored on this computer.", { exact: false }).waitFor();
   const restored = await page.evaluate(() => {
     const suite = JSON.parse(localStorage.getItem("sparksuite.v2") ?? "{}");
-    return { active: suite.active, xp: suite.apps?.piano?.xp, mastery: suite.apps?.piano?.mastery?.["piano-c-major"] };
+    const phrase = JSON.parse(localStorage.getItem("shared-phrase-v1:guitar") ?? "{}");
+    return { active: suite.active, xp: suite.apps?.piano?.xp, mastery: suite.apps?.piano?.mastery?.["piano-c-major"], phrase };
   });
-  assert.deepEqual(restored, { active: "piano", xp: 123, mastery: 0.8 });
+  assert.deepEqual(restored, {
+    active: "piano",
+    xp: 123,
+    mastery: 0.8,
+    phrase: { stage: 1, note: "Keep the chord ringing." },
+  });
 
   await page.getByRole("button", { name: "Import backup", exact: true }).click();
   await page.getByLabel("Choose a SparkSuite progress backup").setInputFiles({
@@ -100,6 +107,7 @@ try {
   assert.equal(exported.format, "sparksuite-profile-backup");
   assert.equal(exported.profile.suite.active, "piano");
   assert.equal(exported.profile.suite.apps.piano.xp, 123);
+  assert.deepEqual(exported.profile.sharedPhrases.guitar, { stage: 1, note: "Keep the chord ringing." });
 
   await page.screenshot({ path: `${output}/account-sync-${label}.png`, fullPage: true });
   assert.deepEqual(errors, [], "Account backup UI should not emit browser errors");
