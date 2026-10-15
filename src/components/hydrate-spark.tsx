@@ -26,7 +26,7 @@ export function HydrateSpark() {
   const [booted, setBooted] = useState(false);
   const [bootedUserId, setBootedUserId] = useState<string | null>(null);
   const pendingAutoSync = useRef(false);
-  const readyForCurrentUser = booted && bootedUserId === (user?.id ?? null);
+  const readyForCurrentUser = booted && bootedUserId === userId;
 
   useEffect(() => {
     if (authEnabled && isPending) return;
@@ -86,7 +86,6 @@ export function HydrateSpark() {
       cancelled = true;
     };
   }, [
-    authEnabled,
     isPending,
     userId,
     userIsDevFallback,
@@ -196,7 +195,6 @@ export function HydrateSpark() {
       window.removeEventListener("storage", onStorage);
     };
   }, [
-    authEnabled,
     pathname,
     readyForCurrentUser,
     userId,
