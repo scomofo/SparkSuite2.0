@@ -100,7 +100,7 @@ export function labCardFor(id: InstrumentId): LabCard | null {
       return {
         kicker: "Lap steel lab",
         title: "Bar",
-        body: "Straight bar, slides, vibrato, palm blocking, positions. Four minutes. Then stop.",
+        body: "Straight bar, slides, vibrato, palm blocking, positions, slants. Four minutes. Then stop.",
         cta: "Four minutes",
       };
     default:

@@ -6,7 +6,7 @@ import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
 import { ghostNote, pianoHold, strum, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, LAPSTEEL_CHORDS, midiToFreq } from "@/lib/spark/instruments";
 
-export type LapSteelTab = "bar" | "slide" | "vibrato" | "block" | "positions";
+export type LapSteelTab = "bar" | "slide" | "vibrato" | "block" | "positions" | "slant";
 const CHORDS = ["C", "F", "G", "D"] as const;
 type LapSteelChord = (typeof CHORDS)[number];
 
@@ -16,6 +16,7 @@ const TABS: { id: LapSteelTab; label: string }[] = [
   { id: "vibrato", label: "Vibrato" },
   { id: "block", label: "Block" },
   { id: "positions", label: "Positions" },
+  { id: "slant", label: "Slant" },
 ];
 
 const COPY: Record<LapSteelTab, { kicker: string; title: string; body: string; hear: string }> = {
@@ -49,6 +50,12 @@ const COPY: Record<LapSteelTab, { kicker: string; title: string; body: string; h
     body: "Open C, fret 5 for F, fret 7 for G, then lift to open C. One straight bar moves the whole chord. Change on beat 1.",
     hear: "C C F F G G C C.",
   },
+  slant: {
+    kicker: "Slanted bar",
+    title: "Tip the top end back a fret",
+    body: "Strings 4 and 2 above fret 2 with string 1 above fret 1 sounds A–D–F: D minor, a chord no straight bar can make in C6. Pick strings 4, 2 and 1; the others stay quiet.",
+    hear: "Open C, then the slant to D minor. Twice.",
+  },
 };
 
 function parseTab(raw: string): LapSteelTab {
@@ -57,7 +64,8 @@ function parseTab(raw: string): LapSteelTab {
     raw === "slide" ||
     raw === "vibrato" ||
     raw === "block" ||
-    raw === "positions"
+    raw === "positions" ||
+    raw === "slant"
   )
     return raw;
   return "bar";
@@ -117,6 +125,13 @@ export function LapSteelLab() {
         beat: i,
         sound: (w) => (i % 2 === 0 ? strum(f, w) : ghostNote(w)),
       }));
+    } else if (tab === "slant") {
+      const openPair = [55, 60, 64].map(midiToFreq);
+      const dmSlant = [57, 62, 65].map(midiToFreq);
+      hits = [0, 2, 4, 6].map((beat) => ({
+        beat,
+        sound: (w: number) => strum(beat % 4 === 0 ? openPair : dmSlant, w),
+      }));
     } else {
       const order = ["C", "C", "F", "F", "G", "G", "C", "C"];
       hits = order.map((c, i) => ({ beat: i, sound: (w) => strum(chordFreqs(c), w) }));
@@ -136,6 +151,12 @@ export function LapSteelLab() {
     if (tab === "block") return { beat, top: beat % 2 === 0 ? "↓" : "x", bot: chord };
     if (tab === "positions")
       return { beat, top: "↓", bot: ["C", "C", "F", "F", "G", "G", "C", "C"][beat] ?? "C" };
+    if (tab === "slant")
+      return {
+        beat,
+        top: beat % 2 === 0 ? "↓" : "hold",
+        bot: beat < 2 || (beat >= 4 && beat < 6) ? "C · open" : "Dm · slant",
+      };
     return { beat, top: "↓", bot: chord };
   });
   const showsChord = tab === "bar" || tab === "block";

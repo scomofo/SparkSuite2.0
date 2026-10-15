@@ -37,6 +37,10 @@ const DAILY_EXERCISES: Record<string, string> = {
   lesson_violin_phrase_01: "violin-phrase-shaping",
   lesson_lapsteel_open_01: "lapsteel-c6-and-the-bar",
   lesson_lapsteel_slide_01: "lapsteel-slide-into",
+  lesson_lapsteel_block_01: "lapsteel-pick-pulse",
+  lesson_lapsteel_vibrato_01: "lapsteel-vibrato",
+  lesson_lapsteel_melody_01: "lapsteel-single-string-melody",
+  lesson_lapsteel_harmony_01: "lapsteel-harmony-in-thirds",
 };
 
 /**
@@ -148,6 +152,134 @@ const MANDOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }
       { beat: 7, label: "Hold", detail: "Let the fifth ring to the end of the bar" },
     ],
   },
+};
+
+/**
+ * Home Sweet Home (Henry Bishop, 1823; public domain), arranged in C in
+ * waltz time. The pitch sequence is the air as printed in Elias Howe's
+ * Diamond School for the Violin (c. 1861) and the anonymous 1862 American
+ * manuscript (Traditional Tune Archive, "Home Sweet Home (1)"), transposed
+ * from G. Each detail names the string and fret; an eighth note is half a
+ * beat on the lesson's grid. The high phrase rides the 2nd string up to
+ * fret 12 — the octave C, "high home".
+ */
+function homeSweetHomeCues(): PracticeCue[] {
+  const NAME: Record<number, string> = { 60: "C", 62: "D", 64: "E", 65: "F", 67: "G", 69: "A", 71: "B", 72: "C" };
+  const table: [number, number, number, string][] = [
+    [0, 60, 0.22, "Pick-up: 2nd string, open"],
+    [0.25, 62, 0.22, "2nd string, fret 2"],
+    [0.5, 64, 0.45, "1st string, open"],
+    [1, 64, 0.45, "1st string, open"],
+    [1.5, 65, 0.22, "1st string, fret 1"],
+    [1.75, 69, 0.22, "1st string, fret 5"],
+    [2, 67, 0.45, "1st string, fret 3"],
+    [2.5, 67, 0.45, "1st string, fret 3"],
+    [3, 64, 0.22, "1st string, open"],
+    [3.25, 67, 0.22, "1st string, fret 3"],
+    [3.5, 65, 0.45, "1st string, fret 1"],
+    [4, 65, 0.22, "1st string, fret 1"],
+    [4.25, 64, 0.22, "1st string, open"],
+    [4.5, 65, 0.22, "1st string, fret 1"],
+    [4.75, 62, 0.22, "2nd string, fret 2"],
+    [5, 64, 0.45, "1st string, open"],
+    [5.5, 60, 0.45, "2nd string, open"],
+    [6, 60, 0.22, "Pick-up again: 2nd string, open"],
+    [6.25, 62, 0.22, "2nd string, fret 2"],
+    [6.5, 64, 0.45, "1st string, open"],
+    [7, 64, 0.45, "1st string, open"],
+    [7.5, 65, 0.22, "1st string, fret 1"],
+    [7.75, 69, 0.22, "1st string, fret 5"],
+    [8, 67, 0.45, "1st string, fret 3"],
+    [8.5, 67, 0.45, "1st string, fret 3"],
+    [9, 64, 0.22, "1st string, open"],
+    [9.25, 67, 0.22, "1st string, fret 3"],
+    [9.5, 65, 0.45, "1st string, fret 1"],
+    [10, 65, 0.22, "1st string, fret 1"],
+    [10.25, 64, 0.22, "1st string, open"],
+    [10.5, 65, 0.22, "1st string, fret 1"],
+    [10.75, 62, 0.22, "2nd string, fret 2"],
+    [11, 60, 1.4, "2nd string, open — hold: the first half ends at home"],
+    [12.5, 67, 0.45, "Pick-up: 2nd string, fret 7 — the high half starts"],
+    [13, 72, 0.45, "2nd string, fret 12 — high home: C an octave up"],
+    [13.5, 72, 0.45, "2nd string, fret 12"],
+    [14, 71, 0.22, "2nd string, fret 11"],
+    [14.25, 69, 0.22, "2nd string, fret 9"],
+    [14.5, 67, 0.45, "2nd string, fret 7"],
+    [15, 67, 0.45, "2nd string, fret 7"],
+    [15.5, 64, 0.45, "2nd string, fret 4"],
+    [16, 65, 0.45, "2nd string, fret 5"],
+    [16.5, 65, 0.45, "2nd string, fret 5"],
+    [17, 62, 0.45, "2nd string, fret 2"],
+    [17.5, 64, 0.45, "2nd string, fret 4"],
+    [18, 64, 0.45, "2nd string, fret 4"],
+    [18.5, 67, 0.45, "2nd string, fret 7"],
+    [19, 72, 0.45, "2nd string, fret 12 — high home again"],
+    [19.5, 72, 0.45, "2nd string, fret 12"],
+    [20, 71, 0.22, "2nd string, fret 11"],
+    [20.25, 69, 0.22, "2nd string, fret 9"],
+    [20.5, 67, 0.45, "2nd string, fret 7"],
+    [21, 67, 0.45, "2nd string, fret 7"],
+    [21.5, 64, 0.45, "2nd string, fret 4"],
+    [22, 65, 0.45, "2nd string, fret 5"],
+    [22.5, 65, 0.45, "2nd string, fret 5"],
+    [23, 62, 0.45, "2nd string, fret 2"],
+    [23.5, 60, 1.4, "2nd string, open — home. Hold it to the end"],
+  ];
+  const cues: PracticeCue[] = table.map(([beat, midi, duration, detail]) => ({
+    beat,
+    label: NAME[midi],
+    notes: [midi],
+    detail,
+    duration,
+  }));
+  cues.push({ beat: 25, label: "Hold", detail: "Let the last C ring" });
+  return cues;
+}
+
+/**
+ * Bespoke daily lap steel cues for lessons no Learn exercise covers.
+ * Porch Swing needs its chord to change every bar (the generic timeline
+ * holds one chord for half the song); the D-walk visits four positions a
+ * bar at a time; the slant lesson's grips are hand-placed bar shapes, and
+ * Home Sweet Home is a fixed melody.
+ *
+ * The slant grip is the standard C6 minor grip from Mike Neer's harmonized
+ * scale chart (Steel Guitar Forum): strings 4–2–1, written "2 x 2 1" —
+ * string 4 (G) and string 2 (C) at fret 2, string 1 (E) tipped back to
+ * fret 1 — sounding A–D–F, a D minor triad. Moved to fret 5 it gives
+ * F minor (C–F–A♭).
+ */
+export const LAPSTEEL_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
+  lesson_lapsteel_cf_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "C ↓", notes: [48, 52, 55, 57, 60, 64], chord: "C", detail: "C: brush all six open strings on beat 1", duration: 1.8 },
+      { beat: 4, label: "F ↓", notes: [53, 57, 60, 62, 65, 69], chord: "F", detail: "F: bar above fret 5 — change on beat 1", duration: 1.8 },
+    ],
+  },
+  lesson_lapsteel_walk_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "C ↓", notes: [48, 52, 55, 57, 60, 64], chord: "C", detail: "C: open — brush on beat 1", duration: 1.8 },
+      { beat: 4, label: "D ↓", notes: [50, 54, 57, 59, 62, 66], chord: "D", detail: "D: bar above fret 2 — the new position", duration: 1.8 },
+      { beat: 8, label: "F ↓", notes: [53, 57, 60, 62, 65, 69], chord: "F", detail: "F: bar above fret 5", duration: 1.8 },
+      { beat: 12, label: "G ↓", notes: [55, 59, 62, 64, 67, 71], chord: "G", detail: "G: bar above fret 7 — then home to C", duration: 1.8 },
+    ],
+  },
+  lesson_lapsteel_slant_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "Dm slant", notes: [57, 62, 65], chord: "Dm", detail: "Strings 4 and 2 above fret 2, string 1 tipped back to fret 1 — pick strings 4, 2 and 1 only", duration: 1.8 },
+      { beat: 2, label: "Dm slant", notes: [57, 62, 65], chord: "Dm", detail: "Same slant: A, D, F — D minor", duration: 0.9 },
+      { beat: 4, label: "C", notes: [55, 60, 64], chord: "C", detail: "C: strings 4, 2 and 1 straight across, open — the shape you already own", duration: 0.9 },
+      { beat: 6, label: "Dm slant", notes: [57, 62, 65], chord: "Dm", detail: "Tip string 1 back one fret and the major turns minor", duration: 0.9 },
+      { beat: 8, label: "Fm slant", notes: [60, 65, 68], chord: "Fm", detail: "The same slant at fret 5: strings 4 and 2 above 5, string 1 at 4 — C, F, A♭", duration: 1.8 },
+      { beat: 10, label: "Fm slant", notes: [60, 65, 68], chord: "Fm", detail: "Same slant: F minor", duration: 0.9 },
+      { beat: 12, label: "C", notes: [55, 60, 64], chord: "C", detail: "C: straighten the bar and come back to open", duration: 0.9 },
+      { beat: 14, label: "Dm slant", notes: [57, 62, 65], chord: "Dm", detail: "Settle back into the fret 2 slant and let it ring", duration: 1.8 },
+    ],
+  },
+  lesson_lapsteel_hsh_01: { beats: 28, cues: homeSweetHomeCues() },
 };
 
 const VIOLIN_NOTE_NAME: Record<number, string> = {
@@ -469,6 +601,7 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
       !!PIANO_DAILY_CUES[item.lessonId ?? ""] ||
       !!VOCAL_DAILY_CUES[item.lessonId ?? ""] ||
       !!VIOLIN_DAILY_CUES[item.lessonId ?? ""] ||
+      !!LAPSTEEL_DAILY_CUES[item.lessonId ?? ""] ||
       !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
   );
 }
@@ -768,7 +901,7 @@ function clawhammerBar(beat: number): PracticeCue[] {
 /** Quarter-note positions, with explicit pitches, mutes and bow directions. */
 export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (item.process === "respond" || item.process === "create") return undefined;
-  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""];
+  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? LAPSTEEL_DAILY_CUES[item.lessonId ?? ""];
   if (bespoke) {
     const cues: PracticeCue[] = [];
     const total = item.bars * 4;

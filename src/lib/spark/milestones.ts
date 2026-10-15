@@ -376,7 +376,7 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
     variation: "Slide into every change",
     variationHint:
       "Instead of lifting and placing the bar, slide it from position to position on the last beat of each bar so it arrives on beat 1.",
-    lessons: ["lapsteel-c6-and-the-bar", "lapsteel-pick-pulse", "lapsteel-straight-bar"],
+    lessons: ["lapsteel-c6-and-the-bar", "lapsteel-straight-bar", "lapsteel-slide-into"],
     bpm: 50,
     beats: 16,
     shapes: ["C", "F", "G"],
