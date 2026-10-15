@@ -196,7 +196,7 @@ const PIANO_LESSONS: Lesson[] = [
     trackId: "track_piano_triads",
     order: 2,
     type: "chord",
-    objectives: ["Play C–E–G together", "Hear the bright third"],
+    objectives: ["Play C–E–G together", "Hear the bright third", "Fingers 1–3–5 in the right hand"],
     chords: ["C"],
     pattern: "D",
     bars: 8,
@@ -253,7 +253,7 @@ const PIANO_LESSONS: Lesson[] = [
     bpm: 72,
     prerequisites: ["lesson_piano_c_triad_01"],
     masteryRequired: 0.75,
-    why: "The dark colour next to C.",
+    why: "The dark colour next to C — same flattened third as C minor, on white keys.",
   },
   {
     id: "lesson_piano_f_01",

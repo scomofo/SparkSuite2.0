@@ -413,12 +413,12 @@ const piano = path("piano", [
     title: "Hear what the third changes",
     outcome: "Build C major and C minor by changing one note.",
     explanation:
-      "A triad uses a root, third, and fifth. C major is C–E–G. Lower E by one semitone to E♭ and you have C minor, C–E♭–G. A semitone is the distance to the very next key, black or white.",
+      "A triad uses a root, third, and fifth. C major is C–E–G. Lower E by one semitone to E♭ and you have C minor, C–E♭–G. A semitone is the distance to the very next key, black or white. In the right hand, play the triad with fingers 1–3–5 — thumb, middle, pinky.",
     example: "C–E–G → C–E♭–G. Keep C and G in place; E♭ is the black key immediately left of E.",
     practice: [
       "Find C, E, and G separately, then sound them together.",
       "Move only E to E♭ and listen to the change.",
-      "Alternate three times, naming major or minor before you play.",
+      "Alternate three times, naming major or minor before you play; then build A–C–E — the same minor shape, all on white keys.",
     ],
     question: "Which change turns C major into C minor?",
     options: ["Raise G to A", "Lower C to B", "Lower E to E♭"],
@@ -491,7 +491,7 @@ const piano = path("piano", [
       "G7 contains F natural, a minor seventh above G. F♯ would give Gmaj7, a different chord.",
     demo: {
       label: "ii–V–I in C",
-      notes: [[50, 57, 60, 65], [], [43, 55, 59, 65], [], [48, 55, 59, 64], []],
+      notes: [[50, 57, 60, 65], [], [55, 59, 62, 65], [], [48, 55, 59, 64], []],
     },
   },
   {
