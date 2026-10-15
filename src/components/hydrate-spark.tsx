@@ -54,6 +54,8 @@ export function HydrateSpark() {
         setSyncState({
           status: "local-only",
           userId: null,
+          revision: 0,
+          lastSyncedAt: null,
           message: authEnabled
             ? "Sign in to sync progress across computers. This device's progress remains available."
             : "Progress is saved locally in this development session.",
