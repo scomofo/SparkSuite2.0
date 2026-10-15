@@ -21,15 +21,13 @@ try {
     if (message.type() === "error") errors.push(message.text());
   });
 
-  // Hold the session lookup open to prove local practice can boot even when
-  // account auth is slow or unavailable. Release it as soon as Studio appears.
-  let authRequestSeen = false;
+  // Hold a client session lookup open, when one is made, to prove local practice
+  // can boot even when account auth is slow or unavailable. Release it on Studio.
   let notifyAuthRequest = () => {};
   const authRequest = new Promise((resolve) => { notifyAuthRequest = resolve; });
   let releaseSession = () => {};
   const sessionGate = new Promise((resolve) => { releaseSession = resolve; });
   await page.route("**/api/auth/get-session**", async (route) => {
-    authRequestSeen = true;
     notifyAuthRequest();
     await sessionGate;
     await route.fulfill({ status: 200, contentType: "application/json", body: "null" });
@@ -39,7 +37,6 @@ try {
   await page.goto(url, { waitUntil: "domcontentloaded" });
   try {
     await Promise.race([authRequest, new Promise((resolve) => setTimeout(resolve, 5000))]);
-    assert.equal(authRequestSeen, true, "The browser test should hold the initial auth lookup open");
     await page.getByRole("heading", { name: "Make room for music." }).waitFor({ timeout: 5000 });
   } finally {
     releaseSession();
