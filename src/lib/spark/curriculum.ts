@@ -1320,6 +1320,7 @@ const mandolin = path("mandolin", [
     answer: 1,
     feedback:
       "The pulse continues through a missed stroke. Rejoin it on the next beat; restarting or catching up changes the timing.",
+    demo: { label: "D on 1 and 3; 2 and 4 stay silent", notes: [[62], [], [62], []] },
   },
   {
     slug: "g-and-c",
@@ -1367,7 +1368,7 @@ const mandolin = path("mandolin", [
     title: "The chop on two and four",
     outcome: "Alternate a ringing downstroke with a short muted chop.",
     explanation:
-      "Start with an unpitched muted backbeat on beats 2 and 4. Open G has open courses, so releasing the two fretted fingers alone will not silence it. Lay your fretting fingers lightly across all four courses, without pressing them to the frets, then strike a short click. Restore G for the ringing strokes on 1 and 3. This prepares a chop rhythm; a pitched chop with a closed shape comes later.",
+      "Start with an unpitched muted backbeat on beats 2 and 4. Open G has open courses, so releasing the two fretted fingers alone will not silence it. Lay your fretting fingers lightly across all four courses, without pressing them to the frets, then strike a short click. Restore G for the ringing strokes on 1 and 3. This prepares a chop rhythm. A pitched chop frets all four courses in a closed shape, so the click itself carries a chord; that closed shape is the next one to grow into.",
     example:
       "Beat 1: strum G. Beat 2: touch all four courses lightly and strike a muted click. Restore G on 3; mute all courses on 4.",
     practice: [
@@ -1384,6 +1385,10 @@ const mandolin = path("mandolin", [
     answer: 0,
     feedback:
       "Light contact across every course damps the open strings too. Releasing only the fretted notes leaves open courses ringing; force and pick height do not mute them.",
+    demo: {
+      label: "Ring on 1 and 3, chop on 2 and 4; chops sound as short hits in this reference",
+      notes: [[55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79]],
+    },
   },
   {
     slug: "tremolo",
@@ -1437,8 +1442,13 @@ const mandolin = path("mandolin", [
     feedback:
       "The count and the harmony carry through both roles. The picking pattern and the fretting job change, not the underlying pulse.",
     demo: {
-      label: "Melody then a G chop",
-      notes: [[62], [64], [66], [67], [55, 62, 71, 79], [], [55, 62, 71, 79], []],
+      label: "Melody, then backing on G and D; chops sound as short hits in this reference",
+      notes: [
+        [62], [64], [66], [67],
+        [69], [67], [66], [62],
+        [55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79],
+        [57, 62, 69, 78], [57, 62, 69, 78], [55, 62, 71, 79], [],
+      ],
     },
   },
   {
@@ -1464,6 +1474,17 @@ const mandolin = path("mandolin", [
     answer: 1,
     feedback:
       "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+    demo: {
+      label: "Melody, then G, C and D strums, and a final G",
+      notes: [
+        [62], [64], [66], [67],
+        [69], [67], [66], [62],
+        [55, 62, 71, 79], [],
+        [55, 64, 72, 76], [],
+        [57, 62, 69, 78], [], [], [],
+        [55, 62, 71, 79],
+      ],
+    },
   },
 ]);
 

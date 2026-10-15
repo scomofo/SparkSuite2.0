@@ -166,15 +166,21 @@ const PATTERNS: Record<string, QuestPattern> = {
     r(0), n(1,"Chop",[55,59,62],"Short backbeat chop.",0.2), r(2), n(3,"Chop",[55,59,62],"Release pressure after the hit.",0.2),
     r(4), n(5,"Chop",[55,59,62],"Same dry sound."), r(6), n(7,"Chop",[55,59,62],"Finish clean.",0.2),
   ]},
-  "mandolin-side-intermediate": { bpm: 70, subdivision: 2, cues: [
-    n(0,"G",55,"Course 1."), n(.5,"B",59,"Course 2."), n(1,"D",62,"Course 3."),
-    n(1.5,"G",55,"Pattern repeats."), n(2,"B",59,"Keep volume even."), n(2.5,"D",62,"No accent spike."),
-    n(3,"G",55,"Cross the bar line smoothly."), n(3.5,"B",59,"Continue."), n(4,"D",62,"Second cycle."), n(4.5,"G",55,"Roll."),
-    n(5,"B",59,"Even."), n(5.5,"D",62,"Even."), n(6,"G",55,"Return."), n(6.5,"B",59,"Prepare ending."), n(7,"D",62,"Land.",1.2),
+  "mandolin-side-intermediate": { bpm: 70, beats: 16, subdivision: 2, cues: [
+    n(0,"G",55,"Course 1 — G course, open."), n(.5,"D",62,"Course 2 — D course, open."), n(1,"B",71,"Course 3 — A course, fret 2."),
+    n(1.5,"G",55,"Pattern repeats."), n(2,"D",62,"Keep volume even."), n(2.5,"B",71,"No accent spike."),
+    n(3,"G",55,"Cross the bar line smoothly."), n(3.5,"D",62,"Continue."), n(4,"B",71,"Even."), n(4.5,"G",55,"Roll."),
+    n(5,"D",62,"Even."), n(5.5,"B",71,"Even."), n(6,"G",55,"Return."), n(6.5,"D",62,"Prepare the middle."), n(7,"B",71,"Continue."),
+    n(7.5,"G",55,"Halfway."), n(8,"D",62,"Even."), n(8.5,"B",71,"No accent spike."), n(9,"G",55,"Roll."),
+    n(9.5,"D",62,"Even."), n(10,"B",71,"Even."), n(10.5,"G",55,"Cross the bar line smoothly."), n(11,"D",62,"Continue."),
+    n(11.5,"B",71,"Even."), n(12,"G",55,"Final bar."), n(12.5,"D",62,"Even."), n(13,"B",71,"Prepare ending."),
+    n(13.5,"G",55,"Roll home."), n(14,"D",62,"Even."), n(14.5,"B",71,"One more course."), n(15,"G",55,"Land on the G course.",1.2),
   ]},
-  "mandolin-side-advanced": { bpm: 70, cues: [
+  "mandolin-side-advanced": { bpm: 70, beats: 16, cues: [
     n(0,"Melody G",67,"Lead voice."), n(1,"A",69,"Melody."), n(2,"B",71,"Peak."), n(3,"G",67,"Close phrase."),
-    r(4), n(5,"Chop",[55,59,62],"Switch to backup."), r(6), n(7,"Chop",[55,59,62],"Keep tempo identical.",0.25),
+    n(4,"A",69,"Second bar answers."), n(5,"G",67,"Melody."), n(6,"F♯",66,"Melody."), n(7,"D",62,"Close on D.",1.2),
+    r(8), n(9,"Chop",[55,59,62],"Switch to backup.",0.2), r(10), n(11,"Chop",[55,59,62],"Keep tempo identical.",0.25),
+    r(12), n(13,"Chop",[55,59,62],"Second bar of backbeat.",0.2), r(14), n(15,"Chop",[55,59,62],"Finish clean.",0.25),
   ]},
 
   "banjo-side-foundations": { bpm: 60, cues: [

@@ -84,7 +84,17 @@ export function MandolinLab() {
   const navigate = useNavigate({ from: "/techniques" });
   const tab = parseTab(search.tab);
   const chord = parseChord(search.chord);
-  const copy = COPY[tab];
+  const copy =
+    tab === "switch"
+      ? {
+          ...COPY.switch,
+          body:
+            chord === "G"
+              ? "Four downs on G, then four more on G. With G selected there is no switch to make — choose C, D or Am and the second half becomes the switch back to G."
+              : COPY.switch.body,
+          hear: `${chord} ${chord} ${chord} ${chord}, G G G G.`,
+        }
+      : COPY[tab];
   const head = usePlayhead();
   const f = freqs(chord);
   const open = instrumentById("mandolin").openFreq;
