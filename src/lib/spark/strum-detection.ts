@@ -1,0 +1,158 @@
+export type StrumOnset = {
+  /** The estimated attack time on the same monotonic clock as requestAnimationFrame. */
+  onsetMs: number;
+  /** RMS level of the detected attack. */
+  level: number;
+};
+
+export type StrumDetectorOptions = {
+  minimumLevel?: number;
+  cooldownMs?: number;
+  confirmationMs?: number;
+  maxConfirmationMs?: number;
+  maxFlatness?: number;
+};
+
+/** Root-mean-square signal level for one microphone frame. */
+export function rmsLevel(samples: Float32Array): number {
+  if (!samples.length) return 0;
+  let energy = 0;
+  for (let i = 0; i < samples.length; i++) energy += samples[i] * samples[i];
+  return Math.sqrt(energy / samples.length);
+}
+
+/**
+ * Spectral flatness is near 1 for broadband noise and lower for pitched,
+ * harmonic material. This is only a strum-vs-click gate, not chord recognition.
+ */
+export function spectralFlatness(
+  spectrumDb: Float32Array,
+  sampleRate: number,
+  fftSize: number,
+  lowHz = 100,
+  highHz = 2200,
+): number {
+  if (
+    !spectrumDb.length ||
+    !Number.isFinite(sampleRate) ||
+    sampleRate <= 0 ||
+    !Number.isFinite(fftSize) ||
+    fftSize <= 0
+  ) return 1;
+
+  const binHz = sampleRate / fftSize;
+  let powerSum = 0;
+  let logPowerSum = 0;
+  let count = 0;
+
+  for (let i = 1; i < spectrumDb.length; i++) {
+    const hz = i * binHz;
+    if (hz < lowHz || hz > highHz) continue;
+    const db = spectrumDb[i];
+    if (!Number.isFinite(db)) continue;
+    const power = 10 ** (Math.max(-120, Math.min(0, db)) / 10);
+    powerSum += power;
+    logPowerSum += Math.log(Math.max(power, 1e-12));
+    count++;
+  }
+
+  if (!count || powerSum <= 0) return 1;
+  return Math.exp(logPowerSum / count) / (powerSum / count);
+}
+
+export function isTonalStrumSpectrum(
+  spectrumDb: Float32Array,
+  sampleRate: number,
+  fftSize: number,
+  maxFlatness = 0.7,
+): boolean {
+  return spectralFlatness(spectrumDb, sampleRate, fftSize) <= maxFlatness;
+}
+
+/**
+ * Detects acoustic strum attacks from microphone frames. A transient is only
+ * accepted when the following frame still contains energy and a reasonably
+ * harmonic spectrum, which rejects most clicks and hand claps. The timestamp
+ * returned is the original attack time so confirmation latency does not skew
+ * rhythm scoring.
+ */
+export class StrumOnsetDetector {
+  private readonly options: Required<StrumDetectorOptions>;
+  private noiseFloor = 0.001;
+  private previousRms = 0;
+  private lastDetectedMs = Number.NEGATIVE_INFINITY;
+  private pending: { onsetMs: number; peakRms: number } | null = null;
+
+  constructor(options: StrumDetectorOptions = {}) {
+    this.options = {
+      minimumLevel: options.minimumLevel ?? 0.008,
+      cooldownMs: options.cooldownMs ?? 140,
+      confirmationMs: options.confirmationMs ?? 28,
+      maxConfirmationMs: options.maxConfirmationMs ?? 112,
+      maxFlatness: options.maxFlatness ?? 0.7,
+    };
+  }
+
+  process(
+    samples: Float32Array,
+    spectrumDb: Float32Array,
+    sampleRate: number,
+    fftSize: number,
+    nowMs: number,
+  ): StrumOnset | null {
+    if (!Number.isFinite(nowMs) || !samples.length) return null;
+
+    const level = rmsLevel(samples);
+    let detected: StrumOnset | null = null;
+
+    if (this.pending) {
+      this.pending.peakRms = Math.max(this.pending.peakRms, level);
+      const age = nowMs - this.pending.onsetMs;
+      if (age >= this.options.confirmationMs) {
+        const sustained = level >= Math.max(
+          this.options.minimumLevel * 0.35,
+          this.pending.peakRms * 0.12,
+        );
+        if (
+          sustained &&
+          isTonalStrumSpectrum(
+            spectrumDb,
+            sampleRate,
+            fftSize,
+            this.options.maxFlatness,
+          )
+        ) {
+          detected = { onsetMs: this.pending.onsetMs, level: this.pending.peakRms };
+          this.lastDetectedMs = nowMs;
+        }
+        if (detected || age >= this.options.maxConfirmationMs) this.pending = null;
+      }
+    } else {
+      const threshold = Math.max(
+        this.options.minimumLevel,
+        this.noiseFloor * 3.2,
+        this.previousRms * 1.65,
+      );
+      if (
+        level >= threshold &&
+        nowMs - this.lastDetectedMs >= this.options.cooldownMs
+      ) {
+        this.pending = { onsetMs: nowMs, peakRms: level };
+      } else if (
+        level < Math.max(this.options.minimumLevel * 0.75, this.noiseFloor * 3)
+      ) {
+        this.noiseFloor = Math.max(0.0004, this.noiseFloor * 0.96 + level * 0.04);
+      }
+    }
+
+    this.previousRms = level;
+    return detected;
+  }
+
+  reset() {
+    this.noiseFloor = 0.001;
+    this.previousRms = 0;
+    this.lastDetectedMs = Number.NEGATIVE_INFINITY;
+    this.pending = null;
+  }
+}
