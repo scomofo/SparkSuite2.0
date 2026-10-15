@@ -281,6 +281,26 @@ export const VIOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCu
   lesson_violin_twinkle_01: { beats: 48, cues: twinkleCues() },
 };
 
+/** Violin's open strings — the only pitches that are not finger placements. */
+const VIOLIN_OPEN_MIDIS: ReadonlySet<number> = new Set([55, 62, 69, 76]);
+
+/**
+ * Cents judging for violin's fingered daily cues, transplanted from the
+ * vocals build on Scott's ruling: a single-note cue whose pitch is not an
+ * open string can only be produced by placing a finger, so it declares
+ * `expectedMidi` and the session judges it on the tracker's unrounded
+ * frequency at the 20-cent standard (vocal-judge.ts). Open-string cues and
+ * multi-note cues (double stops) carry no expectedMidi: they stay
+ * onset-judged, because pitch placement is not what those cues measure.
+ */
+export function judgeViolinFingeredCues(cues: PracticeCue[]): PracticeCue[] {
+  return cues.map((cue) =>
+    cue.notes?.length === 1 && !VIOLIN_OPEN_MIDIS.has(cue.notes[0]) && cue.expectedMidi === undefined
+      ? { ...cue, expectedMidi: cue.notes[0] }
+      : cue,
+  );
+};
+
 const NOTE_NAME: Record<number, string> = {
   41: "F", 43: "G", 48: "C", 50: "D", 52: "E", 53: "F", 55: "G", 57: "A", 59: "B",
   60: "C", 62: "D", 64: "E", 65: "F", 67: "G", 69: "A", 71: "B", 72: "C", 74: "D",
@@ -780,7 +800,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
         });
       }
     }
-    return cues;
+    return judgeViolinFingeredCues(cues);
   }
   if (!hasInstrumentPattern(item)) return undefined;
   const piano = PIANO_DAILY_CUES[item.lessonId];
@@ -891,6 +911,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
       cues.push(next);
     }
   }
+  if (item.lessonId?.startsWith("lesson_violin_")) return judgeViolinFingeredCues(cues);
   return cues;
 }
 

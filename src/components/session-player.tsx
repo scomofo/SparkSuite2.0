@@ -403,8 +403,9 @@ export function SessionPlayer() {
         onJudge("miss", !fromMic);
         return;
       }
-      // Bespoke vocals cues (expectedMidi) are scored only from the mic's
-      // unrounded pitch: within 20 cents of the target counts, anything else
+      // Judged cues (expectedMidi: bespoke vocals cues, violin's fingered
+      // notes) are scored only from the mic's unrounded pitch: within 20
+      // cents of the target counts, anything else
       // — wrong pitch, wrong octave, no pitch evidence — scores nothing here
       // and the note is left to expire as a miss. The drone lesson carries no
       // expectedMidi and keeps its octave-tolerant pitch-class check below.
@@ -675,7 +676,10 @@ export function SessionPlayer() {
                 }
                 inputIndex = nearest.index;
               }
-              attemptRef.current?.("pluck", inputIndex, onset.onsetMs, onset.midi);
+              // Judged cues (expectedMidi: vocals, violin's fingered notes)
+              // read the onset's UNROUNDED frequency from the evidence;
+              // unjudged notes ignore it, exactly as before.
+              attemptRef.current?.("pluck", inputIndex, onset.onsetMs, onset.midi, { frequencyHz: onset.frequencyHz });
             }
           }
         } else {

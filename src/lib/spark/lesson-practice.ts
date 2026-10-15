@@ -20,7 +20,7 @@ export type PracticeCue = {
   muted?: boolean;
   duration?: number;
   chord?: string;
-  /** Bespoke vocals cues: the MIDI the singer is judged against (unrounded cents). */
+  /** Judged cues (vocals; violin's fingered notes): the MIDI the player is judged against (unrounded cents). */
   expectedMidi?: number;
   /** Bespoke vocals hold cues: beats the expected pitch must be sustained. */
   holdBeats?: number;

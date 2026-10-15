@@ -2116,6 +2116,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_open_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
   },
   {
     id: "lesson_violin_tetrachord_01",
@@ -2131,6 +2135,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_first_finger_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "Four notes in a row on one string: the left hand's home pattern. The walk and the slurs both live here.",
   },
   {
@@ -2149,7 +2157,12 @@ const VIOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     process: "perform",
     repertoire: "Evening Walk",
-    criteria: ["The loop finishes", "The rest keeps its full count"],
+    criteria: [
+      "The loop finishes",
+      "The rest keeps its full count",
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "Three notes and a rest. That is a tune.",
     interpret: "Let each note fade into the rest.",
   },
@@ -2187,6 +2200,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_tetrachord_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "The bow keeps moving while the finger changes.",
   },
   {
@@ -2241,6 +2258,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_crossing_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "The Learn phrase, as daily practice: play it evenly first, then add the shape.",
     interpret: "One high point per phrase. The rest of the notes lead there or away.",
   },
@@ -2258,6 +2279,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_tetrachord_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "The tetrachord pattern does not belong to the D string. Here it is on the A string, where the scale is completed.",
   },
   {
@@ -2274,6 +2299,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_a_tetrachord_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "The first completed scale in this path, and it has a name: D major, the key every melody here lives in.",
   },
   {
@@ -2290,6 +2319,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_tetrachord_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "Until now the second finger has only sat high. Low 2 is the other placement — and the one the G-major pattern needs.",
   },
   {
@@ -2308,7 +2341,12 @@ const VIOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     process: "perform",
     repertoire: "Twinkle, Twinkle, Little Star",
-    criteria: ["The six phrases finish", "The held notes keep their full two beats"],
+    criteria: [
+      "The six phrases finish",
+      "The held notes keep their full two beats",
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "A traditional tune — often the first one a violinist learns whole. Every note in it is one you already have.",
     interpret: "Plain and steady first. Sing it in your head as you bow.",
   },
@@ -2344,6 +2382,10 @@ const VIOLIN_LESSONS: Lesson[] = [
     bpm: 60,
     prerequisites: ["lesson_violin_tetrachord_01"],
     masteryRequired: 0.75,
+    criteria: [
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
     why: "The G string has been open-only until now. With its tetrachord placed, all four strings carry fingers.",
   },
 ];
