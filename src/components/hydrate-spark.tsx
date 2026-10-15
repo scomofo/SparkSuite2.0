@@ -124,18 +124,18 @@ export function HydrateSpark() {
       running = true;
       setSyncState({
         status: "syncing",
-        userId: currentUser.id,
+        userId: currentUser!.id,
         message: "Syncing your progress…",
       });
       try {
-        const result = await synchronizeProfile(currentUser.id, choice);
+        const result = await synchronizeProfile(currentUser!.id, choice);
         if (result.applied) {
           reload();
           reloadLearning();
         }
         setSyncState({
           status: result.status,
-          userId: currentUser.id,
+          userId: currentUser!.id,
           revision: result.revision,
           lastSyncedAt: result.status === "synced" ? result.updatedAt : useProfileSync.getState().lastSyncedAt,
           message: result.message,
@@ -143,7 +143,7 @@ export function HydrateSpark() {
       } catch (error) {
         setSyncState({
           status: "offline",
-          userId: currentUser.id,
+          userId: currentUser!.id,
           message: error instanceof Error ? error.message : "Cloud sync failed. Local progress is still saved.",
         });
       } finally {
