@@ -79,7 +79,7 @@ export function analyzeChordSpectrum(
     return Math.abs(1200 * Math.log2(ratio / harmonic)) <= 45;
   }));
   const midiNotes = independent.map((peak) => peak.midi).sort((a, b) => a - b);
-  const confidence = Math.max(0, Math.min(1, (midiNotes.length - 1) / 4));
+  const confidence = midiNotes.length >= 2 ? Math.min(1, 0.55 + (midiNotes.length - 2) * 0.1) : 0;
   return { midiNotes, confidence, strongestDb };
 }
 
