@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent } from "react";
+import { useRef, useState, type ChangeEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Cloud, Download, FileUp, RefreshCw, ShieldCheck, Upload } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -41,22 +41,14 @@ function AccountPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const [hasRecovery, setHasRecovery] = useState(() => {
+  const hasRecovery = (() => {
     try {
       return typeof window !== "undefined" && Boolean(localStorage.getItem(PROFILE_RECOVERY_KEY));
     } catch {
       return false;
     }
-  });
+  })();
   const busy = sync.status === "checking" || sync.status === "syncing";
-
-  useEffect(() => {
-    try {
-      setHasRecovery(Boolean(localStorage.getItem(PROFILE_RECOVERY_KEY)));
-    } catch {
-      setHasRecovery(false);
-    }
-  }, [sync.status]);
 
   function exportRecoveryBackup() {
     try {
@@ -108,7 +100,6 @@ function AccountPage() {
       if (!snapshot) throw new Error("This file is not a valid SparkSuite progress backup.");
       if (!window.confirm("Restore this backup onto this computer? Current local progress will be kept in a recovery copy first.")) return;
       applyProfileSnapshot(snapshot);
-      setHasRecovery(true);
       try {
         localStorage.removeItem(PROFILE_SYNC_MARKER_KEY);
       } catch {
