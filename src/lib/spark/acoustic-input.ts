@@ -433,7 +433,7 @@ export class PercussionOnsetDetector {
     ) return null;
 
     const classification = classifyDrumSpectrum(spectrumDb, sampleRate, fftSize);
-    if (classification.padIndex === null || classification.confidence < 0.58) return null;
+    if (classification.padIndex === null || classification.drumClass === "unknown" || classification.confidence < 0.58) return null;
 
     this.lastEventMs = nowMs;
     return {
