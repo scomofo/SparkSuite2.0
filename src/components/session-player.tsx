@@ -62,16 +62,16 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Sing or hum the target pitch on the cue. Held notes are checked at each beat.";
   }
   if (mode === "strum" && instrument === "piano") {
-    return "Play the chord on your real piano when the cue arrives. Timing is scored; individual chord notes are not yet graded.";
+    return "Play the chord on your real piano. Timing and sounding notes are checked when the microphone can separate them clearly.";
   }
   if (mode === "strum") {
-    return `Strum your real ${label} on the cue. Timing is scored; chord fingering and down/up direction are not yet graded.`;
+    return `Strum your real ${label} on the cue. The mic checks timing and chord-note coverage, and grades down/up direction only when the signal is clear. It cannot see finger placement.`;
   }
   if (mode === "percussion") {
-    return "Play your real drum kit on the cue. Timing and a rough kick/snare distinction are checked.";
+    return "Play your real drum kit on the cue. The mic classifies kick, snare, hi-hat/cymbal, or tom when confidence is high; ambiguous hits are not guessed.";
   }
   if (mode === "attack") {
-    return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; exact chord voicing and mute quality are not yet graded.";
+    return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; muted-chop quality and exact voicing are not graded yet.";
   }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
 }
@@ -1127,6 +1127,11 @@ export function SessionPlayer() {
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
                   {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
                 </p>
+                {micFeedback ? (
+                  <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
+                    {micFeedback}
+                  </p>
+                ) : null}
                 {!visualOnly && micStatus === "listening" ? (
                   <Button
                     variant="ghost"
