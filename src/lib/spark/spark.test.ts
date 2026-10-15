@@ -26,7 +26,7 @@ import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
-import { isTonalStrumSpectrum, isUkuleleStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
+import { isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
 import { acousticInputModeFor, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
@@ -370,7 +370,7 @@ describe("tuner guards (review P4)", () => {
 });
 
 
-describe("acoustic ukulele strum detection", () => {
+describe("acoustic strum detection", () => {
   const sampleRate = 48000;
   const fftSize = 2048;
 
@@ -405,7 +405,7 @@ describe("acoustic ukulele strum detection", () => {
     const frame = chordFrame();
     const spectrum = chordSpectrum();
     assert.equal(isTonalStrumSpectrum(spectrum, sampleRate, fftSize), true);
-    assert.equal(isUkuleleStrumSpectrum(spectrum, sampleRate, fftSize), true);
+    assert.equal(isHarmonicStrumSpectrum(spectrum, sampleRate, fftSize), true);
     assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, 100), null);
     const event = detector.process(frame, spectrum, sampleRate, fftSize, 132);
     assert.ok(event);
@@ -421,7 +421,7 @@ describe("acoustic ukulele strum detection", () => {
     const attack = new Float32Array(fftSize).fill(0.1);
     const quiet = new Float32Array(fftSize).fill(0.001);
     assert.equal(isTonalStrumSpectrum(flatSpectrum, sampleRate, fftSize), false);
-    assert.equal(isUkuleleStrumSpectrum(clickSpectrum, sampleRate, fftSize), false);
+    assert.equal(isHarmonicStrumSpectrum(clickSpectrum, sampleRate, fftSize), false);
     assert.equal(detector.process(attack, flatSpectrum, sampleRate, fftSize, 100), null);
     assert.equal(detector.process(quiet, flatSpectrum, sampleRate, fftSize, 140), null);
     assert.equal(detector.process(quiet, flatSpectrum, sampleRate, fftSize, 220), null);
