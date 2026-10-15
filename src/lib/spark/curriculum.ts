@@ -644,7 +644,7 @@ const ukulele = path("ukulele", [
     title: "Turn a chord into a pattern",
     outcome: "Separate chord notes into an even fingerpicked figure.",
     explanation:
-      "An arpeggio sounds a chord's notes one after another. On a high-G ukulele, a string-order pattern may move up and down in pitch. Keep the timing even before changing chords or adding speed.",
+      "An arpeggio sounds a chord's notes one after another. On a high-G ukulele, a string-order pattern may move up and down in pitch. Keep the timing even before changing chords or adding speed. This pattern gives the C, E, and A strings to thumb, index, and middle. The Strum lab's Pick drill assigns one finger per string instead — same hand, different job.",
     example:
       "Hold C. Pluck C string, E string, A string, E string, one per beat. The notes are C–E–C–E.",
     practice: [
