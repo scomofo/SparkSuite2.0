@@ -3,6 +3,7 @@ import {
   AudioLines,
   BookOpen,
   ChartNoAxesColumnIncreasing,
+  Cloud,
   Flame,
   Gauge,
   Home,
@@ -11,6 +12,7 @@ import {
   Settings,
 } from "lucide-react";
 import { LabFocus } from "@/components/lab-focus";
+import { SignedOut, UserButton } from "@/lib/auth/gates";
 import { InstrumentMark } from "@/components/instrument-mark";
 import { instrumentById } from "@/lib/spark/instruments";
 import { labSearchFor, usesTechLab } from "@/lib/spark/labs";
@@ -104,10 +106,30 @@ export function AppShell({
         {navigation}
         <div className="mt-auto shrink-0 pt-5">
           <Link
+            to="/account"
+            aria-current={pathname === "/account" ? "page" : undefined}
+            className={cn(
+              "flex min-h-11 items-center gap-2 rounded-md px-2 text-sm",
+              pathname === "/account"
+                ? "bg-raised text-accent"
+                : "text-muted hover:bg-raised hover:text-fg",
+            )}
+          >
+            <Cloud className="size-4" aria-hidden="true" /> Account & sync
+          </Link>
+          <SignedOut>
+            <Link to="/login" className="mt-1 flex min-h-10 items-center rounded-md px-2 text-sm text-muted hover:bg-raised hover:text-fg">
+              Sign in to sync
+            </Link>
+          </SignedOut>
+          <div className="mt-2 px-2">
+            <UserButton />
+          </div>
+          <Link
             to="/settings"
             aria-current={pathname === "/settings" ? "page" : undefined}
             className={cn(
-              "flex min-h-11 items-center gap-2 rounded-md px-2 text-sm",
+              "mt-2 flex min-h-11 items-center gap-2 rounded-md px-2 text-sm",
               pathname === "/settings"
                 ? "bg-raised text-accent"
                 : "text-muted hover:bg-raised hover:text-fg",
@@ -126,7 +148,17 @@ export function AppShell({
         tabIndex={-1}
         className={cn("mx-auto min-h-dvh pb-28 lg:pb-10", wide ? "max-w-6xl" : "max-w-lg")}
       >
-        <div className="flex justify-end border-b border-border px-5 py-1 lg:hidden">
+        <div className="flex justify-between border-b border-border px-5 py-1 lg:hidden">
+          <Link
+            to="/account"
+            aria-current={pathname === "/account" ? "page" : undefined}
+            className={cn(
+              "inline-flex min-h-11 items-center gap-2 rounded-md px-2 text-xs",
+              pathname === "/account" ? "text-accent" : "text-muted hover:text-fg",
+            )}
+          >
+            <Cloud className="size-4" aria-hidden="true" /> Account & sync
+          </Link>
           <Link
             to="/settings"
             aria-current={pathname === "/settings" ? "page" : undefined}
