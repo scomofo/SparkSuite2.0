@@ -47,6 +47,7 @@ type SparkStore = {
   hydrated: boolean;
   checkpointSaved: boolean;
   hydrate: () => void;
+  reloadFromStorage: () => void;
   selectInstrument: (id: InstrumentId) => void;
   beginDay: () => void;
   pauseSession: () => void;
@@ -81,6 +82,20 @@ export const useSpark = create<SparkStore>((set, get) => ({
       progress,
       plan: spark.getPlan(),
       session: loadCheckpoint(progress, suite.active),
+      hydrated: true,
+      ...fromSuite(suite),
+    });
+  },
+  reloadFromStorage: () => {
+    const suite = loadSuite();
+    const progress = progressFor(suite, suite.active);
+    spark.setInstrument(suite.active, progress);
+    set({
+      instrument: suite.active,
+      progress,
+      plan: spark.getPlan(),
+      session: loadCheckpoint(progress, suite.active),
+      lastResult: null,
       hydrated: true,
       ...fromSuite(suite),
     });
