@@ -14,6 +14,8 @@ import { useSpark } from "@/store/spark";
 
 export function HydrateSpark() {
   const { user, isPending } = useCurrentUserState();
+  const userId = user?.id ?? null;
+  const userIsDevFallback = user?.isDevFallback ?? false;
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const hydrate = useSpark((s) => s.hydrate);
   const reload = useSpark((s) => s.reloadFromStorage);
@@ -31,17 +33,17 @@ export function HydrateSpark() {
     let cancelled = false;
 
     async function initialize() {
-      if (authEnabled && user && !user.isDevFallback) {
+      if (authEnabled && userId && !userIsDevFallback) {
         setSyncState({
           status: "checking",
-          userId: user.id,
+          userId,
           message: "Checking your cloud progress…",
         });
-        const result = await synchronizeProfile(user.id);
+        const result = await synchronizeProfile(userId);
         if (cancelled) return;
         setSyncState({
           status: result.status,
-          userId: user.id,
+          userId,
           revision: result.revision,
           lastSyncedAt: result.status === "synced" ? result.updatedAt : useProfileSync.getState().lastSyncedAt,
           message: result.message,
@@ -64,7 +66,7 @@ export function HydrateSpark() {
       if (cancelled) return;
       hydrate();
       hydrateLearning();
-      setBootedUserId(user?.id ?? null);
+      setBootedUserId(userId);
       setBooted(true);
     }
 
@@ -72,12 +74,12 @@ export function HydrateSpark() {
       if (cancelled) return;
       setSyncState({
         status: "offline",
-        userId: user?.id ?? null,
+        userId: userId,
         message: error instanceof Error ? error.message : "Cloud sync is unavailable. Local progress is still saved.",
       });
       hydrate();
       hydrateLearning();
-      setBootedUserId(user?.id ?? null);
+      setBootedUserId(userId);
       setBooted(true);
     });
     return () => {
@@ -86,8 +88,8 @@ export function HydrateSpark() {
   }, [
     authEnabled,
     isPending,
-    user?.id,
-    user?.isDevFallback,
+    userId,
+    userIsDevFallback,
     hydrate,
     hydrateLearning,
     reload,
@@ -110,8 +112,9 @@ export function HydrateSpark() {
   }, [refreshDay]);
 
   useEffect(() => {
-    const currentUser = user;
-    if (!readyForCurrentUser || !authEnabled || !currentUser || currentUser.isDevFallback) return;
+    const currentUserId = userId;
+    const currentUserIsDevFallback = userIsDevFallback;
+    if (!readyForCurrentUser || !authEnabled || !currentUserId || currentUserIsDevFallback) return;
     let timer: number | undefined;
     let running = false;
     let rerun = false;
@@ -124,18 +127,18 @@ export function HydrateSpark() {
       running = true;
       setSyncState({
         status: "syncing",
-        userId: currentUser!.id,
+        userId: currentUserId,
         message: "Syncing your progress…",
       });
       try {
-        const result = await synchronizeProfile(currentUser!.id, choice);
+        const result = await synchronizeProfile(currentUserId, choice);
         if (result.applied) {
           reload();
           reloadLearning();
         }
         setSyncState({
           status: result.status,
-          userId: currentUser!.id,
+          userId: currentUserId,
           revision: result.revision,
           lastSyncedAt: result.status === "synced" ? result.updatedAt : useProfileSync.getState().lastSyncedAt,
           message: result.message,
@@ -143,7 +146,7 @@ export function HydrateSpark() {
       } catch (error) {
         setSyncState({
           status: "offline",
-          userId: currentUser!.id,
+          userId: currentUserId,
           message: error instanceof Error ? error.message : "Cloud sync failed. Local progress is still saved.",
         });
       } finally {
@@ -196,8 +199,8 @@ export function HydrateSpark() {
     authEnabled,
     pathname,
     readyForCurrentUser,
-    user?.id,
-    user?.isDevFallback,
+    userId,
+    userIsDevFallback,
     reload,
     reloadLearning,
     setSyncState,
