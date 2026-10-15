@@ -18,9 +18,12 @@ page.on("pageerror", (error) => errors.push(error.message));
 page.on("console", (message) => {
   if (message.type() === "error") errors.push(`${message.text()} (${message.location().url})`);
 });
+await page.route("**/api/auth/get-session**", (route) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
+);
 try {
   await page.clock.install({ time: new Date("2026-09-05T18:00:00Z") });
-  await page.goto(url, { waitUntil: "domcontentloaded" });
+  await page.goto(url, { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Skip setup", exact: true }).click();
   await page.getByRole("link", { name: "Open learning path", exact: true }).click();
   await page.getByRole("heading", { name: "Guitar learning", exact: true }).waitFor();
@@ -53,7 +56,7 @@ try {
   await page.getByRole("link", { name: "Done for now", exact: true }).click();
   await page.getByRole("link", { name: "Resume learning", exact: true }).click();
   await page.getByRole("button", { name: "I tried it", exact: true }).waitFor();
-  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: "I tried it", exact: true }).waitFor();
   await page.getByLabel("Learning instrument", { exact: true }).selectOption("piano");
   await page.getByRole("button", { name: "Start learning", exact: true }).click();
@@ -67,7 +70,7 @@ try {
   assert.equal(await finish.isDisabled(), true, "A wrong answer cannot finish");
   await page.getByText("Not quite yet. Here's the useful bit to revisit.", { exact: true }).waitFor();
   await page.getByRole("radio", { name: "A string played without fretting", exact: true }).check();
-  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.reload({ waitUntil: "networkidle" });
   assert.equal(
     await page
       .getByRole("radio", { name: "A string played without fretting", exact: true })
@@ -97,7 +100,7 @@ try {
 
   // Returning on another day suggests one review and still offers new material.
   await page.clock.setSystemTime(new Date("2026-09-08T18:00:00Z"));
-  await page.reload({ waitUntil: "domcontentloaded" });
+  await page.reload({ waitUntil: "networkidle" });
   await page.getByRole("button", { name: "Review this idea", exact: true }).waitFor();
   await page.getByRole("button", { name: "Learn something new instead", exact: true }).click();
   await page.getByRole("heading", { name: "Give four beats a home", exact: true }).waitFor();
