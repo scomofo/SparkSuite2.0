@@ -112,6 +112,44 @@ try {
     rows,
     "Reload cannot award the loop twice",
   );
+
+  // Ukulele strumming is real acoustic input, not a tap on a synthetic Strum button.
+  await page.getByLabel("Instrument", { exact: true }).selectOption("ukulele");
+  await page.getByRole("link", { name: "Today", exact: true }).click();
+  await page.getByRole("button", { name: "Start today's loop", exact: true }).click();
+  await page.getByRole("button", { name: "Skip this one", exact: true }).click();
+  await page.getByRole("button", { name: "Enable microphone", exact: true }).waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: "Strum", exact: true }).count(),
+    0,
+    "Ukulele strum exercises must not expose a manual Strum scoring button",
+  );
+  assert.equal(
+    await page.getByRole("button", { name: "Count me in", exact: true }).isEnabled(),
+    false,
+    "A scored ukulele strum exercise requires microphone access",
+  );
+  await page.evaluate(() => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          throw new DOMException("denied", "NotAllowedError");
+        },
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
+  await page
+    .getByText("Microphone access was blocked or unavailable. Allow access in your browser and try again.", { exact: true })
+    .waitFor();
+  await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).waitFor();
+  assert.equal(
+    await page.getByRole("button", { name: "Count me in", exact: true }).isEnabled(),
+    false,
+    "Denied microphone access must not silently turn taps into scored strums",
+  );
+
   assert.deepEqual(errors, [], "Browser console and runtime errors");
   writeFileSync(
     `${output}/studio-${label}-checks.json`,
@@ -127,6 +165,7 @@ try {
           "instrument switching",
           "direct practice reload",
           "single finalization",
+          "ukulele acoustic-input gating and denied-microphone fallback",
         ],
       },
       null,
