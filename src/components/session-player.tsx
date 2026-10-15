@@ -412,12 +412,6 @@ export function SessionPlayer() {
     setMicError(null);
   }, []);
 
-  // Do not keep the microphone open while the current exercise uses a
-  // different input method (for example, the single-string warmup).
-  useEffect(() => {
-    if (!requiresUkuleleMic && micStatus === "listening") stopUkuleleMic();
-  }, [micStatus, requiresUkuleleMic, stopUkuleleMic]);
-
   const beginVisualOnly = useCallback(() => {
     if (!requiresUkuleleMic || needsPickRef.current || modeling) return;
     visualOnlyRef.current = true;
@@ -500,25 +494,39 @@ export function SessionPlayer() {
     if (visualOnlyRef.current) skipCurrent();
     else finishItem();
     const s = useSpark.getState().session;
+    const nextItem = s ? currentItem(s) : null;
+    const nextNeedsMic =
+      instrument === "ukulele" &&
+      nextItem !== null &&
+      !isPluckDrill(nextItem) &&
+      (nextItem.surface ?? inst.surface) === "strings";
+    if (!nextNeedsMic && micStatus === "listening") stopUkuleleMic();
     if (!s || isSessionDone(s)) {
       finishDay();
       void navigate({ to: "/results" });
     } else {
       resetItem();
     }
-  }, [finishDay, finishItem, navigate, resetItem, skipCurrent]);
+  }, [finishDay, finishItem, instrument, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopUkuleleMic]);
 
   const skipThis = useCallback(() => {
     setCombo(0);
     skipCurrent();
     const s = useSpark.getState().session;
+    const nextItem = s ? currentItem(s) : null;
+    const nextNeedsMic =
+      instrument === "ukulele" &&
+      nextItem !== null &&
+      !isPluckDrill(nextItem) &&
+      (nextItem.surface ?? inst.surface) === "strings";
+    if (!nextNeedsMic && micStatus === "listening") stopUkuleleMic();
     if (!s || isSessionDone(s)) {
       finishDay();
       void navigate({ to: "/results" });
     } else {
       resetItem();
     }
-  }, [finishDay, navigate, resetItem, skipCurrent]);
+  }, [finishDay, instrument, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopUkuleleMic]);
 
   const leave = useCallback(() => {
     pauseSession();
