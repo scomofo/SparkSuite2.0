@@ -43,6 +43,9 @@ function watchErrors(target) {
   });
 }
 watchErrors(page);
+await page.route("**/api/auth/get-session**", (route) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
+);
 // Observe native Web Audio calls; no fake AudioContext, clock, or playback implementation.
 await page.addInitScript(() => {
   window.__phraseAudio = { starts: [], disconnects: 0, state: () => "not-created" };

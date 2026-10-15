@@ -90,48 +90,54 @@ const PATTERNS: Record<string, QuestPattern> = {
   ]},
 
   "bass-side-foundations": { bpm: 60, cues: [
-    n(0,"Long E",40,"Let E ring almost a full beat.",0.95), n(1,"Long E",40,"Same pitch, connected.",0.95),
-    n(2,"Long E",40,"Feel the legato weight.",0.95), n(3,"Long E",40,"Last long note.",0.95),
-    n(4,"Short E",40,"Now stop it quickly.",0.25), n(5,"Short E",40,"Silence is part of the groove.",0.25),
-    n(6,"Short E",40,"Keep the attack identical.",0.25), n(7,"Short E",40,"Compare the feel.",0.25),
+    n(0,"Long E",28,"Let E ring almost a full beat.",0.95), n(1,"Long E",28,"Same pitch, connected.",0.95),
+    n(2,"Long E",28,"Feel the legato weight.",0.95), n(3,"Long E",28,"Last long note.",0.95),
+    n(4,"Short E",28,"Now stop it quickly.",0.25), n(5,"Short E",28,"Silence is part of the groove.",0.25),
+    n(6,"Short E",28,"Keep the attack identical.",0.25), n(7,"Short E",28,"Compare the feel.",0.25),
   ]},
   "bass-side-beginner": { bpm: 70, cues: [
-    n(0,"E + kick",40,"Root lands with the imagined kick."), r(1), n(2,"E + kick",40,"Lock again."), r(3),
-    n(4,"E + kick",40,"Stay attached to the downbeat."), n(5,"F#",42,"Passing tone between kicks."),
-    n(6,"G + kick",43,"Arrive on the next root."), r(7,"Leave space after the landing."),
+    n(0,"E + kick",28,"Root lands with the imagined kick."), r(1), n(2,"E + kick",28,"Lock again."), r(3),
+    n(4,"E + kick",28,"Stay attached to the downbeat."), n(5,"F#",30,"Passing tone between kicks."),
+    n(6,"G + kick",31,"Arrive on the next root."), r(7,"Leave space after the landing."),
   ]},
   "bass-side-intermediate": { bpm: 60, cues: [
-    n(0,"G",43,"Target root G."), n(1,"F#",42,"Approach G from below."), n(2,"G",43,"Land."),
-    n(3,"Ab",44,"Approach G from above."), n(4,"G",43,"Land again."),
-    n(5,"C#",49,"Approach D from below."), n(6,"D",50,"New root."), r(7),
+    n(0,"G",31,"Target root G."), n(1,"F#",30,"Approach G from below."), n(2,"G",31,"Land."),
+    n(3,"Ab",32,"Approach G from above."), n(4,"G",31,"Land again."),
+    n(5,"C#",37,"Approach D from below."), n(6,"D",38,"New root."), r(7),
   ]},
   "bass-side-advanced": { bpm: 60, cues: [
-    n(0,"Active E",40,"Root."), n(1,"G",43,"Colour tone."), n(2,"A",45,"Motion."), n(3,"B",47,"Lead onward."),
-    n(4,"Simple E",40,"Now one long root.",1.8), r(5), n(6,"Simple G",43,"Another deliberate root.",1.8), r(7),
+    n(0,"Active E",28,"Root."), n(1,"G",31,"Colour tone."), n(2,"A",33,"Motion."), n(3,"B",35,"Lead onward."),
+    n(4,"Simple E",28,"Now one long root.",1.8), r(5), n(6,"Simple G",31,"Another deliberate root.",1.8), r(7),
   ]},
 
   "drums-side-foundations": { bpm: 80, cues: [
     d(0,"1",[],"Count one."), d(1,"Snare",[1],"Backbeat on 2."), d(2,"3",[],"Count three."), d(3,"Snare",[1],"Backbeat on 4."),
     d(4,"1",[],"New bar."), d(5,"Snare",[1],"Find 2 again."), d(6,"3",[],"Keep counting."), d(7,"Snare",[1],"And 4."),
   ]},
-  "drums-side-beginner": { bpm: 80, subdivision: 2, cues: [
+  "drums-side-beginner": { bpm: 80, beats: 12, subdivision: 2, cues: [
     d(0,"Kick + hat",[0,2],"Quarter-note groove starts."), d(1,"Snare + hat",[1,2],"Backbeat."),
     d(2,"Kick + hat",[0,2],"Keep anchors."), d(3,"Snare + hat",[1,2],"Backbeat."),
     d(4,"Kick + hat",[0,2],"Now eighth-note hats."), d(4.5,"hat",[2],"and"),
     d(5,"Snare + hat",[1,2],"2"), d(5.5,"hat",[2],"and"), d(6,"Kick + hat",[0,2],"3"), d(6.5,"hat",[2],"and"),
     d(7,"Snare + hat",[1,2],"4"), d(7.5,"hat",[2],"and"),
+    d(8,"Kick",[0],"Now the hats drop out."), d(9,"Snare",[1],"Backbeat, nothing else."),
+    d(10,"Kick",[0],"Anchors only."), d(11,"Snare",[1],"Same backbeat, emptier."),
   ]},
   "drums-side-intermediate": { bpm: 80, subdivision: 2, cues: [
-    d(0,"ACCENT",[2],"Accent beat 1."), d(.5,"hat",[2],"Light."),
-    d(1,"snare",[1,2],"Backbeat."), d(1.5,"ACCENT",[2],"Move accent to the and of 2."),
-    d(2,"kick",[0,2],"Keep groove stable."), d(2.5,"hat",[2],"Light."),
-    d(3,"snare",[1,2],"Backbeat."), d(3.5,"ACCENT",[2],"Late accent."),
-    d(4,"kick",[0,2],"Second bar, same pulse."), d(5,"snare",[1,2],"2"), d(6,"kick",[0,2],"3"), d(7,"snare",[1,2],"4"),
+    d(0,"Kick + ACCENT",[0,2],"Accent on 1 — kick stays in."), d(0.5,"hat",[2],"Light."),
+    d(1,"Snare + hat",[1,2],"Backbeat."), d(1.5,"hat",[2],"Light."),
+    d(2,"Kick + hat",[0,2],"Keep groove stable."), d(2.5,"hat",[2],"Light."),
+    d(3,"Snare + hat",[1,2],"Backbeat."), d(3.5,"hat",[2],"Light."),
+    d(4,"Kick + hat",[0,2],"Second bar — the accent moves."), d(4.5,"hat",[2],"Light."),
+    d(5,"Snare + hat",[1,2],"Backbeat."), d(5.5,"hat",[2],"Light."),
+    d(6,"Kick + hat",[0,2],"Keep groove stable."), d(6.5,"ACCENT",[2],"Accent on the and of 3."),
+    d(7,"Snare + hat",[1,2],"Backbeat."), d(7.5,"hat",[2],"Light."),
   ]},
-  "drums-side-advanced": { bpm: 80, subdivision: 2, cues: [
+  "drums-side-advanced": { bpm: 80, beats: 9, subdivision: 2, cues: [
     d(0,"Kick + hat",[0,2],"Groove."), d(1,"Snare + hat",[1,2],"Backbeat."), d(2,"Kick + hat",[0,2],"Groove."), d(3,"Snare + hat",[1,2],"Backbeat."),
     d(4,"Tom",[3],"Fill begins."), d(4.5,"Snare",[1],"Keep subdivision."), d(5,"Tom",[3],"Continue."), d(5.5,"Snare",[1],"Do not rush."),
-    d(6,"Tom + kick",[0,3],"Build toward the bar line."), d(6.5,"Snare",[1],"Last setup."), d(7,"Tom",[3],"Final fill note."), d(7.5,"Snare",[1],"Then imagine beat 1 landing next."),
+    d(6,"Tom + kick",[0,3],"Build toward the bar line."), d(6.5,"Snare",[1],"Keep building."), d(7,"Tom",[3],"Final fill note."), d(7.5,"Snare",[1],"Last setup note."),
+    d(8,"Kick + snare",[0,1],"Beat 1 — the landing."),
   ]},
 
   "vocals-side-foundations": { bpm: 60, beats: 20, cues: [
@@ -184,15 +190,21 @@ const PATTERNS: Record<string, QuestPattern> = {
     r(0), n(1,"Chop",[55,59,62],"Short backbeat chop.",0.2), r(2), n(3,"Chop",[55,59,62],"Release pressure after the hit.",0.2),
     r(4), n(5,"Chop",[55,59,62],"Same dry sound."), r(6), n(7,"Chop",[55,59,62],"Finish clean.",0.2),
   ]},
-  "mandolin-side-intermediate": { bpm: 70, subdivision: 2, cues: [
-    n(0,"G",55,"Course 1."), n(.5,"B",59,"Course 2."), n(1,"D",62,"Course 3."),
-    n(1.5,"G",55,"Pattern repeats."), n(2,"B",59,"Keep volume even."), n(2.5,"D",62,"No accent spike."),
-    n(3,"G",55,"Cross the bar line smoothly."), n(3.5,"B",59,"Continue."), n(4,"D",62,"Second cycle."), n(4.5,"G",55,"Roll."),
-    n(5,"B",59,"Even."), n(5.5,"D",62,"Even."), n(6,"G",55,"Return."), n(6.5,"B",59,"Prepare ending."), n(7,"D",62,"Land.",1.2),
+  "mandolin-side-intermediate": { bpm: 70, beats: 16, subdivision: 2, cues: [
+    n(0,"G",55,"Course 1 — G course, open."), n(.5,"D",62,"Course 2 — D course, open."), n(1,"B",71,"Course 3 — A course, fret 2."),
+    n(1.5,"G",55,"Pattern repeats."), n(2,"D",62,"Keep volume even."), n(2.5,"B",71,"No accent spike."),
+    n(3,"G",55,"Cross the bar line smoothly."), n(3.5,"D",62,"Continue."), n(4,"B",71,"Even."), n(4.5,"G",55,"Roll."),
+    n(5,"D",62,"Even."), n(5.5,"B",71,"Even."), n(6,"G",55,"Return."), n(6.5,"D",62,"Prepare the middle."), n(7,"B",71,"Continue."),
+    n(7.5,"G",55,"Halfway."), n(8,"D",62,"Even."), n(8.5,"B",71,"No accent spike."), n(9,"G",55,"Roll."),
+    n(9.5,"D",62,"Even."), n(10,"B",71,"Even."), n(10.5,"G",55,"Cross the bar line smoothly."), n(11,"D",62,"Continue."),
+    n(11.5,"B",71,"Even."), n(12,"G",55,"Final bar."), n(12.5,"D",62,"Even."), n(13,"B",71,"Prepare ending."),
+    n(13.5,"G",55,"Roll home."), n(14,"D",62,"Even."), n(14.5,"B",71,"One more course."), n(15,"G",55,"Land on the G course.",1.2),
   ]},
-  "mandolin-side-advanced": { bpm: 70, cues: [
+  "mandolin-side-advanced": { bpm: 70, beats: 16, cues: [
     n(0,"Melody G",67,"Lead voice."), n(1,"A",69,"Melody."), n(2,"B",71,"Peak."), n(3,"G",67,"Close phrase."),
-    r(4), n(5,"Chop",[55,59,62],"Switch to backup."), r(6), n(7,"Chop",[55,59,62],"Keep tempo identical.",0.25),
+    n(4,"A",69,"Second bar answers."), n(5,"G",67,"Melody."), n(6,"F♯",66,"Melody."), n(7,"D",62,"Close on D.",1.2),
+    r(8), n(9,"Chop",[55,59,62],"Switch to backup.",0.2), r(10), n(11,"Chop",[55,59,62],"Keep tempo identical.",0.25),
+    r(12), n(13,"Chop",[55,59,62],"Second bar of backbeat.",0.2), r(14), n(15,"Chop",[55,59,62],"Finish clean.",0.25),
   ]},
 
   "banjo-side-foundations": { bpm: 60, cues: [

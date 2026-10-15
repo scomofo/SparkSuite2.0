@@ -38,7 +38,8 @@ export type LearningLesson = {
   answer: number;
   feedback: string;
   prerequisite?: string;
-  /** Optional synthesized pitch reference; each entry is one beat, [] is a rest. */
+  /** Optional synthesized reference; each entry is one step, [] is a rest.
+   *  Pitched instruments use MIDI pitches; drums use GM drum notes (midi-drums.ts). */
   demo?: { label: string; notes: number[][] };
 };
 
@@ -355,7 +356,7 @@ const guitar = path("guitar", [
     ],
     answer: 1,
     feedback:
-      "Keeping other choices steady lets you hear what the rhythm changed. Your finished miniature is a starting point for further refinement.",
+      "Keeping other choices steady lets you hear what the rhythm changed. That finished miniature is the version the next one gets compared against.",
   },
 ]);
 
@@ -413,12 +414,12 @@ const piano = path("piano", [
     title: "Hear what the third changes",
     outcome: "Build C major and C minor by changing one note.",
     explanation:
-      "A triad uses a root, third, and fifth. C major is C–E–G. Lower E by one semitone to E♭ and you have C minor, C–E♭–G. A semitone is the distance to the very next key, black or white.",
+      "A triad uses a root, third, and fifth. C major is C–E–G. Lower E by one semitone to E♭ and you have C minor, C–E♭–G. A semitone is the distance to the very next key, black or white. In the right hand, play the triad with fingers 1–3–5 — thumb, middle, pinky.",
     example: "C–E–G → C–E♭–G. Keep C and G in place; E♭ is the black key immediately left of E.",
     practice: [
       "Find C, E, and G separately, then sound them together.",
       "Move only E to E♭ and listen to the change.",
-      "Alternate three times, naming major or minor before you play.",
+      "Alternate three times, naming major or minor before you play; then build A–C–E — the same minor shape, all on white keys.",
     ],
     question: "Which change turns C major into C minor?",
     options: ["Raise G to A", "Lower C to B", "Lower E to E♭"],
@@ -491,7 +492,7 @@ const piano = path("piano", [
       "G7 contains F natural, a minor seventh above G. F♯ would give Gmaj7, a different chord.",
     demo: {
       label: "ii–V–I in C",
-      notes: [[50, 57, 60, 65], [], [43, 55, 59, 65], [], [48, 55, 59, 64], []],
+      notes: [[50, 57, 60, 65], [], [55, 59, 62, 65], [], [48, 55, 59, 64], []],
     },
   },
   {
@@ -739,11 +740,11 @@ const bass = path("bass", [
     title: "Find one note and its silence",
     outcome: "Name E–A–D–G and stop a note deliberately.",
     explanation:
-      "Standard four-string bass tuning is E–A–D–G, thickest to thinnest. An open string has no fret pressed. Muting means stopping unwanted vibration with a light touch. The end of a bass note is part of the groove.",
+      "Standard four-string bass tuning is E–A–D–G, thickest to thinnest. An open string has no fret pressed. Muting means stopping unwanted vibration with a light touch. The end of a bass note is part of the groove. Before you play, tune each string to its note with a tuner; every later lesson assumes the strings are right.",
     example:
       "Pluck open E, then gently touch the string to stop it. Sound and silence are two separate actions.",
     practice: [
-      "Find and name the four open strings slowly.",
+      "Use a tuner to bring each string to its note, E–A–D–G, naming the four open strings as you tune them.",
       "Pluck E once and stop it with a light touch after two counted beats.",
       "Repeat four times, listening for a clean space after the note.",
     ],
@@ -768,7 +769,7 @@ const bass = path("bass", [
     example: "Count 1–2–3–4 and play open E once on each number. Four bars is sixteen notes.",
     practice: [
       "Count four evenly twice before playing.",
-      "Play open E on the four numbers, using a light pluck.",
+      "Play open E on the four numbers, using a light pluck and alternating index and middle fingers; the lab's Alt tab drills this stroke.",
       "Continue for four bars; if a note is late, rejoin the next number.",
     ],
     question: "How many quarter-note beats are in four bars of 4/4?",
@@ -826,7 +827,7 @@ const bass = path("bass", [
     explanation:
       "Straight eighth notes divide a beat in half: number, and. Syncopation emphasizes a weaker part of the beat. An offbeat bass note still belongs to the same steady grid; counting the silent strong beats helps keep its place.",
     example:
-      "Play E on 1, and-of-2, and 4. Keep counting all eight syllables: 1-and-2-and-3-and-4-and.",
+      "Play E on 1, and-of-2, and on beat 4. Keep counting all eight syllables: 1-and-2-and-3-and-4-and.",
     practice: [
       "Tap the example on your knee while saying the full count.",
       "Play it on open E for two bars, leaving the other positions silent.",
@@ -935,6 +936,7 @@ const drums = path("drums", [
     answer: 2,
     feedback:
       "The top 4 says four beats per bar; the bottom 4 makes the quarter note the beat unit.",
+    demo: { label: "Kick on every beat", notes: [[36], [36], [36], [36]] },
   },
   {
     slug: "backbeat",
@@ -954,6 +956,10 @@ const drums = path("drums", [
     answer: 0,
     feedback:
       "The snare emphasizes 2 and 4. The kick on 1 and 3 gives you a simple complementary pattern.",
+    demo: {
+      label: "Kick on 1 and 3, snare on 2 and 4",
+      notes: [[36], [38], [36], [38], [36], [38], [36], [38]],
+    },
   },
   {
     slug: "eighth-hats",
@@ -961,7 +967,7 @@ const drums = path("drums", [
     title: "Add the hi-hat clock",
     outcome: "Layer even eighth notes over kick and snare.",
     explanation:
-      "Eighth notes divide each quarter-note beat into two equal parts. Count 1-and-2-and-3-and-4-and. The hi-hat can play all eight positions while the kick and snare keep their four-beat pattern. Some sounds happen together.",
+      "Eighth notes divide each quarter-note beat into two equal parts. Count 1-and-2-and-3-and-4-and. The hi-hat can play all eight positions while the kick and snare keep their four-beat pattern. Some sounds happen together. Give the hi-hat to your right hand and the snare to your left, both sticks held the same way (matched grip).",
     example: "Hi-hat on every number and and. Kick on 1 and 3; snare on 2 and 4.",
     practice: [
       "Tap eight even hi-hat strokes while speaking the count.",
@@ -973,6 +979,10 @@ const drums = path("drums", [
     answer: 1,
     feedback:
       "Two eighth notes per beat across four beats gives eight hi-hat strokes. They stay even through the snare hits.",
+    demo: {
+      label: "Hat eighths; kick 1 and 3, snare 2 and 4",
+      notes: [[36, 42], [42], [38, 42], [42], [36, 42], [42], [38, 42], [42]],
+    },
   },
   {
     slug: "first-fill",
@@ -997,6 +1007,28 @@ const drums = path("drums", [
     answer: 2,
     feedback:
       "The bar stays four beats long. A fill replaces time in the groove; a clear next beat 1 is the landing.",
+    demo: {
+      label: "Extra snare on the and of 4, kick on the next 1",
+      notes: [
+        [36],
+        [],
+        [38],
+        [],
+        [36],
+        [],
+        [38],
+        [],
+        [36],
+        [],
+        [38],
+        [],
+        [36],
+        [],
+        [38],
+        [38],
+        [36],
+      ],
+    },
   },
   {
     slug: "sixteenths",
@@ -1017,6 +1049,27 @@ const drums = path("drums", [
     answer: 0,
     feedback:
       "A quarter-note beat contains four sixteenths. A silent position still takes one quarter of that beat.",
+    demo: {
+      label: "Snare on 1, e, and — silent on a",
+      notes: [
+        [38],
+        [38],
+        [38],
+        [],
+        [38],
+        [38],
+        [38],
+        [],
+        [38],
+        [38],
+        [38],
+        [],
+        [38],
+        [38],
+        [38],
+        [],
+      ],
+    },
   },
   {
     slug: "accents",
@@ -1041,6 +1094,10 @@ const drums = path("drums", [
     answer: 1,
     feedback:
       "The ghost note sits at a lower volume. Its quieter role lets it add detail without replacing the backbeat's emphasis.",
+    demo: {
+      label: "Accents on 2 and 4, ghost on the and of 3 (one even level here)",
+      notes: [[], [], [38], [], [], [38], [38], []],
+    },
   },
   {
     slug: "three-over-two",
@@ -1061,6 +1118,10 @@ const drums = path("drums", [
     answer: 2,
     feedback:
       "Slots 1 and 4 are three subdivisions apart. Slots 1, 3, and 5 are two subdivisions apart, producing three against two.",
+    demo: {
+      label: "Hat on slots 1, 3, 5; snare on 1 and 4",
+      notes: [[38, 42], [], [42], [38], [42], [], [38, 42], [], [42], [38], [42], []],
+    },
   },
   {
     slug: "arrange",
@@ -1085,6 +1146,28 @@ const drums = path("drums", [
     answer: 0,
     feedback:
       "Eighth-note hats create more events over the same quarter-note pulse. The tempo need not change.",
+    demo: {
+      label: "Quarter hats, then eighth hats; snare–tom fill, kick on 1",
+      notes: [
+        [36, 42],
+        [],
+        [38, 42],
+        [],
+        [36, 42],
+        [],
+        [38, 42],
+        [],
+        [36, 42],
+        [42],
+        [38, 42],
+        [42],
+        [36, 42],
+        [42],
+        [38],
+        [45],
+        [36, 42],
+      ],
+    },
   },
 ]);
 
@@ -1334,6 +1417,7 @@ const mandolin = path("mandolin", [
     answer: 1,
     feedback:
       "The pulse continues through a missed stroke. Rejoin it on the next beat; restarting or catching up changes the timing.",
+    demo: { label: "D on 1 and 3; 2 and 4 stay silent", notes: [[62], [], [62], []] },
   },
   {
     slug: "g-and-c",
@@ -1381,7 +1465,7 @@ const mandolin = path("mandolin", [
     title: "The chop on two and four",
     outcome: "Alternate a ringing downstroke with a short muted chop.",
     explanation:
-      "Start with an unpitched muted backbeat on beats 2 and 4. Open G has open courses, so releasing the two fretted fingers alone will not silence it. Lay your fretting fingers lightly across all four courses, without pressing them to the frets, then strike a short click. Restore G for the ringing strokes on 1 and 3. This prepares a chop rhythm; a pitched chop with a closed shape comes later.",
+      "Start with an unpitched muted backbeat on beats 2 and 4. Open G has open courses, so releasing the two fretted fingers alone will not silence it. Lay your fretting fingers lightly across all four courses, without pressing them to the frets, then strike a short click. Restore G for the ringing strokes on 1 and 3. This prepares a chop rhythm. A pitched chop frets all four courses in a closed shape, so the click itself carries a chord; the daily lesson 'The closed chop' teaches that shape.",
     example:
       "Beat 1: strum G. Beat 2: touch all four courses lightly and strike a muted click. Restore G on 3; mute all courses on 4.",
     practice: [
@@ -1398,6 +1482,10 @@ const mandolin = path("mandolin", [
     answer: 0,
     feedback:
       "Light contact across every course damps the open strings too. Releasing only the fretted notes leaves open courses ringing; force and pick height do not mute them.",
+    demo: {
+      label: "Ring on 1 and 3, chop on 2 and 4; chops sound as short hits in this reference",
+      notes: [[55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79]],
+    },
   },
   {
     slug: "tremolo",
@@ -1451,8 +1539,13 @@ const mandolin = path("mandolin", [
     feedback:
       "The count and the harmony carry through both roles. The picking pattern and the fretting job change, not the underlying pulse.",
     demo: {
-      label: "Melody then a G chop",
-      notes: [[62], [64], [66], [67], [55, 62, 71, 79], [], [55, 62, 71, 79], []],
+      label: "Melody, then backing on G and D; chops sound as short hits in this reference",
+      notes: [
+        [62], [64], [66], [67],
+        [69], [67], [66], [62],
+        [55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79], [55, 62, 71, 79],
+        [57, 62, 69, 78], [57, 62, 69, 78], [55, 62, 71, 79], [],
+      ],
     },
   },
   {
@@ -1478,6 +1571,17 @@ const mandolin = path("mandolin", [
     answer: 1,
     feedback:
       "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+    demo: {
+      label: "Melody, then G, C and D strums, and a final G",
+      notes: [
+        [62], [64], [66], [67],
+        [69], [67], [66], [62],
+        [55, 62, 71, 79], [],
+        [55, 64, 72, 76], [],
+        [57, 62, 69, 78], [], [], [],
+        [55, 62, 71, 79],
+      ],
+    },
   },
 ]);
 
