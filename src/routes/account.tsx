@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Cloud, Download, FileUp, RefreshCw, ShieldCheck, Upload } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -12,6 +12,7 @@ import {
   captureProfileSnapshot,
   parseProfileBackup,
   profileBackupText,
+  PROFILE_RECOVERY_KEY,
   PROFILE_SYNC_MARKER_KEY,
 } from "@/lib/spark/profile-snapshot";
 import { useLearning } from "@/store/learning";
@@ -40,7 +41,43 @@ function AccountPage() {
   const fileInput = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
+  const [hasRecovery, setHasRecovery] = useState(() => {
+    try {
+      return typeof window !== "undefined" && Boolean(localStorage.getItem(PROFILE_RECOVERY_KEY));
+    } catch {
+      return false;
+    }
+  });
   const busy = sync.status === "checking" || sync.status === "syncing";
+
+  useEffect(() => {
+    try {
+      setHasRecovery(Boolean(localStorage.getItem(PROFILE_RECOVERY_KEY)));
+    } catch {
+      setHasRecovery(false);
+    }
+  }, [sync.status]);
+
+  function exportRecoveryBackup() {
+    try {
+      const raw = localStorage.getItem(PROFILE_RECOVERY_KEY);
+      const snapshot = raw ? parseProfileBackup(raw) : null;
+      if (!snapshot) throw new Error("There is no readable local recovery copy on this computer.");
+      const blob = new Blob([profileBackupText(snapshot)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `sparksuite-recovery-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      setError("");
+      setNotice("Local recovery copy exported. You can restore it later using Import backup.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The recovery copy could not be exported.");
+    }
+  }
 
   function exportBackup() {
     try {
@@ -71,6 +108,7 @@ function AccountPage() {
       if (!snapshot) throw new Error("This file is not a valid SparkSuite progress backup.");
       if (!window.confirm("Restore this backup onto this computer? Current local progress will be kept in a recovery copy first.")) return;
       applyProfileSnapshot(snapshot);
+      setHasRecovery(true);
       try {
         localStorage.removeItem(PROFILE_SYNC_MARKER_KEY);
       } catch {
@@ -224,6 +262,11 @@ function AccountPage() {
             <Button variant="ghost" onClick={() => fileInput.current?.click()}>
               <FileUp className="mr-2 size-4" aria-hidden="true" /> Import backup
             </Button>
+            {hasRecovery ? (
+              <Button variant="ghost" onClick={exportRecoveryBackup}>
+                <Download className="mr-2 size-4" aria-hidden="true" /> Export recovery copy
+              </Button>
+            ) : null}
             <input
               ref={fileInput}
               type="file"
