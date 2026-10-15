@@ -27,7 +27,7 @@ import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import { isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
-import { acousticInputModeFor, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector } from "./acoustic-input.ts";
+import { acousticInputModeFor, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -495,6 +495,13 @@ describe("general acoustic instrument input", () => {
   it("rejects silence for pitched input", () => {
     const detector = new PitchOnsetDetector();
     assert.equal(detector.process(new Float32Array(fftSize), sampleRate, 100, 2), null);
+  });
+
+  it("tracks sustained pitches repeatedly for voice and held-note lessons", () => {
+    const tracker = new PitchTracker();
+    const heldC = tone(261.63);
+    assert.equal(tracker.process(heldC, sampleRate, 100, 2, 70, 900)?.midi, 60);
+    assert.equal(tracker.process(heldC, sampleRate, 160, 2, 70, 900)?.midi, 60);
   });
 
   it("classifies low kick-like and bright snare-like acoustic attacks", () => {
