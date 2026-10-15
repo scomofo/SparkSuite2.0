@@ -31,6 +31,49 @@ export type PitchOnset = {
   level: number;
 };
 
+export type PitchSample = {
+  frequencyHz: number;
+  midi: number;
+  level: number;
+};
+
+/** Reads a sustained pitch at a throttled rate, useful for voice and held notes. */
+export class PitchTracker {
+  private readonly minimumLevel: number;
+  private lastAnalysisMs = Number.NEGATIVE_INFINITY;
+
+  constructor(minimumLevel = 0.003) {
+    this.minimumLevel = minimumLevel;
+  }
+
+  process(
+    samples: Float32Array,
+    sampleRate: number,
+    nowMs: number,
+    decimate = 2,
+    minimumHz = 70,
+    maximumHz = 1200,
+  ): PitchSample | null {
+    if (
+      !samples.length ||
+      !Number.isFinite(sampleRate) ||
+      sampleRate <= 0 ||
+      !Number.isFinite(nowMs) ||
+      nowMs - this.lastAnalysisMs < 48
+    ) return null;
+    this.lastAnalysisMs = nowMs;
+    const level = rmsLevel(samples);
+    if (level < this.minimumLevel) return null;
+    const frequencyHz = yinPitchFast(samples, sampleRate, 0.14, decimate);
+    if (!Number.isFinite(frequencyHz) || frequencyHz < minimumHz || frequencyHz > maximumHz) return null;
+    return { frequencyHz, midi: frequencyToMidi(frequencyHz), level };
+  }
+
+  reset() {
+    this.lastAnalysisMs = Number.NEGATIVE_INFINITY;
+  }
+}
+
 export type PercussionOnset = {
   onsetMs: number;
   /** 0 = low-frequency kick-like hit, 1 = brighter snare-like hit. */
