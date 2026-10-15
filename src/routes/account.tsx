@@ -35,6 +35,7 @@ function syncLabel(status: string) {
 
 function AccountPage() {
   const { user, isPending } = useCurrentUserState();
+  const accountUser = authEnabled && user && !user.isDevFallback ? user : null;
   const sync = useProfileSync();
   const reload = useSpark((s) => s.reloadFromStorage);
   const reloadLearning = useLearning((s) => s.reloadFromStorage);
@@ -112,10 +113,10 @@ function AccountPage() {
           ? "Backup restored locally. Choose Merge to combine it with the cloud, or Replace cloud only if you intend this backup to become the account copy."
           : "Backup restored on this computer. Sign in when you want to sync it with other computers.",
       );
-      if (user && authEnabled) {
+      if (accountUser) {
         useProfileSync.getState().setSyncState({
           status: "conflict",
-          userId: user.id,
+          userId: accountUser.id,
           message: "A backup was imported locally. Choose how to combine it with the cloud copy.",
         });
       } else {
@@ -152,16 +153,16 @@ function AccountPage() {
             <div>
               <p className="studio-label">Account</p>
               <h2 id="account-title" className="mt-2 font-display text-xl font-semibold">
-                {isPending ? "Checking sign-in…" : user ? "Signed in" : "Not signed in"}
+                {isPending ? "Checking sign-in…" : accountUser ? "Signed in" : "Not signed in"}
               </h2>
               <p className="mt-2 text-sm text-muted">
-                {user
-                  ? `Progress is associated with ${user.displayName ?? user.primaryEmail ?? "your account"}.`
+                {accountUser
+                  ? `Progress is associated with ${accountUser.displayName ?? accountUser.primaryEmail ?? "your account"}.`
                   : "Your current progress stays on this computer until you sign in and sync it."}
               </p>
             </div>
-            {user && authEnabled ? <UserButton /> : null}
-            {!isPending && !user && authEnabled ? (
+            {accountUser ? <UserButton /> : null}
+            {!isPending && !accountUser ? (
               <Link to="/login" className="inline-flex min-h-11 items-center rounded-lg bg-accent px-4 font-medium text-white">
                 Sign in to sync
               </Link>
@@ -193,7 +194,7 @@ function AccountPage() {
             </div>
           </div>
 
-          {user && authEnabled && !user.isDevFallback ? (
+          {accountUser && !user.isDevFallback ? (
             <div className="mt-5 flex flex-wrap gap-2">
               <Button onClick={() => requestProfileSync()} disabled={busy}>
                 <RefreshCw className="mr-2 size-4" aria-hidden="true" /> {busy ? "Syncing…" : "Sync now"}
@@ -201,7 +202,7 @@ function AccountPage() {
             </div>
           ) : null}
 
-          {sync.status === "conflict" && user && authEnabled ? (
+          {sync.status === "conflict" && accountUser ? (
             <div className="mt-5 rounded-lg border border-border bg-raised p-4">
               <h3 className="font-semibold">Choose how to resolve this</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted">
