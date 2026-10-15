@@ -26,7 +26,13 @@ function cloudSnapshot(raw: unknown): ProfileSnapshot | null {
 }
 
 function applyIfChanged(next: ProfileSnapshot, current: ProfileSnapshot): boolean {
-  const changed = !profileSnapshotEqual(next, current);
+  // Sync calls await the cloud API. If the learner practised in the meantime,
+  // never apply a snapshot based on the older local state over their new work.
+  const latest = captureProfileSnapshot();
+  if (!profileSnapshotEqual(latest, current)) {
+    throw new Error("Local progress changed during cloud sync. Your latest work was preserved; sync again to combine it.");
+  }
+  const changed = !profileSnapshotEqual(next, latest);
   if (changed) applyProfileSnapshot(next);
   return changed;
 }

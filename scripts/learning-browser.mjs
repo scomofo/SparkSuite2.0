@@ -18,6 +18,9 @@ page.on("pageerror", (error) => errors.push(error.message));
 page.on("console", (message) => {
   if (message.type() === "error") errors.push(`${message.text()} (${message.location().url})`);
 });
+await page.route("**/api/auth/get-session**", (route) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
+);
 try {
   await page.clock.install({ time: new Date("2026-09-05T18:00:00Z") });
   await page.goto(url, { waitUntil: "networkidle" });
