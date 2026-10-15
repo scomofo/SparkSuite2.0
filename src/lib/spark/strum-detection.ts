@@ -205,3 +205,100 @@ export class StrumOnsetDetector {
     this.pending = null;
   }
 }
+
+
+export type StrumDirection = "down" | "up" | "unknown";
+
+export type StrumDirectionEstimate = {
+  direction: StrumDirection;
+  confidence: number;
+  leadMs: number;
+};
+
+/** Pure direction decision: downstrokes usually excite lower strings first. */
+export function classifyStrumDirection(
+  lowOnsetMs: number | null,
+  highOnsetMs: number | null,
+  minimumLeadMs = 18,
+): StrumDirectionEstimate {
+  if (lowOnsetMs === null || highOnsetMs === null) {
+    return { direction: "unknown", confidence: 0, leadMs: 0 };
+  }
+  const leadMs = highOnsetMs - lowOnsetMs;
+  if (Math.abs(leadMs) < minimumLeadMs) {
+    return { direction: "unknown", confidence: 0, leadMs };
+  }
+  return {
+    direction: leadMs > 0 ? "down" : "up",
+    confidence: Math.max(0, Math.min(1, (Math.abs(leadMs) - 12) / 36)),
+    leadMs,
+  };
+}
+
+type DirectionFrame = { at: number; lowDb: number; highDb: number };
+
+function bandLevelDb(
+  spectrumDb: Float32Array,
+  sampleRate: number,
+  fftSize: number,
+  minHz: number,
+  maxHz: number,
+): number {
+  if (!spectrumDb.length || sampleRate <= 0 || fftSize <= 0) return -120;
+  const binHz = sampleRate / fftSize;
+  const start = Math.max(1, Math.floor(minHz / binHz));
+  const end = Math.min(spectrumDb.length - 1, Math.ceil(maxHz / binHz));
+  let power = 0;
+  let count = 0;
+  for (let i = start; i <= end; i++) {
+    const db = spectrumDb[i];
+    if (!Number.isFinite(db)) continue;
+    power += 10 ** (Math.max(-120, Math.min(0, db)) / 10);
+    count++;
+  }
+  return count ? 10 * Math.log10(power / count) : -120;
+}
+
+/**
+ * Estimates stroke direction from the order of low- and high-frequency attack
+ * energy. A single microphone cannot always resolve this, so weak/ambiguous
+ * estimates deliberately return "unknown" instead of inventing a direction.
+ */
+export class StrumDirectionDetector {
+  private frames: DirectionFrame[] = [];
+
+  process(
+    spectrumDb: Float32Array,
+    sampleRate: number,
+    fftSize: number,
+    nowMs: number,
+  ) {
+    if (!Number.isFinite(nowMs) || !spectrumDb.length) return;
+    this.frames.push({
+      at: nowMs,
+      lowDb: bandLevelDb(spectrumDb, sampleRate, fftSize, 75, 420),
+      highDb: bandLevelDb(spectrumDb, sampleRate, fftSize, 420, 2600),
+    });
+    this.frames = this.frames.filter((frame) => nowMs - frame.at <= 220);
+  }
+
+  classify(onsetMs: number): StrumDirectionEstimate {
+    const before = this.frames.filter((frame) => frame.at >= onsetMs - 55 && frame.at < onsetMs - 5);
+    const during = this.frames.filter((frame) => frame.at >= onsetMs - 5 && frame.at <= onsetMs + 100);
+    if (before.length < 2 || during.length < 2) {
+      return { direction: "unknown", confidence: 0, leadMs: 0 };
+    }
+
+    const lowBase = Math.min(...before.map((frame) => frame.lowDb));
+    const highBase = Math.min(...before.map((frame) => frame.highDb));
+    const lowThreshold = Math.max(-58, lowBase + 7);
+    const highThreshold = Math.max(-58, highBase + 7);
+    const lowFirst = during.find((frame) => frame.lowDb >= lowThreshold)?.at ?? null;
+    const highFirst = during.find((frame) => frame.highDb >= highThreshold)?.at ?? null;
+    return classifyStrumDirection(lowFirst, highFirst);
+  }
+
+  reset() {
+    this.frames = [];
+  }
+}
