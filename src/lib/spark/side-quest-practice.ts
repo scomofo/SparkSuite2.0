@@ -134,10 +134,16 @@ const PATTERNS: Record<string, QuestPattern> = {
     d(6,"Tom + kick",[0,3],"Build toward the bar line."), d(6.5,"Snare",[1],"Last setup."), d(7,"Tom",[3],"Final fill note."), d(7.5,"Snare",[1],"Then imagine beat 1 landing next."),
   ]},
 
-  "vocals-side-foundations": { bpm: 60, cues: [
+  "vocals-side-foundations": { bpm: 60, beats: 20, cues: [
     n(0,"Speak",60,"Speak the syllable in time; pitch is only a reference."), r(1),
     n(2,"Speak",60,"Repeat with clear consonants."), r(3),
-    n(4,"Sing",60,"Now sustain the same syllable on C.",1.5), r(6), n(7,"Release",60,"Easy final onset.",0.6),
+    n(4,"Speak",60,"Bar two: same syllable, same time."), r(5),
+    n(6,"Speak",60,"Keep the consonants clear."), r(7),
+    n(8,"Speak",60,"Bar three: stay in time."), r(9),
+    n(10,"Speak",60,"Words first; pitch can wait."), r(11),
+    n(12,"Speak",60,"Last spoken bar."), r(13),
+    n(14,"Speak",60,"One more in time, then sing."), r(15),
+    n(16,"Sing",60,"Now sustain the same syllable on C.",1.5), r(18), n(19,"Release",60,"Easy final onset.",0.6),
   ]},
   "vocals-side-beginner": { bpm: 50, cues: [
     n(0,"Gentle",60,"Breathy-light onset, no push.",1.2), r(2),

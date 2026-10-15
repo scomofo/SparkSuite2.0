@@ -40,7 +40,7 @@ const COPY: Record<VoiceTab, { kicker: string; title: string; body: string; hear
     kicker: "Stepwise",
     title: "The next note is one tooth over",
     body: "C to D is a whole step. Don’t jump at it — release C and arrive. The space between is a door, not a gap. Come back the same way.",
-    hear: "C, D, E, D, C.",
+    hear: "C, D, E, D, C — then D, E, and home to C.",
   },
   octave: {
     kicker: "Same letter, new floor",
