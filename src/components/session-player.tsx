@@ -207,6 +207,12 @@ export function SessionPlayer() {
     resetItem();
   }, [item?.id, resetItem]);
 
+  // Do not keep the microphone open while the current exercise uses a
+  // different input method (for example, the single-string warmup).
+  useEffect(() => {
+    if (!requiresUkuleleMic && micStatus === "listening") stopUkuleleMic();
+  }, [micStatus, requiresUkuleleMic, stopUkuleleMic]);
+
   const effectiveItem = useMemo(() => {
     if (!item) return null;
     if (item.process === "create" && createPick) {
@@ -396,6 +402,15 @@ export function SessionPlayer() {
   }, [requiresUkuleleMic]);
 
   const stopUkuleleMic = useCallback(() => {
+    if (phaseRef.current === "play" && requiresUkuleleMicRef.current) {
+      // Stopping mid-exercise ends scoring for this item rather than turning
+      // every remaining beat into a miss.
+      visualOnlyRef.current = true;
+      setVisualOnly(true);
+      hitsRef.current = 0;
+      missesRef.current = 0;
+      setCombo(0);
+    }
     micRequestRef.current += 1;
     micStopRef.current?.();
     micStopRef.current = null;
@@ -774,6 +789,9 @@ export function SessionPlayer() {
               {count}
             </p>
             <p className="text-sm uppercase tracking-[0.2em] text-dim">{item.bpm} bpm</p>
+            {requiresUkuleleMic && micStatus === "listening" ? (
+              <p className="text-xs text-good">Microphone on · strum detection starts with the first cue.</p>
+            ) : null}
           </div>
         ) : null}
 
@@ -859,6 +877,16 @@ export function SessionPlayer() {
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
                   Play the shown chord on the beat. Use headphones for the click; no audio is recorded or uploaded.
                 </p>
+                {!visualOnly && micStatus === "listening" ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="mt-2 w-full"
+                    onClick={stopUkuleleMic}
+                  >
+                    Stop mic and continue unscored
+                  </Button>
+                ) : null}
               </section>
             ) : expectsSpecific ? (
               <p className="text-center text-sm text-muted">Tap the highlighted pad, key, or string — pitch and timing both count.</p>
@@ -912,6 +940,11 @@ export function SessionPlayer() {
                 <p className="text-pretty text-sm text-muted">{refineLine(item, itemSummary?.stars ?? 0)}</p>
               </>
             )}
+            {micStatus === "listening" ? (
+              <Button variant="ghost" className="w-full" onClick={stopUkuleleMic}>
+                Stop microphone
+              </Button>
+            ) : null}
             <Button size="lg" className="w-full" onClick={goNext}>
               {lastItem ? "See today" : "Next"}
             </Button>
