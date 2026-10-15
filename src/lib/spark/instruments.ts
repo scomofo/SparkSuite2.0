@@ -2273,7 +2273,7 @@ export function firstLessonIds(id: InstrumentId): [string, string, string] {
     drums: ["lesson_drums_kick_01", "lesson_drums_backbeat_01", "lesson_drums_four_01"],
     vocals: ["lesson_vocals_drone_01", "lesson_vocals_match_c_01", "lesson_vocals_hold_01"],
     mandolin: ["lesson_mandolin_open_01", "lesson_mandolin_g_01", "lesson_mandolin_c_01"],
-    banjo: ["lesson_banjo_open_01", "lesson_banjo_g_01", "lesson_banjo_gd7_01"],
+    banjo: ["lesson_banjo_open_01", "lesson_banjo_g_01", "lesson_banjo_d7_01"],
     violin: ["lesson_violin_open_01", "lesson_violin_first_finger_01", "lesson_violin_walk_01"],
     lapsteel: ["lesson_lapsteel_open_01", "lesson_lapsteel_c_01", "lesson_lapsteel_cf_01"],
   };

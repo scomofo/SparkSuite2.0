@@ -322,7 +322,7 @@ export const MUSICAL_MILESTONES: MusicalMilestone[] = [
     variation: "Add a hammer-on",
     variationHint:
       "In bar 1, hammer the third string from open to fret 2 on the and of 1 instead of picking the second string; keep the rest of the roll the same.",
-    lessons: ["banjo-open-g", "banjo-pulse-brush", "banjo-g-to-d7"],
+    lessons: ["banjo-open-g", "banjo-forward-roll", "banjo-three-chord-loop"],
     bpm: 50,
     beats: 16,
     shapes: ["G", "C", "D7"],
