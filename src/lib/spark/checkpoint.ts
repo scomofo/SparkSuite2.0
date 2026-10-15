@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { localDayKey } from "../utils.ts";
+import { notifyProfileChanged } from "./profile-events.ts";
 import { generateDailyPlan } from "./daily-plan.ts";
 import type { InstrumentId } from "./instruments.ts";
 import { summarizeItem } from "./practice.ts";
@@ -96,6 +97,7 @@ export function saveCheckpoint(
 ): boolean {
   try {
     localStorage.setItem(keyFor(instrument), checkpointText(session, progress));
+    notifyProfileChanged();
     return true;
   } catch {
     return false;
@@ -105,6 +107,7 @@ export function saveCheckpoint(
 export function clearCheckpoint(instrument: InstrumentId) {
   try {
     localStorage.removeItem(keyFor(instrument));
+    notifyProfileChanged();
   } catch {
     /* Storage can be unavailable. */
   }
