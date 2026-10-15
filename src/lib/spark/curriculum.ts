@@ -555,10 +555,10 @@ const ukulele = path("ukulele", [
     title: "Four strings and a first note",
     outcome: "Locate G–C–E–A and sound each string separately.",
     explanation:
-      "Standard ukulele tuning is G–C–E–A, from the string nearest your face to the one nearest the floor in playing position. Many ukuleles use a high G, so that order is not lowest-to-highest pitch. An open string has no fret pressed.",
+      "Standard ukulele tuning is G–C–E–A, from the string nearest your face to the one nearest the floor in playing position. Many ukuleles use a high G, so that order is not lowest-to-highest pitch. An open string has no fret pressed. Before you play, tune each string to its note with a tuner; every later lesson assumes the strings are right.",
     example: "Say G, C, E, A as you pluck each open string once.",
     practice: [
-      "Support the instrument comfortably and find the string nearest your face.",
+      "Support the instrument comfortably and use a tuner to bring each string to its note, G–C–E–A.",
       "Pluck the four strings one at a time, naming each.",
       "Repeat slowly without judging loudness; aim to hear four separate sounds.",
     ],
@@ -613,7 +613,7 @@ const ukulele = path("ukulele", [
     answer: 0,
     feedback:
       "Am's G-string fret 2 stays. Adding E-string fret 1 changes the open E to F and makes the F shape.",
-    demo: { label: "C, Am, then F", notes: [[60, 64, 67], [], [57, 60, 64], [], [53, 57, 60], []] },
+    demo: { label: "C, Am, then F", notes: [[67, 60, 64, 72], [], [69, 60, 64, 69], [], [69, 60, 65, 69], []] },
   },
   {
     slug: "island-rhythm",
@@ -670,7 +670,7 @@ const ukulele = path("ukulele", [
     outcome: "Keep chord functions while changing the home chord.",
     explanation:
       "Roman numerals describe chords relative to a key. In C major, I–IV–V is C–F–G. In G major, the same functions are G–C–D. Transposing changes the pitches while preserving the relationships; use new shapes, not the old chord names.",
-    example: "C–F–G–C becomes G–C–D–G. G shape: 0–2–3–2; D shape: 2–2–2–0 in GCEA order.",
+    example: "C–F–G–C becomes G–C–D–G. G shape: 0–2–3–2; D shape: 2–2–2–0 in GCEA order. In the key of C, G7 (0–2–1–2) can do G's V job with extra pull home.",
     practice: [
       "Say the new progression aloud before touching the strings.",
       "Find G, C, and D; sound each slowly with a comfortable fingering.",

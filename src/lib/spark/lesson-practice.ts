@@ -460,7 +460,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     beats: 8,
     goal: "Pluck the four open strings in G–C–E–A order, twice.",
     setup:
-      "In the usual playing position, start at the string nearest your face. This guide uses standard high-G tuning.",
+      "In the usual playing position, start at the string nearest your face. This guide uses standard high-G tuning. Tune each string to its note first if you can — the Tuner page in this app listens for exactly these four notes.",
     hint: "Name one string at a time with the guide stopped. High G means the first string is not the lowest pitch.",
     takeaway:
       "G–C–E–A names the strings in playing order. Their pitches do not simply rise from first to last.",
