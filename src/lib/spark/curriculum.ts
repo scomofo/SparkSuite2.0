@@ -1368,7 +1368,7 @@ const mandolin = path("mandolin", [
     title: "The chop on two and four",
     outcome: "Alternate a ringing downstroke with a short muted chop.",
     explanation:
-      "Start with an unpitched muted backbeat on beats 2 and 4. Open G has open courses, so releasing the two fretted fingers alone will not silence it. Lay your fretting fingers lightly across all four courses, without pressing them to the frets, then strike a short click. Restore G for the ringing strokes on 1 and 3. This prepares a chop rhythm. A pitched chop frets all four courses in a closed shape, so the click itself carries a chord; that closed shape is the next one to grow into.",
+      "Start with an unpitched muted backbeat on beats 2 and 4. Open G has open courses, so releasing the two fretted fingers alone will not silence it. Lay your fretting fingers lightly across all four courses, without pressing them to the frets, then strike a short click. Restore G for the ringing strokes on 1 and 3. This prepares a chop rhythm. A pitched chop frets all four courses in a closed shape, so the click itself carries a chord; the daily lesson 'The closed chop' teaches that shape.",
     example:
       "Beat 1: strum G. Beat 2: touch all four courses lightly and strike a muted click. Restore G on 3; mute all courses on 4.",
     practice: [

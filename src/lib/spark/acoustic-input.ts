@@ -137,7 +137,7 @@ export function acousticInputModeFor(input: {
 }): AcousticInputMode {
   if (input.surface === "pads") return "percussion";
   if (input.surface === "voice") return "pitch";
-  if (input.instrument === "mandolin" && input.lessonId === "lesson_mandolin_chop_01") return "attack";
+  if (input.instrument === "mandolin" && (input.lessonId === "lesson_mandolin_chop_01" || input.lessonId === "lesson_mandolin_closed_chop_01")) return "attack";
   if (input.surface === "keys") return input.pluckDrill ? "pitch" : "strum";
   if (input.surface === "strings") {
     if (
