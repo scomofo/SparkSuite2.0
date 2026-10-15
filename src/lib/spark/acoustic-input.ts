@@ -115,9 +115,12 @@ export function assessChordPitches(
     }
   }
   const coverage = expected.length ? matchedNotes / expected.length : 0;
+  // A chord only passes when every expected sounding note is represented.
+  // A confident partial chord is a mismatch, not a near-perfect match; weak
+  // spectra remain uncertain so room noise or masking is not treated as proof.
   let status: ChordAssessment["status"] = "uncertain";
-  if (coverage >= 0.9 && analysis.confidence >= 0.5) status = "match";
-  else if (coverage <= 0.65 && analysis.confidence >= 0.5) status = "mismatch";
+  if (coverage === 1 && analysis.confidence >= 0.5) status = "match";
+  else if (coverage < 1 && analysis.confidence >= 0.5) status = "mismatch";
   return {
     status,
     coverage,
