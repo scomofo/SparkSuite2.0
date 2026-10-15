@@ -1,4 +1,4 @@
-import { useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CheckCircle2, Cloud, Download, FileUp, RefreshCw, ShieldCheck, Upload } from "lucide-react";
 import { AppShell } from "@/components/app-shell";
@@ -35,14 +35,18 @@ function syncLabel(status: string) {
 
 function AccountPage() {
   const { user, isPending } = useCurrentUserState();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const accountUser = authEnabled && user && !user.isDevFallback ? user : null;
+  const visibleUser = mounted ? accountUser : null;
+  const visiblePending = !mounted || isPending;
   const sync = useProfileSync();
   const reload = useSpark((s) => s.reloadFromStorage);
   const reloadLearning = useLearning((s) => s.reloadFromStorage);
   const fileInput = useRef<HTMLInputElement>(null);
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
-  const hasRecovery = (() => {
+  const hasRecovery = mounted && (() => {
     try {
       return typeof window !== "undefined" && Boolean(localStorage.getItem(PROFILE_RECOVERY_KEY));
     } catch {
@@ -153,15 +157,15 @@ function AccountPage() {
             <div>
               <p className="studio-label">Account</p>
               <h2 id="account-title" className="mt-2 font-display text-xl font-semibold">
-                {isPending ? "Checking sign-in…" : accountUser ? "Signed in" : "Not signed in"}
+                {visiblePending ? "Checking sign-in…" : visibleUser ? "Signed in" : "Not signed in"}
               </h2>
               <p className="mt-2 text-sm text-muted">
-                {accountUser
-                  ? `Progress is associated with ${accountUser.displayName ?? accountUser.primaryEmail ?? "your account"}.`
+                {visibleUser
+                  ? `Progress is associated with ${visibleUser.displayName ?? visibleUser.primaryEmail ?? "your account"}.`
                   : "Your current progress stays on this computer until you sign in and sync it."}
               </p>
             </div>
-            {accountUser ? <UserButton /> : null}
+            {visibleUser ? <UserButton /> : null}
             {!isPending && !accountUser ? (
               <Link to="/login" className="inline-flex min-h-11 items-center rounded-lg bg-accent px-4 font-medium text-white">
                 Sign in to sync
@@ -194,7 +198,7 @@ function AccountPage() {
             </div>
           </div>
 
-          {accountUser ? (
+          {visibleUser ? (
             <div className="mt-5 flex flex-wrap gap-2">
               <Button onClick={() => requestProfileSync()} disabled={busy}>
                 <RefreshCw className="mr-2 size-4" aria-hidden="true" /> {busy ? "Syncing…" : "Sync now"}
@@ -202,7 +206,7 @@ function AccountPage() {
             </div>
           ) : null}
 
-          {sync.status === "conflict" && accountUser ? (
+          {sync.status === "conflict" && visibleUser ? (
             <div className="mt-5 rounded-lg border border-border bg-raised p-4">
               <h3 className="font-semibold">Choose how to resolve this</h3>
               <p className="mt-1 text-sm leading-relaxed text-muted">
