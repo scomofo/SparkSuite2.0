@@ -10,14 +10,15 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { PGlite } from "@electric-sql/pglite";
 import { isMigrationFile, migrationName, pendingMigrations } from "./migration-plan.mjs";
 import { projectRoot } from "./with-app-env.mjs";
 
 const AUTH_MIGRATION = "0001_auth.sql";
 
 /**
- * The auth-on copy of the Better Auth schema and its source, or null when the
- * app has not turned sign-in on (the shipped state).
+ * The root Better Auth migration and its maintained source copy, or null when
+ * either file is missing.
  */
 function authSchemaCopy(root) {
   const copy = join(root, "migrations", AUTH_MIGRATION);
@@ -25,6 +26,30 @@ function authSchemaCopy(root) {
   if (!existsSync(copy) || !existsSync(source)) return null;
   return { copy: readFileSync(copy, "utf8"), source: readFileSync(source, "utf8") };
 }
+
+
+test("auth and per-user profile migrations apply in embedded Postgres", async () => {
+  const db = new PGlite();
+  try {
+    await db.exec(readFileSync(join(projectRoot(), "migrations/0001_auth.sql"), "utf8"));
+    await db.exec(readFileSync(join(projectRoot(), "migrations/0002_spark_profile_sync.sql"), "utf8"));
+    const columns = await db.query(
+      "select column_name from information_schema.columns where table_name = 'spark_profile_sync' order by ordinal_position",
+    );
+    assert.deepEqual(columns.rows.map((row) => row.column_name), [
+      "user_id",
+      "payload",
+      "revision",
+      "updated_at",
+    ]);
+    const foreignKeys = await db.query(
+      "select constraint_name from information_schema.table_constraints where table_name = 'spark_profile_sync' and constraint_type = 'FOREIGN KEY'",
+    );
+    assert.equal(foreignKeys.rows.length, 1, "Cloud progress is tied to the account and cascades on deletion");
+  } finally {
+    await db.close();
+  }
+});
 
 test("_migrations keys on basename, not path", () => {
   assert.equal(migrationName("/migrations/0002_todos.sql"), "0002_todos.sql");
