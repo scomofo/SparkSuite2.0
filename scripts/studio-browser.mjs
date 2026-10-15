@@ -99,19 +99,18 @@ try {
   await page.getByRole("button", { name: "Skip this one", exact: true }).click();
   await page.getByRole("link", { name: "Back to today", exact: true }).click();
   await page.getByRole("link", { name: "Progress", exact: true }).click();
-  await page.getByRole("table", { name: "Recent Guitar sessions" }).waitFor();
-  const rows = await page
-    .getByRole("table", { name: "Recent Guitar sessions" })
-    .getByRole("row")
-    .count();
-  assert.equal(rows, 2, "Finishing the recovered loop awards one history entry");
-  await page.screenshot({ path: `${output}/progress-${label}-earned.png`, fullPage: true });
-  await page.reload({ waitUntil: "domcontentloaded" });
-  await page.getByRole("table", { name: "Recent Guitar sessions" }).waitFor();
+  const history = page.getByRole("table", { name: "Recent Guitar sessions" });
   assert.equal(
-    await page.getByRole("table", { name: "Recent Guitar sessions" }).getByRole("row").count(),
-    rows,
-    "Reload cannot award the loop twice",
+    await history.count(),
+    0,
+    "Unscored/skipped practice must not create a scored session history entry",
+  );
+  await page.screenshot({ path: `${output}/progress-${label}-unscored.png`, fullPage: true });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  assert.equal(
+    await page.getByRole("table", { name: "Recent Guitar sessions" }).count(),
+    0,
+    "Reload must not turn unscored practice into a completed session",
   );
 
   // Ukulele strumming is real acoustic input, not a tap on a synthetic Strum button.
@@ -184,7 +183,7 @@ try {
           "completed exercise recovery",
           "instrument switching",
           "direct practice reload",
-          "single finalization",
+          "unscored fallback does not award session history",
           "ukulele acoustic-input gating and denied-microphone fallback",
           "microphone-first input for piano, guitar, bass, mandolin, banjo, violin, lap steel, drums, and vocals",
         ],
