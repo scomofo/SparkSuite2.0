@@ -27,13 +27,172 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
   return (
     item.process !== "respond" &&
     item.process !== "create" &&
-    !!DAILY_EXERCISES[item.lessonId ?? ""]
+    (!!DAILY_EXERCISES[item.lessonId ?? ""] || !!VOCAL_DAILY_CUES[item.lessonId ?? ""])
   );
+}
+
+export type VocalDailyCue = {
+  beat: number;
+  /** Guide pitches for modeling: the target, plus any reference tone under it. */
+  notes: number[];
+  /**
+   * The pitch the singer is judged against, on the tracker's unrounded cents
+   * (vocal-judge.ts). Omitted on purpose for the range finder — its steps are
+   * guide pitches only and its criteria are self-report.
+   */
+  expectedMidi?: number;
+  /** Beats the expected pitch must be sustained; judged as a hold. */
+  holdBeats?: number;
+  label: string;
+  detail: string;
+  chord?: string;
+};
+
+/**
+ * Bespoke daily vocals cues, declared per lesson like the other daily
+ * patterns. `beats` is the phrase length; the phrase loops across the
+ * lesson's bars. Phrase layouts keep every hold's end at least a frame
+ * inside the lesson so its verdict lands before the item closes.
+ */
+export const VOCAL_DAILY_CUES: Record<string, { beats: number; cues: VocalDailyCue[] }> = {
+  lesson_vocals_match_c_01: {
+    beats: 4,
+    cues: [
+      {
+        beat: 0,
+        notes: [60],
+        expectedMidi: 60,
+        label: "C",
+        detail: "Sing C — land inside 20 cents of the reference",
+      },
+    ],
+  },
+  lesson_vocals_hold_01: {
+    beats: 4,
+    cues: [
+      {
+        beat: 0,
+        notes: [60],
+        expectedMidi: 60,
+        holdBeats: 4,
+        label: "Hold C",
+        detail: "One breath — hold C in tune for the whole bar",
+      },
+    ],
+  },
+  lesson_vocals_thirds_01: {
+    beats: 12,
+    cues: [
+      { beat: 0, notes: [60, 64], expectedMidi: 64, chord: "C", label: "E — third of C", detail: "Root is C; sing E, the third above" },
+      { beat: 2, notes: [60, 64], expectedMidi: 64, chord: "C", label: "E — third of C", detail: "Root is C; sing E, the third above" },
+      { beat: 4, notes: [65, 69], expectedMidi: 69, chord: "F", label: "A — third of F", detail: "Root is F; sing A, the third above" },
+      { beat: 6, notes: [65, 69], expectedMidi: 69, chord: "F", label: "A — third of F", detail: "Root is F; sing A, the third above" },
+      { beat: 8, notes: [67, 71], expectedMidi: 71, chord: "G", label: "B — third of G", detail: "Root is G; sing B, the third above" },
+      { beat: 10, notes: [67, 71], expectedMidi: 71, chord: "G", label: "B — third of G", detail: "Root is G; sing B, the third above" },
+    ],
+  },
+  lesson_vocals_offbeat_01: {
+    beats: 4,
+    cues: [
+      { beat: 1.5, notes: [60], expectedMidi: 60, label: "And of 2 — C", detail: "Enter on the offbeat: the 'and' of 2" },
+      { beat: 3.5, notes: [60], expectedMidi: 60, label: "And of 4 — C", detail: "Enter on the offbeat: the 'and' of 4" },
+    ],
+  },
+  lesson_vocals_harmony_01: {
+    beats: 16,
+    cues: [
+      {
+        beat: 0,
+        notes: [60, 64],
+        expectedMidi: 64,
+        holdBeats: 6,
+        chord: "C",
+        label: "Hold E",
+        detail: "Melody overhead: C–D–E–D–C. You hold E, the third above its home",
+      },
+      {
+        beat: 8,
+        notes: [60, 64],
+        expectedMidi: 64,
+        holdBeats: 6,
+        chord: "C",
+        label: "Hold E",
+        detail: "The melody passes overhead again. Your E stays still",
+      },
+    ],
+  },
+  lesson_vocals_range_01: {
+    beats: 20,
+    cues: [
+      { beat: 0, notes: [60], label: "C4", detail: "Start on middle C — one step per beat from here" },
+      { beat: 1, notes: [61], label: "C♯4", detail: "One semitone up" },
+      { beat: 2, notes: [62], label: "D4", detail: "One semitone up" },
+      { beat: 3, notes: [63], label: "D♯4", detail: "One semitone up" },
+      { beat: 4, notes: [64], label: "E4", detail: "One semitone up" },
+      { beat: 5, notes: [65], label: "F4", detail: "One semitone up" },
+      { beat: 6, notes: [66], label: "F♯4", detail: "One semitone up" },
+      { beat: 7, notes: [67], label: "G4", detail: "The top step for today — notice how it feels" },
+      { beat: 8, notes: [66], label: "F♯4", detail: "Back down, one step per beat" },
+      { beat: 9, notes: [65], label: "F4", detail: "One semitone down" },
+      { beat: 10, notes: [64], label: "E4", detail: "One semitone down" },
+      { beat: 11, notes: [63], label: "D♯4", detail: "One semitone down" },
+      { beat: 12, notes: [62], label: "D4", detail: "One semitone down" },
+      { beat: 13, notes: [61], label: "C♯4", detail: "One semitone down" },
+      { beat: 14, notes: [60], label: "C4", detail: "Middle C again — keep going down" },
+      { beat: 15, notes: [59], label: "B3", detail: "One semitone down" },
+      { beat: 16, notes: [58], label: "B♭3", detail: "One semitone down" },
+      { beat: 17, notes: [57], label: "A3", detail: "One semitone down" },
+      { beat: 18, notes: [56], label: "A♭3", detail: "One semitone down" },
+      { beat: 19, notes: [55], label: "G3", detail: "The bottom step for today — note where it stopped feeling easy" },
+    ],
+  },
+  lesson_vocals_scale_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, notes: [60], expectedMidi: 60, label: "C", detail: "Five-note scale: C D E F G and back — sing C" },
+      { beat: 1, notes: [62], expectedMidi: 62, label: "D", detail: "Sing D" },
+      { beat: 2, notes: [64], expectedMidi: 64, label: "E", detail: "Sing E" },
+      { beat: 3, notes: [65], expectedMidi: 65, label: "F", detail: "Sing F" },
+      { beat: 4, notes: [67], expectedMidi: 67, label: "G", detail: "Sing G — the top, turn around here" },
+      { beat: 5, notes: [65], expectedMidi: 65, label: "F", detail: "Sing F" },
+      { beat: 6, notes: [64], expectedMidi: 64, label: "E", detail: "Sing E" },
+      { beat: 7, notes: [62], expectedMidi: 62, label: "D", detail: "Sing D" },
+      { beat: 8, notes: [60], expectedMidi: 60, label: "C", detail: "Sing C — home" },
+    ],
+  },
+};
+
+/** Expand a lesson's bespoke vocals phrase across its bars. */
+export function vocalDailyCues(item: PlanItem): PracticeCue[] | undefined {
+  const pattern = VOCAL_DAILY_CUES[item.lessonId ?? ""];
+  if (!pattern || item.process === "respond" || item.process === "create") return undefined;
+  const total = item.bars * 4;
+  const cues: PracticeCue[] = [];
+  for (let start = 0; start < total; start += pattern.beats) {
+    for (const cue of pattern.cues) {
+      const beat = start + cue.beat;
+      if (beat >= total) continue;
+      const holdBeats = cue.holdBeats ? Math.min(cue.holdBeats, total - beat) : undefined;
+      cues.push({
+        beat,
+        label: cue.label,
+        detail: cue.detail,
+        notes: cue.notes,
+        chord: cue.chord,
+        expectedMidi: cue.expectedMidi,
+        holdBeats,
+        duration: holdBeats,
+      });
+    }
+  }
+  return cues;
 }
 
 /** Quarter-note positions, with explicit pitches, mutes and bow directions. */
 export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (!hasInstrumentPattern(item)) return undefined;
+  const vocal = vocalDailyCues(item);
+  if (vocal) return vocal;
   const exercise = lessonExercise(DAILY_EXERCISES[item.lessonId])!;
   const cues: PracticeCue[] = [];
   const total = item.bars * 4;
