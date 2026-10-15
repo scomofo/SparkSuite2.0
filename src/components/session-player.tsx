@@ -37,6 +37,10 @@ import type { ChordShape, HitJudge, ItemResult } from "@/lib/spark/types";
 
 type Phase = "intro" | "countin" | "play" | "itemdone";
 
+function supportsMicrophoneInput(surface: string): boolean {
+  return surface === "strings" || surface === "keys" || surface === "pads" || surface === "voice";
+}
+
 function acousticInstrumentLabel(instrument: InstrumentId, name: string) {
   if (instrument === "vocals") return "voice";
   if (instrument === "drums") return "drum kit";
@@ -162,7 +166,7 @@ export function SessionPlayer() {
   const [micError, setMicError] = useState<string | null>(null);
   const [visualOnly, setVisualOnly] = useState(false);
   const micSurface = item?.surface ?? inst.surface;
-  const requiresMicInput = item !== null;
+  const requiresMicInput = supportsMicrophoneInput(micSurface);
   const micMode = acousticInputModeFor({
     instrument,
     surface: micSurface,
