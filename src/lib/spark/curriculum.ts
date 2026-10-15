@@ -961,7 +961,7 @@ const drums = path("drums", [
     title: "Add the hi-hat clock",
     outcome: "Layer even eighth notes over kick and snare.",
     explanation:
-      "Eighth notes divide each quarter-note beat into two equal parts. Count 1-and-2-and-3-and-4-and. The hi-hat can play all eight positions while the kick and snare keep their four-beat pattern. Some sounds happen together.",
+      "Eighth notes divide each quarter-note beat into two equal parts. Count 1-and-2-and-3-and-4-and. The hi-hat can play all eight positions while the kick and snare keep their four-beat pattern. Some sounds happen together. Give the hi-hat to your right hand and the snare to your left, both sticks held the same way (matched grip).",
     example: "Hi-hat on every number and and. Kick on 1 and 3; snare on 2 and 4.",
     practice: [
       "Tap eight even hi-hat strokes while speaking the count.",
