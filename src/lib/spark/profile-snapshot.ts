@@ -213,7 +213,10 @@ function mergeProgress(
     : Math.max(local.xp, cloud.xp);
   const mastery: Record<string, number> = { ...cloud.mastery };
   for (const [key, value] of Object.entries(local.mastery)) mastery[key] = Math.max(mastery[key] ?? 0, value);
-  const dailyComplete = { ...cloud.dailyComplete, ...local.dailyComplete };
+  const dailyComplete = { ...cloud.dailyComplete };
+  for (const [day, complete] of Object.entries(local.dailyComplete)) {
+    dailyComplete[day] = Boolean(dailyComplete[day] || complete);
+  }
   const history = new Map<string, { date: string; accuracy: number; xp: number }>();
   for (const entry of [...cloud.history, ...local.history]) {
     history.set(`${entry.date}|${entry.accuracy}|${entry.xp}`, entry);
