@@ -61,7 +61,7 @@ async function capture(name, widths = [1280, 390, 320]) {
   }
 }
 try {
-  await page.goto(url, { waitUntil: "networkidle" });
+  await page.goto(url, { waitUntil: "domcontentloaded" });
   await link("Choose my starting point").press("Enter");
   await heading("Make room for your kind of practice.").waitFor();
   await capture("setup");
@@ -83,7 +83,7 @@ try {
   await link("Resume learning").click();
   await button("I tried it").waitFor();
   assert.equal((await saved()).records["guitar-first-sound"].step, 1);
-  await page.goto(`${url}/start`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/start`, { waitUntil: "domcontentloaded" });
   await page.getByLabel("Setup instrument").selectOption("piano");
   await page.getByRole("radio", { name: "Ready to create and refine", exact: true }).check();
   await page.getByRole("radio", { name: "10 min", exact: true }).check();
@@ -105,7 +105,7 @@ try {
   assert.equal(await button("I tried it").count(), 0, "Advanced projects cannot skip stages");
 
   // A two-minute milestone has a real first-bar stopping point.
-  await page.goto(`${url}/milestone?instrument=guitar`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/milestone?instrument=guitar`, { waitUntil: "domcontentloaded" });
   await button("Start with the first bar").click();
   assert.equal(await page.getByRole("radio", { name: "First bar", exact: true }).isChecked(), true);
   await page.getByLabel("Piece guide").selectOption("silent");
@@ -134,7 +134,7 @@ try {
     await page.getByRole("radio", { name: "Whole piece", exact: true }).isChecked(),
     true,
   );
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   assert.equal(await button("Stop guide").count(), 0, "Return never starts audio");
   await page.getByLabel("Piece tempo").selectOption("40");
   await page.getByLabel("Piece version").selectOption("variation");
@@ -171,7 +171,7 @@ try {
   assert.equal(snapshot.bpm, 40);
   assert.equal(snapshot.variation, true);
   await capture("saved", [390]);
-  await page.goto(`${url}/progress`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/progress`, { waitUntil: "domcontentloaded" });
   await page
     .getByRole("region", { name: "Saved music", exact: true })
     .getByRole("link", { name: /Em to G, then home/ })
@@ -186,7 +186,7 @@ try {
   await page
     .getByRole("textbox", { name: /One thing for next time/ })
     .fill("Try a different ending.");
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   assert.deepEqual(
     (await saved()).milestones.guitar.saved,
     snapshot,
@@ -199,7 +199,7 @@ try {
 
   // A five-minute choice creates a whole-piece starting point; returning to another
   // instrument restores its own preference rather than copying this setup.
-  await page.goto(`${url}/start`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/start`, { waitUntil: "domcontentloaded" });
   await page.getByLabel("Setup instrument").selectOption("ukulele");
   await page.getByRole("radio", { name: "I know a few basics", exact: true }).check();
   await page.getByRole("radio", { name: "5 min", exact: true }).check();
@@ -207,7 +207,7 @@ try {
   assert.equal((await saved()).profiles.ukulele.minutes, 5);
   for (const piece of MUSICAL_MILESTONES.filter((item) => item.instrument !== "guitar")) {
     await page.goto(`${url}/milestone?instrument=${piece.instrument}`, {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
     await button("Start this piece").click();
     await heading(piece.title).waitFor();
@@ -233,7 +233,7 @@ try {
     await button("Save this version").click();
     await heading("A piece to come back to.").waitFor();
   }
-  await page.goto(`${url}/progress`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/progress`, { waitUntil: "domcontentloaded" });
   assert.equal(
     await page.getByRole("region", { name: "Saved music", exact: true }).getByRole("link").count(),
     MUSICAL_MILESTONES.length,
@@ -249,7 +249,7 @@ try {
     2,
     "Pieces do not silently complete lessons",
   );
-  await page.goto(`${url}/milestone?instrument=piano`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/milestone?instrument=piano`, { waitUntil: "domcontentloaded" });
   await button("Replay my saved version").click();
   await page.evaluate(() => {
     Storage.prototype.setItem = () => {
