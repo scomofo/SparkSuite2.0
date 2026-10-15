@@ -352,6 +352,8 @@ export function classifyDrumSpectrum(
   if (!spectrumDb.length || sampleRate <= 0 || fftSize <= 0) {
     return { drumClass: "unknown", padIndex: null, confidence: 0 };
   }
+  const strongestDb = spectrumDb.reduce((best, value) => Number.isFinite(value) ? Math.max(best, value) : best, -120);
+  if (strongestDb < -85) return { drumClass: "unknown", padIndex: null, confidence: 0 };
   const f = spectrumFeatures(spectrumDb, sampleRate, fftSize);
   if (f.total <= 0) return { drumClass: "unknown", padIndex: null, confidence: 0 };
 
