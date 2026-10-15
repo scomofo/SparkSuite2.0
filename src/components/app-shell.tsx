@@ -12,7 +12,6 @@ import {
   Settings,
 } from "lucide-react";
 import { LabFocus } from "@/components/lab-focus";
-import { SignedOut, UserButton } from "@/lib/auth/gates";
 import { InstrumentMark } from "@/components/instrument-mark";
 import { instrumentById } from "@/lib/spark/instruments";
 import { labSearchFor, usesTechLab } from "@/lib/spark/labs";
@@ -117,14 +116,6 @@ export function AppShell({
           >
             <Cloud className="size-4" aria-hidden="true" /> Account & sync
           </Link>
-          <SignedOut>
-            <Link to="/login" className="mt-1 flex min-h-10 items-center rounded-md px-2 text-sm text-muted hover:bg-raised hover:text-fg">
-              Sign in to sync
-            </Link>
-          </SignedOut>
-          <div className="mt-2 px-2">
-            <UserButton />
-          </div>
           <Link
             to="/settings"
             aria-current={pathname === "/settings" ? "page" : undefined}
