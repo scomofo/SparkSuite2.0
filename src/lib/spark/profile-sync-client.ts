@@ -25,6 +25,12 @@ function cloudSnapshot(raw: unknown): ProfileSnapshot | null {
   return sanitizeProfileSnapshot(raw);
 }
 
+function applyIfChanged(next: ProfileSnapshot, current: ProfileSnapshot): boolean {
+  const changed = !profileSnapshotEqual(next, current);
+  if (changed) applyProfileSnapshot(next);
+  return changed;
+}
+
 function markerFor(userId: string, revision: number, updatedAt: string | null, snapshot: ProfileSnapshot) {
   return {
     userId,
@@ -81,13 +87,13 @@ export async function synchronizeProfile(
           message: "There is no cloud profile to restore.",
         };
       }
-      applyProfileSnapshot(cloud);
+      const applied = applyIfChanged(cloud, local);
       writeProfileSyncMarker(markerFor(userId, cloudRow.revision, cloudRow.updatedAt, cloud));
       return {
         status: "synced",
         revision: cloudRow.revision,
         updatedAt: cloudRow.updatedAt,
-        applied: true,
+        applied,
         message: "Cloud progress restored on this computer. A local recovery copy was kept.",
       };
     }
@@ -104,13 +110,13 @@ export async function synchronizeProfile(
         };
       }
       const saved = cloudSnapshot(result.payload) ?? local;
-      applyProfileSnapshot(saved);
+      const applied = applyIfChanged(saved, local);
       writeProfileSyncMarker(markerFor(userId, result.revision, result.updatedAt, saved));
       return {
         status: "synced",
         revision: result.revision,
         updatedAt: result.updatedAt,
-        applied: true,
+        applied,
         message: "This computer's profile replaced the cloud copy.",
       };
     }
@@ -149,24 +155,24 @@ export async function synchronizeProfile(
           };
         }
         const saved = cloudSnapshot(retry.payload) ?? merged;
-        applyProfileSnapshot(saved);
+        const applied = applyIfChanged(saved, local);
         writeProfileSyncMarker(markerFor(userId, retry.revision, retry.updatedAt, saved));
         return {
           status: "synced",
           revision: retry.revision,
           updatedAt: retry.updatedAt,
-          applied: true,
+          applied,
           message: "Local and cloud progress were combined.",
         };
       }
       const saved = cloudSnapshot(result.payload) ?? local;
-      applyProfileSnapshot(saved);
+      const applied = applyIfChanged(saved, local);
       writeProfileSyncMarker(markerFor(userId, result.revision, result.updatedAt, saved));
       return {
         status: "synced",
         revision: result.revision,
         updatedAt: result.updatedAt,
-        applied: true,
+        applied,
         message: "Your progress is now backed up to your account.",
       };
     }
@@ -177,13 +183,13 @@ export async function synchronizeProfile(
 
     if (!hasMatchingMarker) {
       if (!localHasData) {
-        applyProfileSnapshot(cloud);
+        const applied = applyIfChanged(cloud, local);
         writeProfileSyncMarker(markerFor(userId, cloudRow.revision, cloudRow.updatedAt, cloud));
         return {
           status: "synced",
           revision: cloudRow.revision,
           updatedAt: cloudRow.updatedAt,
-          applied: true,
+          applied,
           message: "Your cloud progress has been restored on this computer.",
         };
       }
@@ -200,13 +206,13 @@ export async function synchronizeProfile(
           };
         }
         const saved = cloudSnapshot(result.payload) ?? merged;
-        applyProfileSnapshot(saved);
+        const applied = applyIfChanged(saved, local);
         writeProfileSyncMarker(markerFor(userId, result.revision, result.updatedAt, saved));
         return {
           status: "synced",
           revision: result.revision,
           updatedAt: result.updatedAt,
-          applied: true,
+          applied,
           message: "Local progress was added to your new cloud profile.",
         };
       }
@@ -234,13 +240,13 @@ export async function synchronizeProfile(
         };
       }
       const saved = cloudSnapshot(result.payload) ?? merged;
-      applyProfileSnapshot(saved);
+      const applied = applyIfChanged(saved, local);
       writeProfileSyncMarker(markerFor(userId, result.revision, result.updatedAt, saved));
       return {
         status: "synced",
         revision: result.revision,
         updatedAt: result.updatedAt,
-        applied: true,
+        applied,
         message: "Local and cloud progress were merged.",
       };
     }
@@ -290,37 +296,37 @@ export async function synchronizeProfile(
           };
         }
         const saved = cloudSnapshot(retry.payload) ?? merged;
-        applyProfileSnapshot(saved);
+        const applied = applyIfChanged(saved, local);
         writeProfileSyncMarker(markerFor(userId, retry.revision, retry.updatedAt, saved));
         return {
           status: "synced",
           revision: retry.revision,
           updatedAt: retry.updatedAt,
-          applied: true,
+          applied,
           message: "Progress from both computers was merged.",
         };
       }
       const saved = cloudSnapshot(result.payload) ?? local;
-      applyProfileSnapshot(saved);
+      const applied = applyIfChanged(saved, local);
       writeProfileSyncMarker(markerFor(userId, result.revision, result.updatedAt, saved));
       return {
         status: "synced",
         revision: result.revision,
         updatedAt: result.updatedAt,
-        applied: true,
+        applied,
         message: "Your latest progress was uploaded.",
       };
     }
 
     if (marker && marker.userId === userId && cloudRow.revision > marker.revision) {
       if (profileSnapshotEqual(local, marker.snapshot)) {
-        applyProfileSnapshot(cloud);
+        const applied = applyIfChanged(cloud, local);
         writeProfileSyncMarker(markerFor(userId, cloudRow.revision, cloudRow.updatedAt, cloud));
         return {
           status: "synced",
           revision: cloudRow.revision,
           updatedAt: cloudRow.updatedAt,
-          applied: true,
+          applied,
           message: "New progress from your other computer was restored.",
         };
       }
@@ -351,24 +357,24 @@ export async function synchronizeProfile(
           };
         }
         const saved = cloudSnapshot(retry.payload) ?? retryMerge;
-        applyProfileSnapshot(saved);
+        const applied = applyIfChanged(saved, local);
         writeProfileSyncMarker(markerFor(userId, retry.revision, retry.updatedAt, saved));
         return {
           status: "synced",
           revision: retry.revision,
           updatedAt: retry.updatedAt,
-          applied: true,
+          applied,
           message: "Progress from both computers was merged.",
         };
       }
       const saved = cloudSnapshot(result.payload) ?? merged;
-      applyProfileSnapshot(saved);
+      const applied = applyIfChanged(saved, local);
       writeProfileSyncMarker(markerFor(userId, result.revision, result.updatedAt, saved));
       return {
         status: "synced",
         revision: result.revision,
         updatedAt: result.updatedAt,
-        applied: true,
+        applied,
         message: "Progress from both computers was merged.",
       };
     }
