@@ -18,7 +18,7 @@ export type NoteEvent = {
   duration?: number;
   label?: string;
   detail?: string;
-  /** Bespoke vocals cues: pitch judged on unrounded cents when the mic is live. */
+  /** Judged cues (vocals; violin's fingered notes): pitch judged on unrounded cents when the mic is live. */
   expectedMidi?: number;
   /** Bespoke vocals hold cues: beats the expected pitch must be sustained. */
   holdBeats?: number;
@@ -60,9 +60,13 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
     kind: direction,
     bar: Math.floor(cue.beat / 4), beat: cue.beat % 4,
     notes: cue.notes, muted: cue.muted, duration: cue.duration, label: cue.label, chord: cue.chord,
-    // Only bespoke vocals cues carry these; other instruments' events stay
-    // exactly as before (no new keys on the object).
-    ...(cue.expectedMidi !== undefined ? { expectedMidi: cue.expectedMidi, string: cue.expectedMidi } : {}),
+    // Judged cues (vocals; violin's fingered notes) carry expectedMidi onto
+    // the event. The voice surface also mirrors it into `string`, that
+    // surface's expected-target convention; on string instruments `string`
+    // names a string index, not a pitch, so it stays unset there.
+    ...(cue.expectedMidi !== undefined
+      ? { expectedMidi: cue.expectedMidi, ...(item.surface === "voice" ? { string: cue.expectedMidi } : {}) }
+      : {}),
     ...(cue.holdBeats !== undefined ? { holdBeats: cue.holdBeats } : {}),
     };
   });

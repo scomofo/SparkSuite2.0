@@ -1,12 +1,15 @@
+import { useState } from "react";
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { AppShell } from "@/components/app-shell";
 import { BeatStrip, LabCopy, PlayBar, TabRow } from "@/components/labs/shared";
 import { usePlayhead, type LineHit } from "@/components/labs/use-playhead";
+import { PitchMatch } from "@/components/tuner-panel";
 import { pianoHold, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById, midiToFreq } from "@/lib/spark/instruments";
 import { instrumentLabPattern } from "@/lib/spark/instrument-patterns";
+import { cn } from "@/lib/utils";
 
-export type ViolinTab = "open" | "bow" | "finger" | "slur" | "cross";
+export type ViolinTab = "open" | "bow" | "finger" | "slur" | "cross" | "pitch";
 
 const TABS: { id: ViolinTab; label: string }[] = [
   { id: "open", label: "Open" },
@@ -14,6 +17,7 @@ const TABS: { id: ViolinTab; label: string }[] = [
   { id: "finger", label: "Finger" },
   { id: "slur", label: "Slur" },
   { id: "cross", label: "Cross" },
+  { id: "pitch", label: "Pitch" },
 ];
 
 const COPY: Record<ViolinTab, { kicker: string; title: string; body: string; hear: string }> = {
@@ -47,10 +51,33 @@ const COPY: Record<ViolinTab, { kicker: string; title: string; body: string; hea
     body: "D to A and back on the pulse. The whole arm rolls to the new level. Grow the sound over the line with bow speed, not pressure.",
     hear: "D, A, D, A. Soft to full.",
   },
+  pitch: {
+    kicker: "Twenty cents",
+    title: "Land the finger inside the note",
+    body: "Pick a target below, hear it, then play it on the string named. The needle shows how far your pitch sits from the target, in cents — inside 20 counts as in tune, the same standard the daily lessons use with the mic on. The open strings are the reference for every fingered note: tune them first.",
+    hear: "The target, twice. Then your turn.",
+  },
 };
 
+/** Every first-position note the daily path teaches, open strings included. */
+const PITCH_TARGETS: { midi: number; name: string; place: string }[] = [
+  { midi: 55, name: "G3", place: "Open G" },
+  { midi: 57, name: "A3", place: "G string · 1st finger" },
+  { midi: 59, name: "B3", place: "G string · 2nd finger" },
+  { midi: 60, name: "C4", place: "G string · 3rd finger" },
+  { midi: 62, name: "D4", place: "Open D" },
+  { midi: 64, name: "E4", place: "D string · 1st finger" },
+  { midi: 66, name: "F♯4", place: "D string · 2nd finger" },
+  { midi: 67, name: "G4", place: "D string · 3rd finger" },
+  { midi: 69, name: "A4", place: "Open A" },
+  { midi: 71, name: "B4", place: "A string · 1st finger" },
+  { midi: 73, name: "C♯5", place: "A string · 2nd finger" },
+  { midi: 74, name: "D5", place: "A string · 3rd finger" },
+  { midi: 76, name: "E5", place: "Open E" },
+];
+
 function parseTab(raw: string): ViolinTab {
-  if (raw === "open" || raw === "bow" || raw === "finger" || raw === "slur" || raw === "cross")
+  if (raw === "open" || raw === "bow" || raw === "finger" || raw === "slur" || raw === "cross" || raw === "pitch")
     return raw;
   return "open";
 }
@@ -67,6 +94,11 @@ export function ViolinLab() {
   const tab = parseTab(search.tab);
   const copy = COPY[tab];
   const head = usePlayhead();
+  // The Pitch tab's target: the reference pattern presents this note and
+  // PitchMatch judges against this same note — presented and judged are
+  // the same pitch by construction.
+  const [pitchTarget, setPitchTarget] = useState(64);
+  const target = PITCH_TARGETS.find((t) => t.midi === pitchTarget) ?? PITCH_TARGETS[5];
 
   const patch = (next: Partial<{ tab: string }>) => {
     void navigate({ search: { tab: next.tab ?? tab, chord: "" }, replace: true });
@@ -93,6 +125,12 @@ export function ViolinLab() {
       hits = instrumentLabPattern("violin-slurs").cues.map((cue) => ({
         beat: cue.beat,
         sound: hold(midiToFreq(cue.notes![0]), beatSec * (cue.duration ?? 0.45)),
+      }));
+    } else if (tab === "pitch") {
+      hits = [0, 4].map((beat) => ({
+        beat,
+        mark: target.midi,
+        sound: hold(midiToFreq(target.midi), beatSec * 1.8),
       }));
     } else {
       hits = [62, 69, 62, 69, 62, 69, 62, 69].map((midi, beat) => ({
@@ -128,6 +166,12 @@ export function ViolinLab() {
         top: beat % 2 === 0 ? "⊓" : "∨",
         bot: ["D E", "F♯ G", "G F♯", "E D", "D E", "F♯ G", "G F♯", "E D"][beat] ?? "D",
       };
+    if (tab === "pitch")
+      return {
+        beat,
+        top: beat % 4 === 0 ? target.name : "·",
+        bot: beat % 4 === 0 ? "target" : "you",
+      };
     return { beat, top: beat % 2 === 0 ? "⊓" : "∨", bot: beat % 2 === 0 ? "D" : "A" };
   });
 
@@ -153,9 +197,40 @@ export function ViolinLab() {
           />
         </LabCopy>
         <BeatStrip cells={cells} cursorBeat={head.cursorBeat} />
+        {tab === "pitch" ? (
+          <>
+            <div
+              className="mt-6 grid w-full gap-2"
+              style={{ gridTemplateColumns: "repeat(auto-fit, minmax(4.5rem, 1fr))" }}
+              role="group"
+              aria-label="Pitch targets"
+            >
+              {PITCH_TARGETS.map((t) => (
+                <button
+                  key={t.midi}
+                  type="button"
+                  aria-pressed={t.midi === target.midi}
+                  onClick={() => setPitchTarget(t.midi)}
+                  className={cn(
+                    "flex h-12 flex-col items-center justify-center rounded-lg border text-sm font-medium transition-colors",
+                    t.midi === target.midi
+                      ? "border-ember bg-raised text-ember shadow-xs"
+                      : "border-border bg-surface text-fg hover:border-ember/50 hover:bg-raised",
+                  )}
+                >
+                  <span>{t.name}</span>
+                  <span className="text-[10px] text-dim">{t.place}</span>
+                </button>
+              ))}
+            </div>
+            <section className="mt-6">
+              <PitchMatch targetFreq={midiToFreq(target.midi)} targetName={target.name} />
+            </section>
+          </>
+        ) : null}
         <p className="mt-6 text-xs leading-relaxed text-muted">
-          ⊓ = down-bow · ∨ = up-bow. The references are sustained synthesized tones, not a violin,
-          and nothing here listens to your playing.
+          ⊓ = down-bow · ∨ = up-bow. The references are sustained synthesized tones, not a violin.
+          Only the Pitch tab listens to your playing; the other tabs play references.
         </p>
       </div>
     </AppShell>

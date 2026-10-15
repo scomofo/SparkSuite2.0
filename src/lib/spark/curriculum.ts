@@ -1887,7 +1887,7 @@ const violin = path("violin", [
     title: "Four strings and one straight bow",
     outcome: "Name G–D–A–E and draw one straight bow on each open string.",
     explanation:
-      "A violin has four strings tuned G–D–A–E, from lowest to highest, a fifth apart. The bow makes the sound: hold it with a relaxed, rounded hand and draw it across one string between the bridge and the fingerboard. A straight bow stays parallel to the bridge for the whole stroke. Speed and weight, not force, shape the tone.",
+      "A violin has four strings tuned G–D–A–E, from lowest to highest, a fifth apart. The bow makes the sound: hold it with a relaxed, rounded hand and draw it across one string between the bridge and the fingerboard. A straight bow stays parallel to the bridge for the whole stroke. Speed and weight, not force, shape the tone. Before you play, tune each string to its note with a tuner; every later lesson assumes the open strings are right.",
     example:
       "One bar per string: G down-bow, D up-bow, A down-bow, E up-bow. Each stroke starts where the last one ended.",
     practice: [
@@ -2075,6 +2075,16 @@ const violin = path("violin", [
     answer: 1,
     feedback:
       "A specific, changeable observation gives the next attempt a task. Broad judgments and sudden tempo jumps do not tell you what to practise.",
+    demo: {
+      label: "Phrase A, phrase B, then the held D — rests included; bowing from your written plan",
+      notes: [
+        [62], [64], [66], [67],
+        [69], [], [], [],
+        [67], [66], [64], [62],
+        [64], [], [], [],
+        [62],
+      ],
+    },
   },
 ]);
 
