@@ -18,6 +18,9 @@ page.on("pageerror", (error) => errors.push(error.message));
 page.on("console", (message) => {
   if (message.type() === "error") errors.push(message.text());
 });
+await page.route("**/api/auth/get-session**", (route) =>
+  route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
+);
 const button = (name) => page.getByRole("button", { name, exact: true });
 const link = (name) => page.getByRole("link", { name, exact: true });
 const heading = (name) => page.getByRole("heading", { name, exact: true });

@@ -8,6 +8,7 @@ const ROLE_CLASS: Record<BassRole, string> = {
   "5": "bg-ember text-accent-fg",
   "8": "bg-good text-bg",
   ap: "bg-raised text-fg ring-1 ring-ember/70",
+  ct: "bg-raised text-fg ring-1 ring-good/70",
   gh: "bg-border text-muted",
   hm: "bg-warn text-bg",
 };
@@ -133,6 +134,7 @@ export function RoleLegend({ className, roles }: { className?: string; roles?: B
     { role: "5", label: "5th" },
     { role: "8", label: "Octave" },
     { role: "ap", label: "Approach" },
+    { role: "ct", label: "Chord tone" },
     { role: "hm", label: "Hammer" },
     { role: "gh", label: "Ghost" },
   ];

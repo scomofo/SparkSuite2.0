@@ -1,6 +1,6 @@
 // CI regression checks for the user-facing studio and recovery flow.
 import assert from "node:assert/strict";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const url = process.argv[2] ?? "http://127.0.0.1:8083";
@@ -16,13 +16,72 @@ try {
     timezoneId: "America/Edmonton",
     locale: "en-CA",
   });
+  const authRequests = [];
+  const failedRequests = [];
   page.on("pageerror", (error) => errors.push(error.message));
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
+  page.on("request", (request) => {
+    if (request.url().includes("/api/auth/")) authRequests.push(request.url());
+  });
+  page.on("requestfailed", (request) => {
+    failedRequests.push({ url: request.url(), error: request.failure()?.errorText });
+  });
+
+  // Hold a client session lookup open, when one is made, to prove local practice
+  // can boot even when account auth is slow or unavailable. Release it on Studio.
+  let notifyAuthRequest = () => {};
+  const authRequest = new Promise((resolve) => { notifyAuthRequest = resolve; });
+  let releaseSession = () => {};
+  const sessionGate = new Promise((resolve) => { releaseSession = resolve; });
+  await page.route("**/api/auth/get-session**", async (route) => {
+    notifyAuthRequest();
+    await sessionGate;
+    await route.fulfill({ status: 200, contentType: "application/json", body: "null" });
+  });
+
   await page.clock.install({ time: new Date("2026-09-05T12:00:00Z") });
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "Make room for music." }).waitFor();
+  try {
+    await Promise.race([authRequest, new Promise((resolve) => setTimeout(resolve, 5000))]);
+    try {
+      await page.getByRole("heading", { name: "Make room for music." }).waitFor({ timeout: 5000 });
+    } catch (error) {
+      const diagnostic = await page.evaluate(() => ({
+        title: document.title,
+        readyState: document.readyState,
+        bodyText: document.body.innerText.slice(0, 1800),
+        rootHtml: document.querySelector("#root")?.innerHTML.slice(0, 1200) ?? null,
+      }));
+      throw new Error(`Studio did not hydrate: ${JSON.stringify({ diagnostic, errors, authRequests, failedRequests, cause: error instanceof Error ? error.message : String(error) })}`);
+    }
+  } finally {
+    releaseSession();
+  const studioHeading = page.getByRole("heading", { name: "Make room for music." });
+  try {
+    await studioHeading.waitFor({ timeout: 10000 });
+  } catch {
+    // Production preview can briefly serve the shell before client routing is
+    // ready. Retry once, but fail with the actual rendered page when it is not
+    // the expected studio rather than masking a route/build regression.
+    await page.reload({ waitUntil: "domcontentloaded" });
+    try {
+      await studioHeading.waitFor({ timeout: 10000 });
+    } catch {
+      const rendered = await page.locator("body").innerText().catch(() => "(body unavailable)");
+      let serverLog = "(preview log unavailable)";
+      try {
+        serverLog = readFileSync(".grok/preview.log", "utf8").slice(-6000);
+      } catch {
+        // The development server has no preview log; the failed production
+        // preview normally writes the SSR exception here.
+      }
+      throw new Error(
+        `Studio route did not render at ${page.url()} (title: ${await page.title()}). Body: ${rendered.slice(0, 1200)}. Preview log tail: ${serverLog}`,
+      );
+    }
+  }
   assert.equal(await page.getByRole("button", { name: /^Practise / }).count(), 10);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${output}/studio-${label}-desktop.png`, fullPage: true });

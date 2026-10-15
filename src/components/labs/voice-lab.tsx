@@ -40,7 +40,7 @@ const COPY: Record<VoiceTab, { kicker: string; title: string; body: string; hear
     kicker: "Stepwise",
     title: "The next note is one tooth over",
     body: "C to D is a whole step. Don’t jump at it — release C and arrive. The space between is a door, not a gap. Come back the same way.",
-    hear: "C, D, E, D, C.",
+    hear: "C, D, E, D, C — then D, E, and home to C.",
   },
   octave: {
     kicker: "Same letter, new floor",
@@ -74,7 +74,12 @@ export function VoiceLab() {
   const tab = parseTab(search.tab);
   const copy = COPY[tab];
   const head = usePlayhead();
-  const t = target(tab);
+  // The 8ve pattern presents C4 and C5 in turn, so the mic target — and the
+  // reference keyboard's expected note — follow the note the pattern is
+  // currently presenting (head.mark). Idle, or after any other tap, the tab
+  // falls back to its home target from target().
+  const t =
+    tab === "octave" && head.mark === 72 ? { midi: 72, name: "C5" } : target(tab);
 
   const patch = (next: VoiceTab) => {
     void navigate({ search: { tab: next, chord: "C" }, replace: true });

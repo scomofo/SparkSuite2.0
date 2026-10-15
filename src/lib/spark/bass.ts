@@ -10,7 +10,7 @@ export type TechTab =
   | "octave"
   | "walk";
 
-export type BassRole = "R" | "5" | "8" | "ap" | "gh" | "hm";
+export type BassRole = "R" | "5" | "8" | "ap" | "ct" | "gh" | "hm";
 export type Finger = "p" | "i" | "m";
 
 export type BassPos = {
@@ -185,11 +185,29 @@ export function lineFor(tab: TechTab, chord: BassChord): LineEvent[] {
   return walkLine(chord);
 }
 
-/** Approach the next chord from below. Em→G and G→C are the two doors. */
+const BASS_OPEN_MIDI = [28, 33, 38, 43];
+
+/** A position for an exact pitch, preferring the string nearest `near`. */
+function posForMidi(midi: number, near: number, role: BassRole): BassPos {
+  const strings = [0, 1, 2, 3].sort((a, b) => Math.abs(a - near) - Math.abs(b - near) || a - b);
+  for (const s of strings) {
+    const fret = midi - (BASS_OPEN_MIDI[s] ?? 28);
+    if (fret >= 0 && fret <= 7) return posOf(s, fret, role);
+  }
+  return posOf(near, 0, role);
+}
+
+/**
+ * Walk into the selected chord's root: state it, step below it, climb back
+ * in, then sit on it. Em and C keep the two original door walks exactly —
+ * Em climbs into G, and C is arrived at by the G→C climb — the reference
+ * instances the general pattern was taken from.
+ */
 function walkLine(chord: BassChord): LineEvent[] {
   const fingers: Finger[] = ["i", "m", "i", "m", "i", "m", "i", "m"];
-  if (chord === "G" || chord === "C") {
-    const notes = [
+  const line = (notes: BassPos[]) => notes.map((pos, i) => ({ pos, beat: i, finger: fingers[i] }));
+  if (chord === "C") {
+    return line([
       posOf(0, 3, "R"),
       posOf(0, 5, "ap"),
       posOf(1, 0, "ap"),
@@ -198,20 +216,25 @@ function walkLine(chord: BassChord): LineEvent[] {
       posOf(1, 3, "R"),
       posOf(1, 3, "R"),
       posOf(1, 3, "R"),
-    ];
-    return notes.map((pos, i) => ({ pos, beat: i, finger: fingers[i] }));
+    ]);
   }
-  const notes = [
-    posOf(0, 0, "R"),
-    posOf(0, 0, "R"),
-    posOf(0, 2, "ap"),
-    posOf(0, 3, "R"),
-    posOf(0, 3, "R"),
-    posOf(0, 3, "R"),
-    posOf(0, 3, "R"),
-    posOf(0, 3, "R"),
-  ];
-  return notes.map((pos, i) => ({ pos, beat: i, finger: fingers[i] }));
+  if (chord === "Em") {
+    return line([
+      posOf(0, 0, "R"),
+      posOf(0, 0, "R"),
+      posOf(0, 2, "ap"),
+      posOf(0, 3, "R"),
+      posOf(0, 3, "R"),
+      posOf(0, 3, "R"),
+      posOf(0, 3, "R"),
+      posOf(0, 3, "R"),
+    ]);
+  }
+  const root = BASS_ROOTS[chord];
+  const rootMidi = (BASS_OPEN_MIDI[root.string] ?? 28) + root.fret;
+  const below2 = posForMidi(rootMidi - 2, root.string, "ap");
+  const below1 = posForMidi(rootMidi - 1, root.string, "ap");
+  return line([root, root, below2, below1, root, root, root, root]);
 }
 
 export const TECH_COPY: Record<TechTab, { kicker: string; title: string; body: string; hear: string }> = {
@@ -272,8 +295,8 @@ export const TECH_COPY: Record<TechTab, { kicker: string; title: string; body: s
   walk: {
     kicker: "Connect",
     title: "Don’t jump. Walk.",
-    body: "The notes between two roots are the sentence. From Em, F♯ is one fret below G — arrive from underneath and the G feels like home, not a guess.",
-    hear: "E, E, F♯, G. Then sit on G.",
+    body: "The notes around a root are the sentence. State the root, step below it, and climb back in. Arriving from underneath makes the root feel like home, not a guess — the Em line climbs into G the same way.",
+    hear: "Root, root, the two steps below, then sit on the root.",
   },
 };
 
@@ -282,6 +305,7 @@ export const ROLE_LABEL: Record<BassRole, string> = {
   "5": "Fifth",
   "8": "Octave",
   ap: "Approach",
+  ct: "Chord tone",
   gh: "Ghost",
   hm: "Hammer",
 };

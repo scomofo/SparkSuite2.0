@@ -20,6 +20,10 @@ export type PracticeCue = {
   muted?: boolean;
   duration?: number;
   chord?: string;
+  /** Bespoke vocals cues: the MIDI the singer is judged against (unrounded cents). */
+  expectedMidi?: number;
+  /** Bespoke vocals hold cues: beats the expected pitch must be sustained. */
+  holdBeats?: number;
 };
 export type PracticeSubdivision = 1 | 2 | 3 | 4;
 export type LessonExercise = {
@@ -235,14 +239,14 @@ const bassHighG: BassPos = { string: 2, fret: 5, name: "G", role: "8" };
 const bassE: BassPos = { string: 0, fret: 0, name: "E", role: "R" };
 const bassFSharp: BassPos = { string: 0, fret: 2, name: "F♯", role: "ap" };
 const bassWalkingD: BassPos = { string: 1, fret: 5, name: "D", role: "R" };
-const bassWalkingF: BassPos = { string: 2, fret: 3, name: "F", role: "ap" };
+const bassWalkingF: BassPos = { string: 2, fret: 3, name: "F", role: "ct" };
 const bassWalkingFSharp: BassPos = { string: 2, fret: 4, name: "F♯", role: "ap" };
 const bassWalkingG: BassPos = { string: 2, fret: 5, name: "G", role: "R" };
 const bassWalkingA: BassPos = { string: 3, fret: 2, name: "A", role: "5" };
 const bassWalkingBHigh: BassPos = { string: 3, fret: 4, name: "B", role: "ap" };
 const bassWalkingB: BassPos = { string: 1, fret: 2, name: "B", role: "ap" };
 const bassWalkingC: BassPos = { string: 1, fret: 3, name: "C", role: "R" };
-const bassWalkingE: BassPos = { string: 2, fret: 2, name: "E", role: "ap" };
+const bassWalkingE: BassPos = { string: 2, fret: 2, name: "E", role: "ct" };
 
 function advancedProject(
   buildBeats: number,
@@ -300,7 +304,7 @@ export const LESSON_EXERCISES: LessonExercise[] = [
     setup: "Use the thickest string. F is just behind fret 1. Leave beat 4 quiet.",
     hint: "Try only open E and F once, without the guide. Press just behind the fret with enough pressure for a clear note.",
     takeaway:
-      "The first fret raises open E to F. Keep exploring a clear sound before adding speed.",
+      "The first fret raises open E to F. A clear sound comes before speed.",
     cues: repeat(
       [
         note(0, "E", [40], "Low E string, open"),

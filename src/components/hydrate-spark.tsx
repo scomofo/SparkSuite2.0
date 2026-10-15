@@ -29,8 +29,25 @@ export function HydrateSpark() {
   const readyForCurrentUser = booted && bootedUserId === userId;
 
   useEffect(() => {
-    if (authEnabled && isPending) return;
     let cancelled = false;
+
+    // Hydrate this computer immediately. A slow or unavailable auth endpoint
+    // must never keep the learner out of their locally saved practice.
+    hydrate();
+    hydrateLearning();
+    setBootedUserId(userId);
+    setBooted(true);
+
+    if (authEnabled && isPending) {
+      setSyncState({
+        status: "checking",
+        userId: null,
+        message: "Checking sign-in. Your local progress remains available.",
+      });
+      return () => {
+        cancelled = true;
+      };
+    }
 
     async function initialize() {
       if (authEnabled && userId && !userIsDevFallback) {
@@ -39,7 +56,7 @@ export function HydrateSpark() {
           userId,
           message: "Checking your cloud progress…",
         });
-        const result = await synchronizeProfile(userId!);
+        const result = await synchronizeProfile(userId);
         if (cancelled) return;
         setSyncState({
           status: result.status,
@@ -63,24 +80,15 @@ export function HydrateSpark() {
             : "Progress is saved locally in this development session.",
         });
       }
-      if (cancelled) return;
-      hydrate();
-      hydrateLearning();
-      setBootedUserId(userId);
-      setBooted(true);
     }
 
     void initialize().catch((error: unknown) => {
       if (cancelled) return;
       setSyncState({
         status: "offline",
-        userId: userId,
+        userId,
         message: error instanceof Error ? error.message : "Cloud sync is unavailable. Local progress is still saved.",
       });
-      hydrate();
-      hydrateLearning();
-      setBootedUserId(userId);
-      setBooted(true);
     });
     return () => {
       cancelled = true;
