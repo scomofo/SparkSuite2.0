@@ -1,6 +1,6 @@
 import { banjoRollBar, lessonExercise, type PracticeCue } from "./lesson-practice.ts";
 import { BANJO_CHORDS } from "./instruments.ts";
-import type { PlanItem } from "./types.ts";
+import { beatsPerBarOf, type PlanItem } from "./types.ts";
 
 /** Labs and Today share the musical specification used by Learn. */
 export function instrumentLabPattern(
@@ -805,7 +805,7 @@ export const VOCAL_DAILY_CUES: Record<string, { beats: number; cues: VocalDailyC
 export function vocalDailyCues(item: PlanItem): PracticeCue[] | undefined {
   const pattern = VOCAL_DAILY_CUES[item.lessonId ?? ""];
   if (!pattern || item.process === "respond" || item.process === "create") return undefined;
-  const total = item.bars * 4;
+  const total = item.bars * beatsPerBarOf(item);
   const cues: PracticeCue[] = [];
   for (let start = 0; start < total; start += pattern.beats) {
     for (const cue of pattern.cues) {
@@ -929,7 +929,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke;
   if (bespoke) {
     const cues: PracticeCue[] = [];
-    const total = item.bars * 4;
+    const total = item.bars * beatsPerBarOf(item);
     for (let start = 0; start < total; start += bespoke.beats) {
       for (const cue of bespoke.cues) {
         const beat = start + cue.beat;
@@ -946,7 +946,7 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   const violinBespoke = VIOLIN_DAILY_CUES[item.lessonId ?? ""];
   if (violinBespoke) {
     const cues: PracticeCue[] = [];
-    const total = item.bars * 4;
+    const total = item.bars * beatsPerBarOf(item);
     for (let start = 0; start < total; start += violinBespoke.beats) {
       for (const cue of violinBespoke.cues) {
         const beat = start + cue.beat;
@@ -967,7 +967,8 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (vocal) return vocal;
   const exercise = lessonExercise(DAILY_EXERCISES[item.lessonId])!;
   const cues: PracticeCue[] = [];
-  const total = item.bars * 4;
+  const bpb = beatsPerBarOf(item);
+  const total = item.bars * bpb;
   const chordBars = Math.max(1, Math.floor(item.bars / Math.max(1, item.chords.length)));
   for (let bar = 0; bar < item.bars; bar++) {
     const chord = item.chords[Math.floor(bar / chordBars) % item.chords.length] ?? "G";
@@ -1052,9 +1053,13 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
       });
       continue;
     }
-    const cycleBeat = (bar * 4) % exercise.beats;
-    for (const cue of exercise.cues.filter((c) => c.beat >= cycleBeat && c.beat < cycleBeat + 4)) {
-      const next = { ...cue, beat: bar * 4 + cue.beat - cycleBeat };
+    // Generic tiling: each bar shows the next beatsPerBar-wide window of
+    // the exercise phrase, cycling by phrase length. The lesson-id special
+    // cases above stay literal — they encode specific 4/4 music for their
+    // own lessons, not engine geometry.
+    const cycleBeat = (bar * bpb) % exercise.beats;
+    for (const cue of exercise.cues.filter((c) => c.beat >= cycleBeat && c.beat < cycleBeat + bpb)) {
+      const next = { ...cue, beat: bar * bpb + cue.beat - cycleBeat };
       // The daily chop can move from G to C; retain its mute on every backbeat.
       if (item.lessonId === "lesson_mandolin_chop_01") {
         next.chord = chord;
@@ -1168,6 +1173,51 @@ const hatFootBar: DrumPatternHit[] = [
   drumHitCue(3, [2], "Left foot: chick under the snare."),
 ];
 
+/**
+ * The waltz family: three beats to the bar. Kick lands on 1 and the
+ * bar turns a beat sooner than everything above — the patterns below
+ * only play correctly in a session whose meter is 3 (beatsPerBar on
+ * their lessons), which is what makes them an honest 3/4 presence
+ * rather than 4/4 patterns with a beat missing.
+ */
+const waltzBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(1, [2], "Hat on 2."),
+  drumHitCue(2, [2], "Hat on 3."),
+];
+
+const waltzSnareBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(1, [1], "Snare on 2."),
+  drumHitCue(2, [1], "Snare on 3."),
+];
+
+const waltzEighthsBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(0.5, [2], "Hat — right hand."),
+  drumHitCue(1, [1, 2], "Snare on 2 — the hat keeps going."),
+  drumHitCue(1.5, [2], "Hat."),
+  drumHitCue(2, [1, 2], "Snare on 3 — the hat keeps going."),
+  drumHitCue(2.5, [2], "Hat."),
+];
+
+const waltzFillPhrase: DrumPatternHit[] = [
+  ...drumBar(waltzEighthsBar, 0),
+  ...drumBar(waltzEighthsBar, 3),
+  drumHitCue(6, [1], "Fill: start on the snare."),
+  drumHitCue(6.5, [1], "Snare."),
+  drumHitCue(7, [3], "Tom."),
+  drumHitCue(7.5, [3], "Tom."),
+  drumHitCue(8, [1], "Snare."),
+  drumHitCue(8.5, [3], "Last fill hit — get ready to land."),
+  drumHitCue(9, [0], "Land on 1."),
+  drumHitCue(9.5, [2], "Hat — the groove is back."),
+  drumHitCue(10, [1, 2], "Snare on 2 — the hat keeps going."),
+  drumHitCue(10.5, [2], "Hat."),
+  drumHitCue(11, [1, 2], "Snare on 3 — the hat keeps going."),
+  drumHitCue(11.5, [2], "Hat."),
+];
+
 const DRUM_DAILY_PATTERNS: Record<string, DrumDailyPattern> = {
   lesson_drums_hats_eighths_01: { beats: 4, hits: hatsGrooveBar },
   lesson_drums_fill_land_01: { beats: 20, hits: fillPhrase },
@@ -1188,6 +1238,10 @@ const DRUM_DAILY_PATTERNS: Record<string, DrumDailyPattern> = {
   },
   lesson_drums_shuffle_01: { beats: 4, hits: shuffleBar },
   lesson_drums_hat_foot_01: { beats: 4, hits: hatFootBar },
+  lesson_drums_waltz_01: { beats: 3, hits: waltzBar },
+  lesson_drums_waltz_snare_01: { beats: 3, hits: waltzSnareBar },
+  lesson_drums_waltz_eighths_01: { beats: 3, hits: waltzEighthsBar },
+  lesson_drums_waltz_fill_01: { beats: 12, hits: waltzFillPhrase },
 };
 
 /** Declared pad pattern for a daily drums lesson, if it has one. */

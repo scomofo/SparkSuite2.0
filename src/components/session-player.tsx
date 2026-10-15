@@ -14,7 +14,7 @@ import {
   UKE_CHORDS,
   type InstrumentId,
 } from "@/lib/spark/instruments";
-import { buildTimeline, consumeHit, countInBeats, isPluckDrill, summarizeItem, type NoteEvent } from "@/lib/spark/practice";
+import { beatsPerBarOf, buildTimeline, consumeHit, countInBeats, isPluckDrill, patternEndSec, summarizeItem, type NoteEvent } from "@/lib/spark/practice";
 import { AUTO_ADVANCE_MS, itemCloseCopy } from "@/lib/spark/psychology";
 import { coachCue, howYouPlay, patternInWords, successLine } from "@/lib/spark/udl";
 import { chordsFromCreatePick, refineLine, whyThisPiece } from "@/lib/spark/nafme";
@@ -314,9 +314,9 @@ export function SessionPlayer() {
     missesRef.current = 0;
     nowRef.current = 0;
     const beat = 60 / effectiveItem.bpm;
-    startRef.current = performance.now() + countInBeats() * beat * 1000;
+    startRef.current = performance.now() + countInBeats(effectiveItem) * beat * 1000;
     setPhase("countin");
-    setCount(4);
+    setCount(countInBeats(effectiveItem));
     setLiveChord(effectiveItem.chords[0] ?? "");
   }, [effectiveItem, micStatus, requiresMicInput]);
 
@@ -324,12 +324,13 @@ export function SessionPlayer() {
     if (phase !== "countin" || !item) return;
     const beatMs = (60 / item.bpm) * 1000;
     const playAt = startRef.current;
-    const origin = playAt - countInBeats() * beatMs;
-    let lastN = 5;
+    const meter = countInBeats(item);
+    const origin = playAt - meter * beatMs;
+    let lastN = meter + 1;
     const loop = (t: number) => {
-      const n = 4 - Math.floor((t - origin) / beatMs);
-      if (n !== lastN && n >= 1 && n <= 4) {
-        click(n === 4);
+      const n = meter - Math.floor((t - origin) / beatMs);
+      if (n !== lastN && n >= 1 && n <= meter) {
+        click(n === meter);
         setCount(n);
         lastN = n;
       }
@@ -729,6 +730,7 @@ export function SessionPlayer() {
 
   useEffect(() => {
     if (phase !== "play" || !item) return;
+    const meter = beatsPerBarOf(item);
     const loop = (t: number) => {
       const elapsed = (t - startRef.current) / 1000;
       nowRef.current = elapsed;
@@ -736,8 +738,8 @@ export function SessionPlayer() {
       const beat = Math.floor(elapsed / beatLen);
       if (beat !== lastBeat.current && beat >= 0) {
         lastBeat.current = beat;
-        click(beat % 4 === 0);
-        setBeatN((beat % 4) + 1);
+        click(beat % meter === 0);
+        setBeatN((beat % meter) + 1);
         const upcoming = notesRef.current.find((n, i) => !consumed.current.has(i) && n.t >= elapsed - 0.05);
         if (upcoming?.string !== undefined) setExpectedString(upcoming.string);
         if (upcoming?.chord) setLiveChord(upcoming.chord);
@@ -758,7 +760,7 @@ export function SessionPlayer() {
         }
       }
       const last = notesRef.current[notesRef.current.length - 1];
-      const end = hasInstrumentPattern(item) ? item.bars * 4 * 60 / item.bpm : (last?.t ?? 0) + 0.8;
+      const end = hasInstrumentPattern(item) ? patternEndSec(item) : (last?.t ?? 0) + 0.8;
       if (last && elapsed > end) {
         setItemSummary(summarizeItem(item, hitsRef.current, missesRef.current));
         setPhase("itemdone");
@@ -872,9 +874,10 @@ export function SessionPlayer() {
     modelTimers.current = [];
     const notes = buildTimeline(src);
     const beat = 60 / src.bpm;
-    const windowSec = beat * 4;
+    const meter = beatsPerBarOf(src);
+    const windowSec = beat * meter;
     setModeling(true);
-    for (let b = 0; b < 4; b++) {
+    for (let b = 0; b < meter; b++) {
       modelTimers.current.push(window.setTimeout(() => click(b === 0), b * beat * 1000));
     }
     for (const note of notes) {
@@ -893,7 +896,8 @@ export function SessionPlayer() {
         for (const id of modelTimers.current) window.clearTimeout(id);
         modelTimers.current = [];
         const beat = 60 / item.bpm;
-        for (let b = 0; b < 4; b++) {
+        const meter = beatsPerBarOf(item);
+        for (let b = 0; b < meter; b++) {
           const pad = token === "backbeat" ? (b % 2 === 0 ? 0 : 1) : b === 0 ? 0 : -1;
           modelTimers.current.push(window.setTimeout(() => {
             click(b === 0);

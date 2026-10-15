@@ -28,6 +28,8 @@ export type Lesson = {
   chords: string[];
   pattern: string;
   bars: number;
+  /** Beats per bar (the meter). Absent = 4 — every lesson written before this field. */
+  beatsPerBar?: number;
   bpm: number;
   prerequisites: string[];
   masteryRequired: number;
@@ -66,6 +68,8 @@ export type PlanItem = {
   chords: string[];
   pattern: string;
   bars: number;
+  /** Beats per bar, copied from the lesson. Absent = 4. */
+  beatsPerBar?: number;
   bpm: number;
   surface?: "strings" | "keys" | "pads" | "voice";
   stringCount?: number;
@@ -149,3 +153,12 @@ export const JUDGE_WINDOWS: Record<Exclude<HitJudge, "miss">, number> = {
   good: 140,
   ok: 220,
 };
+
+/**
+ * The meter of a lesson or plan item, in beats per bar. Defaults to 4:
+ * content written before the field existed is 4/4 and must behave
+ * byte-identically, so every beat-geometry literal resolves through here.
+ */
+export function beatsPerBarOf(item: { beatsPerBar?: number }): number {
+  return item.beatsPerBar && item.beatsPerBar > 0 ? item.beatsPerBar : 4;
+}
