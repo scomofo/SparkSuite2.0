@@ -186,9 +186,8 @@ try {
     await page
       .getByText("Microphone access was blocked or unavailable. Allow access in your browser and try again.", { exact: true })
       .waitFor();
-    await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
     await page.clock.runFor(4000);
-    await page.getByRole("button", { name: "Count me in", exact: true }).click();
+    await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
     await page.clock.runFor(3500);
     await page.keyboard.press("6");
     await page.clock.runFor(31000);
