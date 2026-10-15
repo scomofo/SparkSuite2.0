@@ -1,16 +1,18 @@
 import { rmsLevel } from "./strum-detection.ts";
 import { yinPitchFast } from "./tuner.ts";
 
-export type AcousticInputMode = "strum" | "pitch" | "percussion";
+export type AcousticInputMode = "strum" | "pitch" | "percussion" | "attack";
 
 export function acousticInputModeFor(input: {
   instrument: string;
   surface: "strings" | "keys" | "pads" | "voice";
   pluckDrill: boolean;
   hasPattern: boolean;
+  lessonId?: string;
 }): AcousticInputMode {
   if (input.surface === "pads") return "percussion";
   if (input.surface === "voice") return "pitch";
+  if (input.instrument === "mandolin" && input.lessonId === "lesson_mandolin_chop_01") return "attack";
   if (input.surface === "keys") return input.pluckDrill ? "pitch" : "strum";
   if (input.surface === "strings") {
     if (
