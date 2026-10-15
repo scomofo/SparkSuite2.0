@@ -67,6 +67,8 @@ test("concurrent device progress merges additive XP and unions independent lesso
   assert.ok(guitarLessons.length >= 2);
   local.learning.records[guitarLessons[0].id] = { step: 2, reviews: 0 };
   cloud.learning.records[guitarLessons[1].id] = { step: 1, reviews: 0 };
+  local.sharedPhrases.guitar = { stage: 1, note: "Keep the chord ringing." };
+  cloud.sharedPhrases.piano = { stage: 2, note: "Relax the wrist." };
 
   const merged = mergeProfileSnapshots(local, cloud, base);
   const progress = merged.suite.apps.guitar!;
@@ -76,6 +78,8 @@ test("concurrent device progress merges additive XP and unions independent lesso
   assert.equal(progress.mastery["guitar-g-to-d"], 0.4);
   assert.ok(merged.learning.records[guitarLessons[0].id]);
   assert.ok(merged.learning.records[guitarLessons[1].id]);
+  assert.deepEqual(merged.sharedPhrases.guitar, { stage: 1, note: "Keep the chord ringing." });
+  assert.deepEqual(merged.sharedPhrases.piano, { stage: 2, note: "Relax the wrist." });
 });
 
 test("snapshot equality ignores object key order", () => {
