@@ -40,7 +40,7 @@ const COPY: Record<UkeTab, { kicker: string; title: string; body: string; hear: 
   pick: {
     kicker: "p-i-m-a",
     title: "One finger per string",
-    body: "Thumb on G, index on C, middle on E, ring on A. Not a strum — four separate attacks. Slow until each string speaks.",
+    body: "Thumb on G, index on C, middle on E, ring on A. Not a strum — four separate attacks. Slow until each string speaks. The fingerpicking lesson uses three fingers on a repeating pattern; this drill gives every string its own finger.",
     hear: "G, C, E, A. Then again.",
   },
   switch: {
