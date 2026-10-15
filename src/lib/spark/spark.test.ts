@@ -26,8 +26,8 @@ import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
-import { isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
-import { acousticInputModeFor, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
+import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
+import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -506,31 +506,102 @@ describe("general acoustic instrument input", () => {
     assert.equal(tracker.process(heldC, sampleRate, 160, 2, 70, 900)?.midi, 60);
   });
 
-  it("classifies low kick-like and bright snare-like acoustic attacks", () => {
-    function attackAt(hz: number) {
+  it("classifies kick, snare, hi-hat, and tom spectra and rejects silence", () => {
+    function attackAt(peaks: number[], broadbandHat = false) {
       const samples = new Float32Array(fftSize);
       for (let i = fftSize - 512; i < fftSize; i++) {
-        samples[i] = 0.2 * Math.sin((2 * Math.PI * hz * i) / sampleRate);
+        samples[i] = 0.2 * Math.sin((2 * Math.PI * (peaks[0] ?? 80) * i) / sampleRate);
       }
-      const spectrum = new Float32Array(fftSize / 2).fill(-100);
-      for (const peakHz of (hz < 200 ? [hz, hz * 2] : [hz, hz * 1.4, hz * 1.8])) {
+      const spectrum = new Float32Array(fftSize / 2).fill(-110);
+      if (broadbandHat) {
+        for (let i = Math.ceil(500 * fftSize / sampleRate); i < Math.floor(12000 * fftSize / sampleRate); i++) {
+          spectrum[i] = -43 - (i % 5);
+        }
+      }
+      for (const peakHz of peaks) {
         const index = Math.round((peakHz * fftSize) / sampleRate);
-        if (index < spectrum.length) spectrum[index] = -18;
+        if (index < 2 || index >= spectrum.length - 1) continue;
+        spectrum[index] = -18;
+        spectrum[index - 1] = -29;
+        spectrum[index + 1] = -29;
       }
       return { samples, spectrum };
     }
 
-    const kickDetector = new PercussionOnsetDetector();
-    const kick = attackAt(80);
-    const kickEvent = kickDetector.process(kick.samples, kick.spectrum, sampleRate, fftSize, 100);
+    const kick = attackAt([80, 160]);
+    const kickEvent = new PercussionOnsetDetector().process(kick.samples, kick.spectrum, sampleRate, fftSize, 100);
     assert.ok(kickEvent);
+    assert.equal(kickEvent.drumClass, "kick");
     assert.equal(kickEvent.padIndex, 0);
 
-    const snareDetector = new PercussionOnsetDetector();
-    const snare = attackAt(1800);
-    const snareEvent = snareDetector.process(snare.samples, snare.spectrum, sampleRate, fftSize, 100);
+    const snare = attackAt([1800, 2520, 3240]);
+    const snareEvent = new PercussionOnsetDetector().process(snare.samples, snare.spectrum, sampleRate, fftSize, 100);
     assert.ok(snareEvent);
+    assert.equal(snareEvent.drumClass, "snare");
     assert.equal(snareEvent.padIndex, 1);
+
+    const hat = attackAt([5500, 6800, 8200], true);
+    const hatClass = classifyDrumSpectrum(hat.spectrum, sampleRate, fftSize);
+    assert.equal(hatClass.drumClass, "hat");
+    assert.equal(hatClass.padIndex, 2);
+
+    const tom = attackAt([160, 240, 320, 420]);
+    const tomClass = classifyDrumSpectrum(tom.spectrum, sampleRate, fftSize);
+    assert.equal(tomClass.drumClass, "tom");
+    assert.equal(tomClass.padIndex, 3);
+
+    assert.equal(classifyDrumSpectrum(new Float32Array(fftSize / 2).fill(-110), sampleRate, fftSize).drumClass, "unknown");
+  });
+});
+
+describe("strum direction assessment", () => {
+  it("classifies clear low-first and high-first attacks, but leaves close timing uncertain", () => {
+    assert.equal(classifyStrumDirection(100, 140).direction, "down");
+    assert.equal(classifyStrumDirection(140, 100).direction, "up");
+    assert.equal(classifyStrumDirection(100, 112).direction, "unknown");
+    assert.equal(classifyStrumDirection(null, 120).direction, "unknown");
+  });
+});
+
+describe("polyphonic chord assessment", () => {
+  const sampleRate = 48000;
+  const fftSize = 8192;
+  const em = [40, 47, 52, 55, 59, 64];
+
+  function spectrumFor(notes: number[]) {
+    const spectrum = new Float32Array(fftSize / 2).fill(-110);
+    for (const midi of notes) {
+      const fundamental = 440 * Math.pow(2, (midi - 69) / 12);
+      for (let harmonic = 1; harmonic <= 5; harmonic++) {
+        const hz = fundamental * harmonic;
+        const bin = Math.round(hz * fftSize / sampleRate);
+        if (bin < 2 || bin >= spectrum.length - 1) continue;
+        const db = -18 - 12 * Math.log2(harmonic);
+        spectrum[bin] = Math.max(spectrum[bin], db);
+        spectrum[bin - 1] = Math.max(spectrum[bin - 1], db - 9);
+        spectrum[bin + 1] = Math.max(spectrum[bin + 1], db - 9);
+      }
+    }
+    return spectrum;
+  }
+
+  it("recognizes a multi-note E-minor chord from its independent fundamentals", () => {
+    const analysis = analyzeChordSpectrum(spectrumFor(em), sampleRate, fftSize);
+    assert.ok(analysis.midiNotes.length >= 5, `found pitches: ${analysis.midiNotes.join(",")}`);
+    assert.equal(assessChordPitches(analysis, em).status, "match");
+  });
+
+  it("does not mistake harmonics from one low string for a complete chord", () => {
+    const analysis = analyzeChordSpectrum(spectrumFor([40]), sampleRate, fftSize);
+    assert.deepEqual(analysis.midiNotes, [40]);
+    assert.equal(assessChordPitches(analysis, em).status, "uncertain");
+  });
+
+  it("flags a clearly different chord but keeps a partly masked chord uncertain", () => {
+    const wrong = analyzeChordSpectrum(spectrumFor([42, 49, 54, 57, 61, 66]), sampleRate, fftSize);
+    assert.equal(assessChordPitches(wrong, em).status, "mismatch");
+    const partlyMasked = analyzeChordSpectrum(spectrumFor([40, 47, 52, 59, 64]), sampleRate, fftSize);
+    assert.equal(assessChordPitches(partlyMasked, em).status, "uncertain");
   });
 });
 
