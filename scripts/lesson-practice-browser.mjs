@@ -30,7 +30,7 @@ async function noOverflow() {
 }
 
 try {
-  await page.goto(`${url}/learn`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/learn`, { waitUntil: "domcontentloaded" });
   await button("Start learning").click();
   await button("Let me try it").click();
   await button("Continue this lesson").click();
@@ -87,7 +87,7 @@ try {
     "Check-in receives keyboard focus",
   );
   await page.getByRole("radio", { name: "I'd like another try", exact: true }).check();
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   assert.equal(
     await page.getByRole("radio", { name: "I'd like another try", exact: true }).isChecked(),
     true,
@@ -118,7 +118,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   for (const exercise of LESSON_EXERCISES) {
     await page.goto(`${url}/techniques?lesson=${encodeURIComponent(exercise.lessonId)}`, {
-      waitUntil: "networkidle",
+      waitUntil: "domcontentloaded",
     });
     await page.getByRole("heading", { name: exercise.title, exact: true }).waitFor();
     if (exercise.project) {
@@ -157,7 +157,7 @@ try {
     delete learning.active.guitar;
     localStorage.setItem(key, JSON.stringify(learning));
   }, project.lessonId);
-  await page.goto(`${url}/techniques?lesson=guitar-arrangement`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/techniques?lesson=guitar-arrangement`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Build, choose, then refine.", exact: true }).waitFor();
   assert.equal(
     (await saved()).records[project.lessonId],
@@ -193,14 +193,14 @@ try {
   await link("Resume guided project").click();
   await page.getByText("Project stage 2 of 3", { exact: true }).waitFor();
   assert.equal(await button(choose.button).isDisabled(), true, "Choose requires one direction");
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   await page.getByText("Project stage 2 of 3", { exact: true }).waitFor();
   await page.screenshot({ path: `${output}/lesson-project-${label}-choose.png`, fullPage: true });
   assert.equal((await saved()).records[project.lessonId].practice.projectStage, 1);
   assert.equal(await button("Stop guide").count(), 0, "Reloading a project never starts audio");
   await page.locator('input[name="project-choice"]').first().check();
   assert.equal((await saved()).records[project.lessonId].practice.projectChoice, 0);
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   assert.equal(await page.locator('input[name="project-choice"]').first().isChecked(), true);
   await button(choose.button).click();
   await page.getByRole("heading", { name: "That stage counts.", exact: true }).waitFor();
@@ -212,7 +212,7 @@ try {
   await page.getByRole("heading", { name: "What did you notice?", exact: true }).waitFor();
   assert.equal((await saved()).records[project.lessonId].practice.projectStage, 2);
   assert.equal((await saved()).records[project.lessonId].completedOn, undefined);
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   await page.getByRole("radio", { name: "I'm ready to move on", exact: true }).check();
   await button("Continue to lesson check").click();
   await button("Wrap up this lesson").waitFor();
@@ -230,7 +230,7 @@ try {
   assert.equal(projectRecord.completedOn, undefined, "Project work does not complete the lesson");
 
   // Inspect the concrete chord-change handoff at desktop and both small widths.
-  await page.goto(`${url}/techniques?lesson=guitar-em-to-g`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/techniques?lesson=guitar-em-to-g`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Em → G, one change at a time", exact: true }).waitFor();
   await page.getByLabel("Practice tempo").selectOption("40");
   for (const width of [1280, 390, 320]) {
@@ -272,17 +272,17 @@ try {
   assert.equal((await saved()).records["guitar-em-to-g"].practice.bpm, 40);
 
   // Existing labs still work; unknown lesson IDs never show a mismatched lab.
-  await page.goto(`${url}/techniques?tab=down&chord=G`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/techniques?tab=down&chord=G`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Right hand", exact: true }).waitFor();
   for (const id of ["not-a-lesson"]) {
-    await page.goto(`${url}/techniques?lesson=${id}`, { waitUntil: "networkidle" });
+    await page.goto(`${url}/techniques?lesson=${id}`, { waitUntil: "domcontentloaded" });
     await page
       .getByRole("heading", { name: "This guided exercise is unavailable.", exact: true })
       .waitFor();
     await link("Back to learning").waitFor();
   }
 
-  await page.goto(`${url}/techniques?lesson=bass-fifth-octave`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/techniques?lesson=bass-fifth-octave`, { waitUntil: "domcontentloaded" });
   await page.getByText("Explore the sounds", { exact: true }).click();
   const bassNote = page.getByRole("button", { name: "E string fret 3 G", exact: true });
   await bassNote.press("Enter");
@@ -315,7 +315,7 @@ try {
     window.AudioContext = undefined;
     window.webkitAudioContext = undefined;
   });
-  await silentPage.goto(`${url}/techniques?lesson=piano-find-c`, { waitUntil: "networkidle" });
+  await silentPage.goto(`${url}/techniques?lesson=piano-find-c`, { waitUntil: "domcontentloaded" });
   await silentPage.getByRole("button", { name: "Play one pass", exact: true }).click();
   await silentPage.getByText("Audio is unavailable here.", { exact: false }).waitFor();
   await silentPage.getByRole("button", { name: "Stop guide", exact: true }).click();
