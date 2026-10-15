@@ -3,12 +3,38 @@ import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
-const url = process.argv[2] ?? "http://127.0.0.1:8083";
+const url = process.argv[2] ?? "http://127.0.0.1:8081";
 const label = process.argv[3] ?? "dev";
 const output = "/workspace/screenshots";
 mkdirSync(output, { recursive: true });
+
+// A server that has bound its port can still answer its first requests with
+// a 5xx while it warms up (preview.mjs's readiness probe accepts any HTTP
+// response, including a 500). Poll until the target itself answers OK so the
+// browser never loads an error payload and reports it as a page failure.
+async function waitForHealthy(targetUrl) {
+  const deadline = Date.now() + 30_000;
+  let last = "no response yet";
+  while (Date.now() < deadline) {
+    try {
+      const res = await fetch(targetUrl, { signal: AbortSignal.timeout(2000) });
+      await res.arrayBuffer().catch(() => {});
+      if (res.ok) return;
+      last = `HTTP ${res.status}`;
+    } catch (error) {
+      last = String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(
+    `Server at ${targetUrl} did not answer OK within 30s (last result: ${last})`,
+  );
+}
+
 const browser = await chromium.launch({ headless: true });
 const errors = [];
+let initialResponseStatus = null;
+let initialResponseBody = "";
 let page;
 try {
   page = await browser.newPage({
@@ -42,7 +68,16 @@ try {
   });
 
   await page.clock.install({ time: new Date("2026-09-05T12:00:00Z") });
-  await page.goto(url, { waitUntil: "domcontentloaded" });
+  await waitForHealthy(url);
+  const initialResponse = await page.goto(url, { waitUntil: "domcontentloaded" });
+  initialResponseStatus = initialResponse?.status() ?? null;
+  if (initialResponseStatus !== null && initialResponseStatus >= 500) {
+    initialResponseBody = await initialResponse.text().catch(() => "");
+    throw new Error(
+      `Studio ${label}: initial response from ${url} was HTTP ${initialResponseStatus} ` +
+        `(a server error, not a hydration failure): ${initialResponseBody.slice(0, 200)}`,
+    );
+  }
   try {
     await Promise.race([authRequest, new Promise((resolve) => setTimeout(resolve, 5000))]);
     try {
@@ -278,6 +313,8 @@ try {
         {
           error: String(error),
           errors,
+          initialResponseStatus,
+          initialResponseBody,
           body: await page
             .locator("body")
             .innerText()
