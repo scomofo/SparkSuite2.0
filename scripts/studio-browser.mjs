@@ -22,7 +22,23 @@ try {
   });
   await page.clock.install({ time: new Date("2026-09-05T12:00:00Z") });
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "Make room for music." }).waitFor();
+  const studioHeading = page.getByRole("heading", { name: "Make room for music." });
+  try {
+    await studioHeading.waitFor({ timeout: 10000 });
+  } catch {
+    // Production preview can briefly serve the shell before client routing is
+    // ready. Retry once, but fail with the actual rendered page when it is not
+    // the expected studio rather than masking a route/build regression.
+    await page.reload({ waitUntil: "domcontentloaded" });
+    try {
+      await studioHeading.waitFor({ timeout: 10000 });
+    } catch {
+      const rendered = await page.locator("body").innerText().catch(() => "(body unavailable)");
+      throw new Error(
+        `Studio route did not render at ${page.url()} (title: ${await page.title()}). Body: ${rendered.slice(0, 1200)}`,
+      );
+    }
+  }
   assert.equal(await page.getByRole("button", { name: /^Practise / }).count(), 10);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${output}/studio-${label}-desktop.png`, fullPage: true });
