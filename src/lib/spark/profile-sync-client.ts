@@ -65,7 +65,7 @@ export async function synchronizeProfile(
     const marker = readProfileSyncMarker();
     const base = marker?.userId === userId ? marker.snapshot : undefined;
     const cloudRow = await getCloudProfile();
-    let cloud = cloudSnapshot(cloudRow.payload);
+    const cloud = cloudSnapshot(cloudRow.payload);
 
     if (cloudRow.exists && !cloud) {
       return {
