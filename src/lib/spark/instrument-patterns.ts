@@ -32,6 +32,9 @@ const DAILY_EXERCISES: Record<string, string> = {
   lesson_violin_first_finger_01: "violin-first-finger",
   lesson_violin_slur_01: "violin-slurs",
   lesson_violin_walk_01: "violin-d-tetrachord",
+  lesson_violin_tetrachord_01: "violin-d-tetrachord",
+  lesson_violin_crossing_01: "violin-string-crossing",
+  lesson_violin_phrase_01: "violin-phrase-shaping",
   lesson_lapsteel_open_01: "lapsteel-c6-and-the-bar",
   lesson_lapsteel_slide_01: "lapsteel-slide-into",
 };
@@ -145,6 +148,137 @@ const MANDOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }
       { beat: 7, label: "Hold", detail: "Let the fifth ring to the end of the bar" },
     ],
   },
+};
+
+const VIOLIN_NOTE_NAME: Record<number, string> = {
+  55: "G", 57: "A", 59: "B", 60: "C", 62: "D", 64: "E", 65: "F", 66: "F♯", 67: "G",
+  69: "A", 71: "B", 72: "C", 73: "C♯", 74: "D",
+};
+const VIOLIN_FINGERING: Record<number, string> = {
+  55: "Open G", 57: "G string, first finger", 59: "G string, second finger", 60: "G string, third finger",
+  62: "Open D", 64: "D string, first finger", 65: "D string, second finger low", 66: "D string, second finger",
+  67: "D string, third finger", 69: "Open A", 71: "A string, first finger", 72: "A string, second finger low",
+  73: "A string, second finger", 74: "A string, third finger",
+};
+
+/**
+ * Twinkle, Twinkle, Little Star (traditional), in D — six eight-beat units,
+ * each ending on a note held for two beats. Bow alternation is continuous
+ * across the whole tune: attack k takes a down-bow when k is even.
+ */
+function twinkleCues(): PracticeCue[] {
+  const units: [number, string][][] = [
+    [[62, "Twin-"], [62, "-kle"], [69, "twin-"], [69, "-kle"], [71, "lit-"], [71, "-tle"], [69, "star"]],
+    [[67, "How"], [67, "I"], [66, "won-"], [66, "-der"], [64, "what"], [64, "you"], [62, "are"]],
+    [[69, "Up"], [69, "a-"], [67, "-bove"], [67, "the"], [66, "world"], [66, "so"], [64, "high"]],
+    [[69, "Like"], [69, "a"], [67, "dia-"], [67, "-mond"], [66, "in"], [66, "the"], [64, "sky"]],
+    [[62, "Twin-"], [62, "-kle"], [69, "twin-"], [69, "-kle"], [71, "lit-"], [71, "-tle"], [69, "star"]],
+    [[67, "How"], [67, "I"], [66, "won-"], [66, "-der"], [64, "what"], [64, "you"], [62, "are"]],
+  ];
+  const cues: PracticeCue[] = [];
+  let attack = 0;
+  units.forEach((unit, unitIndex) => {
+    unit.forEach(([midi, word], i) => {
+      const held = i === unit.length - 1;
+      cues.push({
+        beat: unitIndex * 8 + i,
+        label: VIOLIN_NOTE_NAME[midi] + (attack % 2 === 0 ? " ⊓" : " ∨"),
+        notes: [midi],
+        detail:
+          (unitIndex === 0 && i === 0 ? "Twinkle, twinkle — " : "") +
+          `${word} · ${VIOLIN_FINGERING[midi]}` +
+          (held ? " — held for two beats" : ""),
+        duration: held ? 1.85 : 0.9,
+      });
+      attack++;
+    });
+  });
+  return cues;
+}
+
+/**
+ * Bespoke daily violin cues for lessons no Learn exercise covers, declared
+ * per lesson like the mandolin and vocals maps. `beats` is the phrase
+ * length; the phrase loops across the lesson's bars.
+ */
+export const VIOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
+  // The D-string tetrachord's pattern on the A string: A–B–C♯–D and back.
+  lesson_violin_a_tetrachord_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "A ⊓", notes: [69], detail: "Open A", duration: 0.9 },
+      { beat: 1, label: "B ∨", notes: [71], detail: "First finger", duration: 0.9 },
+      { beat: 2, label: "C♯ ⊓", notes: [73], detail: "Second finger", duration: 0.9 },
+      { beat: 3, label: "D ∨", notes: [74], detail: "Third finger, close to second", duration: 0.9 },
+      { beat: 4, label: "D ⊓", notes: [74], detail: "Third finger", duration: 0.9 },
+      { beat: 5, label: "C♯ ∨", notes: [73], detail: "Second finger", duration: 0.9 },
+      { beat: 6, label: "B ⊓", notes: [71], detail: "First finger", duration: 0.9 },
+      { beat: 7, label: "A ∨", notes: [69], detail: "Open A", duration: 0.9 },
+    ],
+  },
+  // One octave of D major: the D-string tetrachord, then the A-string one.
+  lesson_violin_scale_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "D ⊓", notes: [62], detail: "Open D — the tonic", duration: 0.9 },
+      { beat: 1, label: "E ∨", notes: [64], detail: "D string, first finger", duration: 0.9 },
+      { beat: 2, label: "F♯ ⊓", notes: [66], detail: "D string, second finger", duration: 0.9 },
+      { beat: 3, label: "G ∨", notes: [67], detail: "D string, third finger", duration: 0.9 },
+      { beat: 4, label: "A ⊓", notes: [69], detail: "Open A — cross here", duration: 0.9 },
+      { beat: 5, label: "B ∨", notes: [71], detail: "A string, first finger", duration: 0.9 },
+      { beat: 6, label: "C♯ ⊓", notes: [73], detail: "A string, second finger", duration: 0.9 },
+      { beat: 7, label: "D ∨", notes: [74], detail: "A string, third finger — the octave", duration: 0.9 },
+      { beat: 8, label: "D ⊓", notes: [74], detail: "Back down: A string, third finger", duration: 0.9 },
+      { beat: 9, label: "C♯ ∨", notes: [73], detail: "A string, second finger", duration: 0.9 },
+      { beat: 10, label: "B ⊓", notes: [71], detail: "A string, first finger", duration: 0.9 },
+      { beat: 11, label: "A ∨", notes: [69], detail: "Open A", duration: 0.9 },
+      { beat: 12, label: "G ⊓", notes: [67], detail: "Cross back: D string, third finger", duration: 0.9 },
+      { beat: 13, label: "F♯ ∨", notes: [66], detail: "D string, second finger", duration: 0.9 },
+      { beat: 14, label: "E ⊓", notes: [64], detail: "D string, first finger", duration: 0.9 },
+      { beat: 15, label: "D ∨", notes: [62], detail: "Open D — home", duration: 0.9 },
+    ],
+  },
+  // Low second finger: F natural on D, C natural on A — a half step, not two.
+  lesson_violin_low2_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "D ⊓", notes: [62], detail: "Open D", duration: 0.9 },
+      { beat: 1, label: "E ∨", notes: [64], detail: "First finger", duration: 0.9 },
+      { beat: 2, label: "F ⊓", notes: [65], detail: "Second finger low, close behind the first: F natural", duration: 0.9 },
+      { beat: 3, label: "E ∨", notes: [64], detail: "First finger again", duration: 0.9 },
+      { beat: 4, label: "A ⊓", notes: [69], detail: "Open A", duration: 0.9 },
+      { beat: 5, label: "B ∨", notes: [71], detail: "First finger", duration: 0.9 },
+      { beat: 6, label: "C ⊓", notes: [72], detail: "Second finger low, close behind the first: C natural", duration: 0.9 },
+      { beat: 7, label: "B ∨", notes: [71], detail: "First finger again", duration: 0.9 },
+    ],
+  },
+  // The same tetrachord pattern on the lowest string: G–A–B–C and back.
+  lesson_violin_g_tetrachord_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "G ⊓", notes: [55], detail: "Open G", duration: 0.9 },
+      { beat: 1, label: "A ∨", notes: [57], detail: "First finger", duration: 0.9 },
+      { beat: 2, label: "B ⊓", notes: [59], detail: "Second finger", duration: 0.9 },
+      { beat: 3, label: "C ∨", notes: [60], detail: "Third finger, close to second", duration: 0.9 },
+      { beat: 4, label: "C ⊓", notes: [60], detail: "Third finger", duration: 0.9 },
+      { beat: 5, label: "B ∨", notes: [59], detail: "Second finger", duration: 0.9 },
+      { beat: 6, label: "A ⊓", notes: [57], detail: "First finger", duration: 0.9 },
+      { beat: 7, label: "G ∨", notes: [55], detail: "Open G", duration: 0.9 },
+    ],
+  },
+  // Fingered D-string notes against the open-A drone, one bow across both.
+  lesson_violin_doublestop_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "E + A ⊓", notes: [64, 69], detail: "First finger on D, open A under it — roll the arm to the level where both strings sound", duration: 1.85 },
+      { beat: 2, label: "F♯ + A ∨", notes: [66, 69], detail: "Second finger on D, open A under it", duration: 1.85 },
+      { beat: 4, label: "G + A ⊓", notes: [67, 69], detail: "Third finger on D, open A under it", duration: 1.85 },
+      { beat: 6, label: "E + A ∨", notes: [64, 69], detail: "First finger again; keep both strings ringing to the end of the bow", duration: 1.85 },
+    ],
+  },
+  // The whole tune is one 48-beat phrase (12 bars at the lesson's bars: 12),
+  // so it plays through once — no looping.
+  lesson_violin_twinkle_01: { beats: 48, cues: twinkleCues() },
 };
 
 const NOTE_NAME: Record<number, string> = {
@@ -314,6 +448,7 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
     (!!DAILY_EXERCISES[item.lessonId ?? ""] ||
       !!PIANO_DAILY_CUES[item.lessonId ?? ""] ||
       !!VOCAL_DAILY_CUES[item.lessonId ?? ""] ||
+      !!VIOLIN_DAILY_CUES[item.lessonId ?? ""] ||
       !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
   );
 }
@@ -619,6 +754,23 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
     const total = item.bars * 4;
     for (let start = 0; start < total; start += bespoke.beats) {
       for (const cue of bespoke.cues) {
+        const beat = start + cue.beat;
+        if (beat >= total) continue;
+        cues.push({
+          ...cue,
+          beat,
+          duration: cue.duration ? Math.min(cue.duration, total - beat) : cue.duration,
+        });
+      }
+    }
+    return cues;
+  }
+  const violinBespoke = VIOLIN_DAILY_CUES[item.lessonId ?? ""];
+  if (violinBespoke) {
+    const cues: PracticeCue[] = [];
+    const total = item.bars * 4;
+    for (let start = 0; start < total; start += violinBespoke.beats) {
+      for (const cue of violinBespoke.cues) {
         const beat = start + cue.beat;
         if (beat >= total) continue;
         cues.push({
