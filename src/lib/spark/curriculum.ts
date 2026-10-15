@@ -1765,7 +1765,7 @@ const banjo = path("banjo", [
     title: "Two jobs in one tune",
     outcome: "Play backup under a chord loop and switch to a rolled break.",
     explanation:
-      "Backup supports a singer or another instrument; a break presents a melody. Here you practise a change of texture: brushed chords with a muted backbeat, then a roll over the same shapes. For the unpitched clicks on 2 and 4, touch all five strings lightly with the fretting hand; releasing a shape alone cannot mute open strings. Restore the chord for 1 and 3. A pitched vamp — one whose muted beats still sound a chord — needs closed shapes that fret every string; this lesson works with open shapes, so its backbeat stays an unpitched click.",
+      "Backup supports a singer or another instrument; a break presents a melody. Here you practise a change of texture: brushed chords with a muted backbeat, then a roll over the same shapes. For the unpitched clicks on 2 and 4, touch all five strings lightly with the fretting hand; releasing a shape alone cannot mute open strings. Restore the chord for 1 and 3. A pitched vamp — one whose muted beats still sound a chord — needs closed shapes that fret every string; this lesson works with open shapes, so its backbeat stays an unpitched click. The daily lesson “Closed-shape vamp” teaches the pitched kind.",
     example: "Two bars of vamp on G and D7, then two bars of forward roll on G and D7.",
     practice: [
       "Brush G and D7 for two bars, touching all five strings lightly for the muted backbeats.",
