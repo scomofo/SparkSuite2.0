@@ -485,7 +485,7 @@ export function SessionPlayer() {
     setMicError(null);
     unlockAudio();
 
-    // 4096 samples resolves the bass low E while keeping attack latency practical.
+    // 8192 samples improves low-note and chord resolution; onset timestamps use the rolling window's newest chunk.
     const mic = await startMicAnalyser(8192);
     if (request !== micRequestRef.current) {
       mic?.stop();
