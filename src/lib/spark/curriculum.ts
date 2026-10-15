@@ -1111,6 +1111,7 @@ const vocals = path("vocals", [
     answer: 1,
     feedback:
       "A comfortable octave or listening keeps the musical task accessible. Matching a reference never requires forcing your voice.",
+    demo: { label: "Hum two counts, rest two", notes: [[60], [60], [], []] },
   },
   {
     slug: "pitch-direction",
@@ -1155,6 +1156,7 @@ const vocals = path("vocals", [
     answer: 0,
     feedback:
       "The rest creates space and a breathing opportunity. Its beat still belongs to the ongoing pulse.",
+    demo: { label: "Here, we, go — then rest", notes: [[60], [60], [60], []] },
   },
   {
     slug: "thirds",
@@ -1194,6 +1196,10 @@ const vocals = path("vocals", [
     answer: 2,
     feedback:
       "The and of 2 is the midpoint between quarter-note beats 2 and 3. Counting the earlier silence prepares the entrance.",
+    demo: {
+      label: "Come on and-of-2, back on 3, home on 4",
+      notes: [[], [], [], [60], [60], [], [60], []],
+    },
   },
   {
     slug: "harmony-line",
@@ -1246,6 +1252,10 @@ const vocals = path("vocals", [
     answer: 1,
     feedback:
       "Keeping the phrase and timing steady lets you hear what the stressed word contributes to meaning.",
+    demo: {
+      label: "Same notes twice — stress I, then home",
+      notes: [[60], [60], [60], [60], [60], [60], [60], [60]],
+    },
   },
   {
     slug: "performance-plan",
@@ -1270,6 +1280,10 @@ const vocals = path("vocals", [
     answer: 2,
     feedback:
       "A specific, changeable observation gives the next attempt a clear task. Broad judgments do not tell you what to practise.",
+    demo: {
+      label: "Two phrases — words on 1-and, 2, 3; rest on 4",
+      notes: [[60], [60], [62], [], [64], [], [], [], [64], [64], [62], [], [60], [], [], []],
+    },
   },
 ]);
 

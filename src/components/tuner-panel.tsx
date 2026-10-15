@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { pluck, pianoTone, drumHit, unlockAudio } from "@/lib/spark/audio";
-import { instrumentById, midiToFreq } from "@/lib/spark/instruments";
+import { instrumentById } from "@/lib/spark/instruments";
 import { analyserSizeFor, nearestString, startMicAnalyser, yinPitchFast } from "@/lib/spark/tuner";
 import { Button } from "@/components/ui/button";
 import { DrumPads } from "@/components/drum-pads";
@@ -250,7 +250,7 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
       </Button>
       <button
         type="button"
-        onClick={() => pianoTone(midiToFreq(60), undefined, 0.35)}
+        onClick={() => pianoTone(targetFreq, undefined, 0.35)}
         className="text-xs text-muted underline-offset-2 hover:text-fg hover:underline"
       >
         Hear the drone

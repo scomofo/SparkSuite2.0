@@ -20,6 +20,10 @@ export type PracticeCue = {
   muted?: boolean;
   duration?: number;
   chord?: string;
+  /** Bespoke vocals cues: the MIDI the singer is judged against (unrounded cents). */
+  expectedMidi?: number;
+  /** Bespoke vocals hold cues: beats the expected pitch must be sustained. */
+  holdBeats?: number;
 };
 export type PracticeSubdivision = 1 | 2 | 3 | 4;
 export type LessonExercise = {
