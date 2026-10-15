@@ -130,7 +130,7 @@ export class StrumOnsetDetector {
     } else {
       const threshold = Math.max(
         this.options.minimumLevel,
-        this.noiseFloor * 3.2,
+        this.noiseFloor * 2.6,
         this.previousRms * 1.65,
       );
       if (
