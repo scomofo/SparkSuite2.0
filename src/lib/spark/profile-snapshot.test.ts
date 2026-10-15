@@ -56,12 +56,14 @@ test("concurrent device progress merges additive XP and unions independent lesso
     xp: 130,
     history: [...guitar.history, { date: "2026-10-13", accuracy: 0.9, xp: 30 }],
     mastery: { "guitar-em-to-g": 0.7 },
+    dailyComplete: { "2026-10-13": false },
   };
   cloud.suite.apps.guitar = {
     ...guitar,
     xp: 150,
     history: [...guitar.history, { date: "2026-10-14", accuracy: 0.8, xp: 50 }],
     mastery: { "guitar-em-to-g": 0.5, "guitar-g-to-d": 0.4 },
+    dailyComplete: { "2026-10-13": true },
   };
   const guitarLessons = CURRICULUM.filter((lesson) => lesson.instrument === "guitar");
   assert.ok(guitarLessons.length >= 2);
@@ -76,6 +78,7 @@ test("concurrent device progress merges additive XP and unions independent lesso
   assert.equal(progress.history.length, 2);
   assert.equal(progress.mastery["guitar-em-to-g"], 0.7);
   assert.equal(progress.mastery["guitar-g-to-d"], 0.4);
+  assert.equal(progress.dailyComplete["2026-10-13"], true);
   assert.ok(merged.learning.records[guitarLessons[0].id]);
   assert.ok(merged.learning.records[guitarLessons[1].id]);
   assert.deepEqual(merged.sharedPhrases.guitar, { stage: 1, note: "Keep the chord ringing." });
