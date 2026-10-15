@@ -443,7 +443,8 @@ describe("instrument microphone routing", () => {
     surface: "strings" | "keys" | "pads" | "voice",
     pluckDrill = false,
     hasPattern = false,
-  ) => acousticInputModeFor({ instrument, surface, pluckDrill, hasPattern });
+    lessonId?: string,
+  ) => acousticInputModeFor({ instrument, surface, pluckDrill, hasPattern, lessonId });
 
   it("routes each instrument family to a suitable acoustic detector", () => {
     assert.equal(mode("guitar", "strings"), "strum");
@@ -451,6 +452,7 @@ describe("instrument microphone routing", () => {
     assert.equal(mode("ukulele", "strings", true), "pitch");
     assert.equal(mode("bass", "strings"), "pitch");
     assert.equal(mode("mandolin", "strings", false, true), "pitch");
+    assert.equal(mode("mandolin", "strings", false, true, "lesson_mandolin_chop_01"), "attack");
     assert.equal(mode("banjo", "strings", false, true), "pitch");
     assert.equal(mode("violin", "strings"), "pitch");
     assert.equal(mode("lapsteel", "strings", false, true), "pitch");
