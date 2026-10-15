@@ -114,24 +114,30 @@ const PATTERNS: Record<string, QuestPattern> = {
     d(0,"1",[],"Count one."), d(1,"Snare",[1],"Backbeat on 2."), d(2,"3",[],"Count three."), d(3,"Snare",[1],"Backbeat on 4."),
     d(4,"1",[],"New bar."), d(5,"Snare",[1],"Find 2 again."), d(6,"3",[],"Keep counting."), d(7,"Snare",[1],"And 4."),
   ]},
-  "drums-side-beginner": { bpm: 80, subdivision: 2, cues: [
+  "drums-side-beginner": { bpm: 80, beats: 12, subdivision: 2, cues: [
     d(0,"Kick + hat",[0,2],"Quarter-note groove starts."), d(1,"Snare + hat",[1,2],"Backbeat."),
     d(2,"Kick + hat",[0,2],"Keep anchors."), d(3,"Snare + hat",[1,2],"Backbeat."),
     d(4,"Kick + hat",[0,2],"Now eighth-note hats."), d(4.5,"hat",[2],"and"),
     d(5,"Snare + hat",[1,2],"2"), d(5.5,"hat",[2],"and"), d(6,"Kick + hat",[0,2],"3"), d(6.5,"hat",[2],"and"),
     d(7,"Snare + hat",[1,2],"4"), d(7.5,"hat",[2],"and"),
+    d(8,"Kick",[0],"Now the hats drop out."), d(9,"Snare",[1],"Backbeat, nothing else."),
+    d(10,"Kick",[0],"Anchors only."), d(11,"Snare",[1],"Same backbeat, emptier."),
   ]},
   "drums-side-intermediate": { bpm: 80, subdivision: 2, cues: [
-    d(0,"ACCENT",[2],"Accent beat 1."), d(.5,"hat",[2],"Light."),
-    d(1,"snare",[1,2],"Backbeat."), d(1.5,"ACCENT",[2],"Move accent to the and of 2."),
-    d(2,"kick",[0,2],"Keep groove stable."), d(2.5,"hat",[2],"Light."),
-    d(3,"snare",[1,2],"Backbeat."), d(3.5,"ACCENT",[2],"Late accent."),
-    d(4,"kick",[0,2],"Second bar, same pulse."), d(5,"snare",[1,2],"2"), d(6,"kick",[0,2],"3"), d(7,"snare",[1,2],"4"),
+    d(0,"Kick + ACCENT",[0,2],"Accent on 1 — kick stays in."), d(0.5,"hat",[2],"Light."),
+    d(1,"Snare + hat",[1,2],"Backbeat."), d(1.5,"hat",[2],"Light."),
+    d(2,"Kick + hat",[0,2],"Keep groove stable."), d(2.5,"hat",[2],"Light."),
+    d(3,"Snare + hat",[1,2],"Backbeat."), d(3.5,"hat",[2],"Light."),
+    d(4,"Kick + hat",[0,2],"Second bar — the accent moves."), d(4.5,"hat",[2],"Light."),
+    d(5,"Snare + hat",[1,2],"Backbeat."), d(5.5,"hat",[2],"Light."),
+    d(6,"Kick + hat",[0,2],"Keep groove stable."), d(6.5,"ACCENT",[2],"Accent on the and of 3."),
+    d(7,"Snare + hat",[1,2],"Backbeat."), d(7.5,"hat",[2],"Light."),
   ]},
-  "drums-side-advanced": { bpm: 80, subdivision: 2, cues: [
+  "drums-side-advanced": { bpm: 80, beats: 9, subdivision: 2, cues: [
     d(0,"Kick + hat",[0,2],"Groove."), d(1,"Snare + hat",[1,2],"Backbeat."), d(2,"Kick + hat",[0,2],"Groove."), d(3,"Snare + hat",[1,2],"Backbeat."),
     d(4,"Tom",[3],"Fill begins."), d(4.5,"Snare",[1],"Keep subdivision."), d(5,"Tom",[3],"Continue."), d(5.5,"Snare",[1],"Do not rush."),
-    d(6,"Tom + kick",[0,3],"Build toward the bar line."), d(6.5,"Snare",[1],"Last setup."), d(7,"Tom",[3],"Final fill note."), d(7.5,"Snare",[1],"Then imagine beat 1 landing next."),
+    d(6,"Tom + kick",[0,3],"Build toward the bar line."), d(6.5,"Snare",[1],"Keep building."), d(7,"Tom",[3],"Final fill note."), d(7.5,"Snare",[1],"Last setup note."),
+    d(8,"Kick + snare",[0,1],"Beat 1 — the landing."),
   ]},
 
   "vocals-side-foundations": { bpm: 60, beats: 20, cues: [
