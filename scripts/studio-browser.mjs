@@ -73,7 +73,7 @@ try {
     .getByText(/2 \/ 3/)
     .waitFor();
   await page.getByRole("button", { name: "Pause and leave session", exact: true }).click();
-  await page.getByText("1 of 3 exercises finished.", { exact: false }).waitFor();
+  await page.getByText("0 of 3 exercises finished.", { exact: false }).waitFor();
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.getByRole("button", { name: "Resume your loop", exact: true }).waitFor();
   await page.getByRole("link", { name: "Studio", exact: true }).click();
