@@ -64,7 +64,7 @@ try {
   };
 
   page.on("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "Import backup", exact: true }).click();
+  await page.getByRole("button", { name: "Import backup", exact: true }).waitFor();
   await page.getByLabel("Choose a SparkSuite progress backup").setInputFiles({
     name: "sparksuite-progress.json",
     mimeType: "application/json",
@@ -83,7 +83,6 @@ try {
     phrase: { stage: 1, note: "Keep the chord ringing." },
   });
 
-  await page.getByRole("button", { name: "Import backup", exact: true }).click();
   await page.getByLabel("Choose a SparkSuite progress backup").setInputFiles({
     name: "invalid.json",
     mimeType: "application/json",
