@@ -182,14 +182,10 @@ try {
       false,
       `${instrument} scored practice must wait for real microphone input or the unscored fallback`,
     );
-    await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
-    await page
-      .getByText("Microphone access was blocked or unavailable. Allow access in your browser and try again.", { exact: true })
-      .waitFor();
     await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).waitFor();
-    // The ukulele path above exercises the full unscored fallback. For other
-    // instruments, verify that the real-mic gate and safe fallback are offered,
-    // then leave without advancing the lesson or awarding progress.
+    // The ukulele path above exercises denied permission and the full unscored
+    // fallback. For the other instruments, verify the shared microphone gate
+    // and safe fallback, then leave without advancing or awarding progress.
     await page.goto(new URL("/", url).toString(), { waitUntil: "domcontentloaded" });
   }
 
