@@ -215,7 +215,7 @@ function AccountPage() {
           </p>
           <h2 id="backup-title" className="mt-2 font-display text-xl font-semibold">Keep your own copy, too.</h2>
           <p className="mt-2 leading-relaxed text-muted">
-            Export a portable JSON backup for safekeeping or import one on a new computer. Backups include learner progress, profiles, milestones, practice history and valid resumable checkpoints—not microphone audio or temporary API keys.
+            Export a portable JSON backup for safekeeping or import one on a new computer. Backups include learner progress, profiles, milestones, shared-phrase notes/stages, practice history and valid resumable checkpoints—not microphone audio or temporary API keys.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             <Button variant="secondary" onClick={exportBackup}>
