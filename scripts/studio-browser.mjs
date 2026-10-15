@@ -20,9 +20,30 @@ try {
   page.on("console", (message) => {
     if (message.type() === "error") errors.push(message.text());
   });
+
+  // Hold the session lookup open to prove local practice can boot even when
+  // account auth is slow or unavailable. Release it as soon as Studio appears.
+  let authRequestSeen = false;
+  let notifyAuthRequest = () => {};
+  const authRequest = new Promise((resolve) => { notifyAuthRequest = resolve; });
+  let releaseSession = () => {};
+  const sessionGate = new Promise((resolve) => { releaseSession = resolve; });
+  await page.route("**/api/auth/get-session**", async (route) => {
+    authRequestSeen = true;
+    notifyAuthRequest();
+    await sessionGate;
+    await route.fulfill({ status: 200, contentType: "application/json", body: "null" });
+  });
+
   await page.clock.install({ time: new Date("2026-09-05T12:00:00Z") });
   await page.goto(url, { waitUntil: "domcontentloaded" });
-  await page.getByRole("heading", { name: "Make room for music." }).waitFor();
+  try {
+    await Promise.race([authRequest, new Promise((resolve) => setTimeout(resolve, 5000))]);
+    assert.equal(authRequestSeen, true, "The browser test should hold the initial auth lookup open");
+    await page.getByRole("heading", { name: "Make room for music." }).waitFor({ timeout: 5000 });
+  } finally {
+    releaseSession();
+  }
   assert.equal(await page.getByRole("button", { name: /^Practise / }).count(), 10);
   await page.evaluate(() => document.fonts.ready);
   await page.screenshot({ path: `${output}/studio-${label}-desktop.png`, fullPage: true });
