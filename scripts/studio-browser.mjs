@@ -143,11 +143,15 @@ try {
   await page
     .getByText("Microphone access was blocked or unavailable. Allow access in your browser and try again.", { exact: true })
     .waitFor();
-  await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
+  await page.clock.runFor(4000);
+  await page
+    .getByText("Visual-only practice. This attempt will not be scored.", { exact: true })
+    .waitFor();
   assert.equal(
-    await page.getByRole("button", { name: "Count me in", exact: true }).isEnabled(),
-    false,
-    "Denied microphone access must not silently turn taps into scored strums",
+    await page.getByRole("button", { name: "Strum", exact: true }).count(),
+    0,
+    "The ukulele play phase must never score a button press as a strum",
   );
 
   assert.deepEqual(errors, [], "Browser console and runtime errors");
