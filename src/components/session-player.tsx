@@ -142,7 +142,7 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
     return;
   }
   if (instrument === "bass") {
-    const root: Record<string, number> = { Em: 0, G: 3, C: 3, D: 5, A: 5, Am: 0, E: 0 };
+    const root: Record<string, number> = { Em: 0, G: 3, C: 8, D: 10, A: 5, Am: 5, E: 0 };
     const fret = root[chordId] ?? 0;
     bassTone(inst.openFreq[0] * Math.pow(2, fret / 12));
     return;
