@@ -110,7 +110,7 @@ async function seed(learning, instrument = "guitar") {
     },
     { learning, suite },
   );
-  await page.goto(`${url}/coach`, { waitUntil: "networkidle" });
+  await page.goto(`${url}/coach`, { waitUntil: "domcontentloaded" });
   await heading("What would help right now?").waitFor();
 }
 async function expectReadyToAsk() {
@@ -205,7 +205,7 @@ try {
   );
   assert.match((await disabled.json()).error, /not available yet/);
   for (const entry of ["/", "/today", "/learn"]) {
-    await page.goto(`${url}${entry}`, { waitUntil: "networkidle" });
+    await page.goto(`${url}${entry}`, { waitUntil: "domcontentloaded" });
     const before = await storage();
     await page.getByRole("link", { name: /^Ask your coach/ }).press("Enter");
     await heading("Find your next small step.").waitFor();
@@ -690,7 +690,7 @@ try {
         });
       }
     });
-    await isolatedPage.goto(`${url}/coach`, { waitUntil: "networkidle" });
+    await isolatedPage.goto(`${url}/coach`, { waitUntil: "domcontentloaded" });
     await isolatedPage
       .getByText("The AI coach is not available yet. Your guided learning is ready below.", {
         exact: true,
@@ -783,7 +783,7 @@ try {
     true,
     "An old key’s stale response cannot disable the replacement key",
   );
-  await page.reload({ waitUntil: "networkidle" });
+  await page.reload({ waitUntil: "domcontentloaded" });
   await page
     .getByText("The AI coach is not available yet. Your guided learning is ready below.", {
       exact: true,
