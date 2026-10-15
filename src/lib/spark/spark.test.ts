@@ -27,7 +27,7 @@ import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import { isTonalStrumSpectrum, isUkuleleStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
-import { frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector } from "./acoustic-input.ts";
+import { acousticInputModeFor, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -436,6 +436,30 @@ describe("acoustic ukulele strum detection", () => {
   });
 });
 
+
+describe("instrument microphone routing", () => {
+  const mode = (
+    instrument: string,
+    surface: "strings" | "keys" | "pads" | "voice",
+    pluckDrill = false,
+    hasPattern = false,
+  ) => acousticInputModeFor({ instrument, surface, pluckDrill, hasPattern });
+
+  it("routes each instrument family to a suitable acoustic detector", () => {
+    assert.equal(mode("guitar", "strings"), "strum");
+    assert.equal(mode("ukulele", "strings"), "strum");
+    assert.equal(mode("ukulele", "strings", true), "pitch");
+    assert.equal(mode("bass", "strings"), "pitch");
+    assert.equal(mode("mandolin", "strings", false, true), "pitch");
+    assert.equal(mode("banjo", "strings", false, true), "pitch");
+    assert.equal(mode("violin", "strings"), "pitch");
+    assert.equal(mode("lapsteel", "strings", false, true), "pitch");
+    assert.equal(mode("piano", "keys", true), "pitch");
+    assert.equal(mode("piano", "keys"), "strum");
+    assert.equal(mode("drums", "pads"), "percussion");
+    assert.equal(mode("vocals", "voice"), "pitch");
+  });
+});
 
 describe("general acoustic instrument input", () => {
   const sampleRate = 48000;
