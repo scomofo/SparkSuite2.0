@@ -1,4 +1,5 @@
 import { INSTRUMENTS, type InstrumentId } from "./instruments.ts";
+import { localDayKey } from "../utils.ts";
 import { emptyLearning, parseLearning, type LearningState } from "./learning.ts";
 import { restoreCheckpoint } from "./checkpoint.ts";
 import { defaultProgress, defaultSuite, loadSuite, progressFor, sanitizeSuite, type SuiteState } from "./storage.ts";
@@ -64,7 +65,7 @@ export function sanitizeProfileSnapshot(raw: unknown): ProfileSnapshot | null {
   const suite = sanitizeSuite(value.suite);
   let learning: LearningState;
   try {
-    learning = parseLearning(JSON.stringify(value.learning));
+    learning = parseLearning(JSON.stringify(value.learning) ?? "{}");
   } catch {
     learning = emptyLearning();
   }
@@ -280,7 +281,7 @@ function checkpointIndex(text: string | undefined): number {
   if (!text) return -1;
   try {
     const value = JSON.parse(text) as { index?: unknown; date?: unknown };
-    return typeof value.index === "number" && value.date === new Date().toISOString().slice(0, 10)
+    return typeof value.index === "number" && value.date === localDayKey()
       ? value.index
       : -1;
   } catch {
@@ -294,11 +295,7 @@ export function mergeProfileSnapshots(
   base?: ProfileSnapshot,
 ): ProfileSnapshot {
   const suite = defaultSuite();
-  const ids = new Set<InstrumentId>([
-    ...INSTRUMENTS.map((item) => item.id),
-    ...Object.keys(local.suite.apps) as InstrumentId[],
-    ...Object.keys(cloud.suite.apps) as InstrumentId[],
-  ]);
+  const ids = new Set<InstrumentId>(INSTRUMENTS.map((item) => item.id));
   const apps: SuiteState["apps"] = {};
   for (const id of ids) {
     const localProgress = local.suite.apps[id] ?? defaultProgress();
