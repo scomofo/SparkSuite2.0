@@ -362,6 +362,7 @@ export function SessionPlayer() {
       return;
     }
 
+    mic.analyser.smoothingTimeConstant = 0.2;
     const detector = new StrumOnsetDetector();
     const timeData = new Float32Array(mic.analyser.fftSize);
     const spectrumData = new Float32Array(mic.analyser.frequencyBinCount);
