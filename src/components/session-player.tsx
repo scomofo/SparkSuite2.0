@@ -207,12 +207,6 @@ export function SessionPlayer() {
     resetItem();
   }, [item?.id, resetItem]);
 
-  // Do not keep the microphone open while the current exercise uses a
-  // different input method (for example, the single-string warmup).
-  useEffect(() => {
-    if (!requiresUkuleleMic && micStatus === "listening") stopUkuleleMic();
-  }, [micStatus, requiresUkuleleMic, stopUkuleleMic]);
-
   const effectiveItem = useMemo(() => {
     if (!item) return null;
     if (item.process === "create" && createPick) {
@@ -417,6 +411,12 @@ export function SessionPlayer() {
     setMicStatus("off");
     setMicError(null);
   }, []);
+
+  // Do not keep the microphone open while the current exercise uses a
+  // different input method (for example, the single-string warmup).
+  useEffect(() => {
+    if (!requiresUkuleleMic && micStatus === "listening") stopUkuleleMic();
+  }, [micStatus, requiresUkuleleMic, stopUkuleleMic]);
 
   const beginVisualOnly = useCallback(() => {
     if (!requiresUkuleleMic || needsPickRef.current || modeling) return;
