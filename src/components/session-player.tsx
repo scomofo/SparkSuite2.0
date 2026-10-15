@@ -33,7 +33,7 @@ import { acousticInputModeFor, PercussionOnsetDetector, PitchOnsetDetector, type
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
-import type { ChordShape, HitJudge, ItemResult, PlanItem } from "@/lib/spark/types";
+import type { ChordShape, HitJudge, ItemResult } from "@/lib/spark/types";
 
 type Phase = "intro" | "countin" | "play" | "itemdone";
 
