@@ -186,13 +186,11 @@ try {
     await page
       .getByText("Microphone access was blocked or unavailable. Allow access in your browser and try again.", { exact: true })
       .waitFor();
-    await page.clock.runFor(4000);
-    await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
-    await page.clock.runFor(3500);
-    await page.keyboard.press("6");
-    await page.clock.runFor(31000);
-    await page.getByRole("button", { name: "Next", exact: true }).click();
-    await page.getByRole("button", { name: "Skip this one", exact: true }).click();
+    await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).waitFor();
+    // The ukulele path above exercises the full unscored fallback. For other
+    // instruments, verify that the real-mic gate and safe fallback are offered,
+    // then leave without advancing the lesson or awarding progress.
+    await page.goto(new URL("/", url).toString(), { waitUntil: "domcontentloaded" });
   }
 
   assert.deepEqual(errors, [], "Browser console and runtime errors");
