@@ -19,7 +19,7 @@ page.on("console", (message) => {
   if (message.type() === "error") errors.push(`${message.text()} (${message.location().url})`);
 });
 try {
-  await page.goto(new URL("/account", url).toString(), { waitUntil: "networkidle" });
+  await page.goto(new URL("/account", url).toString(), { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Account & sync", exact: true }).waitFor();
 
   const backup = {
