@@ -56,7 +56,12 @@ jobs:
           node scripts/shared-phrase-audio-browser.mjs
           node scripts/browser-smoke.mjs http://127.0.0.1:8083/ /workspace/screenshots/dev.png
           npm run preview:restart
-          node scripts/studio-browser.mjs http://127.0.0.1:8081 built
+          node scripts/studio-browser.mjs http://127.0.0.1:8081 built || {
+            echo "::group::Production preview server log"
+            cat .grok/preview.log || true
+            echo "::endgroup::"
+            exit 1
+          }
           node scripts/learning-browser.mjs http://127.0.0.1:8081 built
           node scripts/profile-sync-browser.mjs http://127.0.0.1:8081 built
           node scripts/lesson-practice-browser.mjs http://127.0.0.1:8081 built
