@@ -10,11 +10,15 @@ export const PROFILE_RECOVERY_KEY = "sparksuite.sync.recovery.v1";
 export const SUITE_STORAGE_KEY = "sparksuite.v2";
 export const LEARNING_STORAGE_KEY = "sparksuite.learning.v1";
 
+export type SharedPhraseKey = InstrumentId | "theory";
+export type SharedPhraseState = { stage: number; note: string };
+
 export type ProfileSnapshot = {
   version: 1;
   suite: SuiteState;
   learning: LearningState;
   checkpoints: Partial<Record<InstrumentId, string>>;
+  sharedPhrases: Partial<Record<SharedPhraseKey, SharedPhraseState>>;
 };
 
 export type ProfileSyncMarker = {
@@ -30,6 +34,7 @@ export function emptyProfileSnapshot(): ProfileSnapshot {
     suite: defaultSuite(),
     learning: emptyLearning(),
     checkpoints: {},
+    sharedPhrases: {},
   };
 }
 
@@ -43,6 +48,7 @@ export function captureProfileSnapshot(): ProfileSnapshot {
     // Keep the safe empty learning state if storage is unavailable.
   }
   const checkpoints: ProfileSnapshot["checkpoints"] = {};
+  const sharedPhrases: ProfileSnapshot["sharedPhrases"] = {};
   try {
     for (const instrument of INSTRUMENTS) {
       const text = localStorage.getItem(`sparksuite.loop.${instrument.id}`);
@@ -52,10 +58,26 @@ export function captureProfileSnapshot(): ProfileSnapshot {
         restoreCheckpoint(text, progressFor(suite, instrument.id), instrument.id)
       ) checkpoints[instrument.id] = text;
     }
+    for (const key of [...INSTRUMENTS.map((instrument) => instrument.id), "theory"] as SharedPhraseKey[]) {
+      const text = localStorage.getItem(`shared-phrase-v1:${key}`);
+      if (!text || text.length > 2_000) continue;
+      try {
+        const value = JSON.parse(text) as { stage?: unknown; note?: unknown };
+        if (
+          typeof value.stage === "number" &&
+          Number.isInteger(value.stage) &&
+          value.stage >= 0 &&
+          value.stage <= 2 &&
+          typeof value.note === "string"
+        ) sharedPhrases[key] = { stage: value.stage, note: value.note.slice(0, 240) };
+      } catch {
+        // Ignore one malformed phrase without discarding the rest of the profile.
+      }
+    }
   } catch {
     // Progress remains portable even if a browser blocks checkpoint storage.
   }
-  return { version: PROFILE_SNAPSHOT_VERSION, suite, learning, checkpoints };
+  return { version: PROFILE_SNAPSHOT_VERSION, suite, learning, checkpoints, sharedPhrases };
 }
 
 export function sanitizeProfileSnapshot(raw: unknown): ProfileSnapshot | null {
@@ -81,7 +103,23 @@ export function sanitizeProfileSnapshot(raw: unknown): ProfileSnapshot | null {
       ) checkpoints[instrument.id] = text;
     }
   }
-  return { version: PROFILE_SNAPSHOT_VERSION, suite, learning, checkpoints };
+  const sharedPhrases: ProfileSnapshot["sharedPhrases"] = {};
+  if (value.sharedPhrases && typeof value.sharedPhrases === "object" && !Array.isArray(value.sharedPhrases)) {
+    const rawPhrases = value.sharedPhrases as Record<string, unknown>;
+    const validKeys = new Set<string>([...INSTRUMENTS.map((instrument) => instrument.id), "theory"]);
+    for (const [key, rawPhrase] of Object.entries(rawPhrases)) {
+      if (!validKeys.has(key) || !rawPhrase || typeof rawPhrase !== "object" || Array.isArray(rawPhrase)) continue;
+      const phrase = rawPhrase as Record<string, unknown>;
+      if (
+        typeof phrase.stage === "number" &&
+        Number.isInteger(phrase.stage) &&
+        phrase.stage >= 0 &&
+        phrase.stage <= 2 &&
+        typeof phrase.note === "string"
+      ) sharedPhrases[key as SharedPhraseKey] = { stage: phrase.stage, note: phrase.note.slice(0, 240) };
+    }
+  }
+  return { version: PROFILE_SNAPSHOT_VERSION, suite, learning, checkpoints, sharedPhrases };
 }
 
 export function applyProfileSnapshot(snapshot: ProfileSnapshot): void {
@@ -111,6 +149,12 @@ export function applyProfileSnapshot(snapshot: ProfileSnapshot): void {
     if (text) localStorage.setItem(key, text);
     else localStorage.removeItem(key);
   }
+  for (const key of [...INSTRUMENTS.map((instrument) => instrument.id), "theory"] as SharedPhraseKey[]) {
+    const storageKey = `shared-phrase-v1:${key}`;
+    const phrase = snapshot.sharedPhrases[key];
+    if (phrase) localStorage.setItem(storageKey, JSON.stringify(phrase));
+    else localStorage.removeItem(storageKey);
+  }
 }
 
 export function profileSnapshotHasData(snapshot: ProfileSnapshot): boolean {
@@ -134,7 +178,8 @@ export function profileSnapshotHasData(snapshot: ProfileSnapshot): boolean {
     Object.keys(learning.skippedSetup).length > 0 ||
     Object.keys(learning.active).length > 0 ||
     learning.pace !== "step";
-  return hasPractice || hasLearning || suite.active !== "guitar" || Object.keys(snapshot.checkpoints).length > 0;
+  return hasPractice || hasLearning || suite.active !== "guitar" ||
+    Object.keys(snapshot.checkpoints).length > 0 || Object.keys(snapshot.sharedPhrases).length > 0;
 }
 
 function canonical(value: unknown): unknown {
@@ -306,6 +351,20 @@ export function mergeProfileSnapshots(
   const active = chooseChanged(local.suite.active, cloud.suite.active, base?.suite.active, !!base) ?? cloud.suite.active;
   const mergedSuite: SuiteState = { ...suite, active, apps };
   const mergedLearning = mergeLearning(local.learning, cloud.learning, base?.learning);
+  const sharedPhrases: ProfileSnapshot["sharedPhrases"] = {};
+  const phraseKeys = [...INSTRUMENTS.map((instrument) => instrument.id), "theory"] as SharedPhraseKey[];
+  for (const key of phraseKeys) {
+    const localPhrase = local.sharedPhrases[key];
+    const cloudPhrase = cloud.sharedPhrases[key];
+    const basePhrase = base?.sharedPhrases[key];
+    if (localPhrase && cloudPhrase) {
+      const selected = chooseChanged(localPhrase, cloudPhrase, basePhrase, !!base);
+      if (selected) sharedPhrases[key] = selected;
+    } else {
+      const selected = localPhrase ?? cloudPhrase;
+      if (selected) sharedPhrases[key] = selected;
+    }
+  }
   const checkpoints: ProfileSnapshot["checkpoints"] = {};
   for (const instrument of INSTRUMENTS) {
     const id = instrument.id;
@@ -322,6 +381,7 @@ export function mergeProfileSnapshots(
     suite: mergedSuite,
     learning: mergedLearning,
     checkpoints,
+    sharedPhrases,
   }) ?? emptyProfileSnapshot();
 }
 
