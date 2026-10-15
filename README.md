@@ -19,7 +19,7 @@ npm run dev
 - **Today:** start or resume the instrument's guided loop. Pausing or refreshing preserves finished exercises; the current unfinished exercise restarts at its introduction. Each instrument has its own checkpoint.
 - **Progress:** revisit saved musical pieces alongside 28 days of activity, XP, lesson mastery, marks, and the eight most recent sessions for the selected instrument.
 
-Progress and checkpoints stay in this browser. Checkpoints expire at the next local calendar day, when the curriculum/plan changes, or when the saved progress changes. Finishing clears the checkpoint; restoring one does not award XP or mark a day complete. Timing scores measure interaction with the on-screen exercises, not microphone-based instrumental assessment.
+Progress and checkpoints stay in this browser. Checkpoints expire at the next local calendar day, when the curriculum/plan changes, or when the saved progress changes. Finishing clears the checkpoint; restoring one does not award XP or mark a day complete. In the daily guided loop, most timing scores measure on-screen input; ukulele strum exercises can use the microphone to score acoustic strum timing. Ukulele audio is analyzed locally in the browser and is not recorded or uploaded. A visual-only, unscored option remains available.
 
 ## Guided learning
 
