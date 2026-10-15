@@ -24,6 +24,7 @@ import { useSpark } from "@/store/spark";
 import { Button } from "@/components/ui/button";
 import { ChordDiagram } from "@/components/chord-diagram";
 import { DrumPads } from "@/components/drum-pads";
+import { useMidiDrums } from "@/components/use-midi-drums";
 import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
@@ -843,6 +844,15 @@ export function SessionPlayer() {
     return () => window.clearTimeout(id);
   }, [goNext, phase, visualOnly]);
 
+  // Opt-in MIDI kit (drums sessions): a hit sounds the pad and flashes it —
+  // the same primitives a pad tap uses — but never enters the judging
+  // pipeline. Playing along only; nothing is scored.
+  const midiPadHit = useCallback((pad: number) => {
+    drumHit(pad);
+    setActiveString(pad);
+  }, []);
+  const midiKit = useMidiDrums(midiPadHit);
+
   if (!session || !item) return null;
 
   const isWarm = isPluckDrill(item);
@@ -1080,6 +1090,32 @@ export function SessionPlayer() {
 
             {surface === "pads" ? (
               <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} disabled={requiresMicInput} />
+            ) : null}
+
+            {surface === "pads" ? (
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="secondary"
+                  aria-pressed={midiKit.status === "on" || midiKit.status === "no-device"}
+                  onClick={() => {
+                    unlockAudio();
+                    midiKit.toggle();
+                  }}
+                >
+                  MIDI kit: {midiKit.status === "on" || midiKit.status === "no-device" ? "on" : "off"}
+                </Button>
+                <p role="status" className="text-center text-xs text-muted">
+                  {midiKit.status === "on"
+                    ? "Play your kit — hits play the pads here. Nothing is scored."
+                    : midiKit.status === "no-device"
+                      ? "MIDI is on, but no kit is connected yet. Plug one in and it will be picked up automatically."
+                      : midiKit.status === "denied"
+                        ? "MIDI permission was blocked, so the kit can't be heard. Taps still work."
+                        : midiKit.status === "unavailable"
+                          ? "This browser has no MIDI support. Taps still work."
+                          : "Have an electronic kit? Turn this on and play the pads from it."}
+                </p>
+              </div>
             ) : null}
 
             {surface === "strings" && isWarm ? (
