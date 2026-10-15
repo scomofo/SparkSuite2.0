@@ -113,6 +113,11 @@ function migrateSuite(raw: unknown): SuiteState {
   return { version: SAVE_VERSION, active: "guitar", apps: { guitar: migrateProgress(obj as ProgressState) } };
 }
 
+/** Sanitize imported or cloud-synced state through the same migration path as local saves. */
+export function sanitizeSuite(raw: unknown): SuiteState {
+  return migrateSuite(raw);
+}
+
 export function loadSuite(): SuiteState {
   if (!canUseStorage()) return defaultSuite();
   try {
