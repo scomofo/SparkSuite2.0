@@ -47,6 +47,7 @@ test("snapshot sanitization drops unknown instruments and invalid checkpoints", 
 
 test("concurrent device progress merges additive XP and unions independent lesson records", () => {
   const base = emptyProfileSnapshot();
+  base.suite.apps.guitar = { ...defaultProgress(), xp: 100 };
   const local = structuredClone(base);
   const cloud = structuredClone(base);
   const guitar = base.suite.apps.guitar ?? defaultProgress();
