@@ -61,6 +61,9 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
   if (mode === "percussion") {
     return "Play your real drum kit on the cue. Timing and a rough kick/snare distinction are checked.";
   }
+  if (mode === "attack") {
+    return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; exact chord voicing and mute quality are not yet graded.";
+  }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
 }
 
@@ -172,6 +175,7 @@ export function SessionPlayer() {
     surface: micSurface,
     pluckDrill: item !== null && isPluckDrill(item),
     hasPattern: item !== null && hasInstrumentPattern(item),
+    lessonId: item?.lessonId,
   });
   const notesRef = useRef<NoteEvent[]>([]);
   const consumed = useRef<Set<number>>(new Set());
@@ -367,7 +371,10 @@ export function SessionPlayer() {
         }
       }
       if (fromMic && detectedMidi !== undefined && res.note.notes?.length) {
-        const pitchMatches = res.note.notes.some((expected) => Math.abs(expected - detectedMidi) <= 1);
+        const pitchMatches = res.note.notes.some((expected) =>
+          Math.abs(expected - detectedMidi) <= 1 ||
+          (res.note!.notes!.length > 1 && Math.abs(Math.abs(expected - detectedMidi) - 12) <= 1),
+        );
         if (!pitchMatches) {
           onJudge("miss", false);
           return;
@@ -545,7 +552,10 @@ export function SessionPlayer() {
             mic.analyser.fftSize,
             ts,
           );
-          if (onset) attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
+          if (onset) {
+            if (mode === "percussion") attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
+            else attemptRef.current?.("strum", undefined, onset.onsetMs);
+          }
         }
       }
       micFrameRef.current = requestAnimationFrame(loop);
@@ -1035,9 +1045,11 @@ export function SessionPlayer() {
                     : micStatus === "listening"
                       ? micMode === "percussion"
                         ? "Listening for your drum hits…"
-                        : micMode === "pitch"
-                          ? `Listening for notes from your ${acousticInstrumentLabel(instrument, inst.name)}…`
-                          : `Listening for ${acousticInstrumentLabel(instrument, inst.name)} strums…`
+                        : micMode === "attack"
+                          ? "Listening for ringing strokes and muted chops…"
+                          : micMode === "pitch"
+                            ? `Listening for notes from your ${acousticInstrumentLabel(instrument, inst.name)}…`
+                            : `Listening for ${acousticInstrumentLabel(instrument, inst.name)} strums…`
                       : "Microphone unavailable. This attempt will not be scored."}
                 </p>
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
