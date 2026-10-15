@@ -1,6 +1,6 @@
 // CI regression checks for the user-facing studio and recovery flow.
 import assert from "node:assert/strict";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 
 const url = process.argv[2] ?? "http://127.0.0.1:8083";
@@ -34,8 +34,15 @@ try {
       await studioHeading.waitFor({ timeout: 10000 });
     } catch {
       const rendered = await page.locator("body").innerText().catch(() => "(body unavailable)");
+      let serverLog = "(preview log unavailable)";
+      try {
+        serverLog = readFileSync(".grok/preview.log", "utf8").slice(-6000);
+      } catch {
+        // The development server has no preview log; the failed production
+        // preview normally writes the SSR exception here.
+      }
       throw new Error(
-        `Studio route did not render at ${page.url()} (title: ${await page.title()}). Body: ${rendered.slice(0, 1200)}`,
+        `Studio route did not render at ${page.url()} (title: ${await page.title()}). Body: ${rendered.slice(0, 1200)}. Preview log tail: ${serverLog}`,
       );
     }
   }
