@@ -24,6 +24,7 @@ import { useSpark } from "@/store/spark";
 import { Button } from "@/components/ui/button";
 import { ChordDiagram } from "@/components/chord-diagram";
 import { DrumPads } from "@/components/drum-pads";
+import { useMidiDrums } from "@/components/use-midi-drums";
 import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
@@ -33,6 +34,7 @@ import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, Percuss
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
+import { pitchWithinTolerance, VocalHoldJudge } from "@/lib/spark/vocal-judge";
 import { practiceShape } from "@/lib/spark/lesson-practice";
 import type { ChordShape, HitJudge, ItemResult } from "@/lib/spark/types";
 
@@ -43,6 +45,10 @@ type AcousticHitEvidence = {
   sampleRate?: number;
   fftSize?: number;
   direction?: StrumDirectionEstimate;
+  /** Unrounded tracked pitch (vocals) — the cents judge reads this, not the rounded MIDI. */
+  frequencyHz?: number;
+  /** A hold judge has already verified this exact note; consume it directly. */
+  verifiedNoteIndex?: number;
 };
 type AttemptFn = (kind: "strum" | "pluck", stringIndex?: number, detectedAtMs?: number, detectedMidi?: number, evidence?: AcousticHitEvidence) => void;
 
@@ -137,7 +143,7 @@ function playInstrumentChord(instrument: InstrumentId, chordId: string, inst = i
     return;
   }
   if (instrument === "bass") {
-    const root: Record<string, number> = { Em: 0, G: 3, C: 3, D: 5, A: 5, Am: 0, E: 0 };
+    const root: Record<string, number> = { Em: 0, G: 3, C: 8, D: 10, A: 5, Am: 5, E: 0 };
     const fret = root[chordId] ?? 0;
     bassTone(inst.openFreq[0] * Math.pow(2, fret / 12));
     return;
@@ -221,6 +227,8 @@ export function SessionPlayer() {
   const micRequiresOpenStringRef = useRef(Boolean(item && micSurface === "strings" && isPluckDrill(item)));
   const micItemIdRef = useRef(item?.id ?? "");
   const micWindowMsRef = useRef(item?.windowMs ?? 230);
+  const micBpmRef = useRef(item?.bpm ?? 60);
+  const holdJudgesRef = useRef(new Map<number, VocalHoldJudge>());
   const micStopRef = useRef<(() => void) | null>(null);
   const micFrameRef = useRef(0);
   const micRequestRef = useRef(0);
@@ -235,6 +243,7 @@ export function SessionPlayer() {
   micRequiresOpenStringRef.current = Boolean(item && micSurface === "strings" && isPluckDrill(item));
   micItemIdRef.current = item?.id ?? "";
   micWindowMsRef.current = item?.windowMs ?? 230;
+  micBpmRef.current = item?.bpm ?? 60;
 
   useEffect(() => () => {
     pauseSession();
@@ -268,6 +277,7 @@ export function SessionPlayer() {
     setVisualOnly(false);
     visualOnlyRef.current = false;
     consumed.current = new Set();
+    holdJudgesRef.current.clear();
     notesRef.current = [];
     lastBeat.current = -1;
     hitsRef.current = 0;
@@ -299,6 +309,7 @@ export function SessionPlayer() {
     unlockAudio();
     notesRef.current = buildTimeline(effectiveItem);
     consumed.current = new Set();
+    holdJudgesRef.current.clear();
     hitsRef.current = 0;
     missesRef.current = 0;
     nowRef.current = 0;
@@ -365,8 +376,18 @@ export function SessionPlayer() {
         stringIndex = undefined;
       }
       const t = ((detectedAtMs ?? performance.now()) - startRef.current) / 1000;
-      const pending = notesRef.current.filter((_, i) => !consumed.current.has(i));
-      const res = consumeHit(pending, t, item.windowMs ?? 230);
+      let res: ReturnType<typeof consumeHit>;
+      if (fromMic && evidence?.verifiedNoteIndex !== undefined) {
+        // A vocals hold judge verified this exact note over its full span;
+        // consume it directly — its window closed beats ago, so the timed
+        // consumeHit lookup no longer applies.
+        const note = notesRef.current[evidence.verifiedNoteIndex];
+        if (!note || consumed.current.has(evidence.verifiedNoteIndex)) return;
+        res = { hit: true, judge: "good", deltaMs: 0, note, index: evidence.verifiedNoteIndex };
+      } else {
+        const pending = notesRef.current.filter((_, i) => !consumed.current.has(i));
+        res = consumeHit(pending, t, item.windowMs ?? 230);
+      }
 
       if (kind === "pluck" && stringIndex !== undefined) {
         if (!fromMic) {
@@ -381,6 +402,15 @@ export function SessionPlayer() {
       if (!res.hit || !res.note) {
         onJudge("miss", !fromMic);
         return;
+      }
+      // Bespoke vocals cues (expectedMidi) are scored only from the mic's
+      // unrounded pitch: within 20 cents of the target counts, anything else
+      // — wrong pitch, wrong octave, no pitch evidence — scores nothing here
+      // and the note is left to expire as a miss. The drone lesson carries no
+      // expectedMidi and keeps its octave-tolerant pitch-class check below.
+      if (res.note.expectedMidi !== undefined && evidence?.verifiedNoteIndex === undefined) {
+        const freq = evidence?.frequencyHz;
+        if (!fromMic || freq === undefined || !pitchWithinTolerance(freq, res.note.expectedMidi)) return;
       }
       if (kind !== "pluck" && fromMic && !res.note.muted && evidence?.spectrumDb && evidence.sampleRate && evidence.fftSize) {
         const expectedChord = res.note.notes?.length
@@ -568,6 +598,30 @@ export function SessionPlayer() {
               minimumHz,
               maximumHz,
             );
+            // Bespoke hold cues are judged over their whole span, not at a
+            // single onset: feed every frame (pitched or silent) to the
+            // note's hold judge and settle the verdict as the span closes.
+            const beatSec = 60 / (micBpmRef.current || 60);
+            notesRef.current.forEach((note, i) => {
+              if (note.expectedMidi === undefined || !note.holdBeats || consumed.current.has(i)) return;
+              // Judged span: 100 ms attack grace at the front, closing a
+              // frame early so the verdict lands before the item ends.
+              const startMs = startRef.current + (note.t + 0.1) * 1000;
+              const endMs = startRef.current + (note.t + note.holdBeats * beatSec - 0.05) * 1000;
+              if (ts < startMs - 250 || (ts > endMs && !holdJudgesRef.current.has(i))) return;
+              let judge = holdJudgesRef.current.get(i);
+              if (!judge) {
+                judge = new VocalHoldJudge(note.expectedMidi, startMs, endMs);
+                holdJudgesRef.current.set(i, judge);
+              }
+              judge.observe(ts, sample ? sample.frequencyHz : null);
+              if (ts >= endMs) {
+                holdJudgesRef.current.delete(i);
+                if (judge.passes()) {
+                  attemptRef.current?.("pluck", note.expectedMidi, ts, note.expectedMidi, { verifiedNoteIndex: i });
+                }
+              }
+            });
             if (sample) {
               const elapsed = (ts - startRef.current) / 1000;
               const windowSec = Math.min(100, micWindowMsRef.current) / 1000;
@@ -576,9 +630,13 @@ export function SessionPlayer() {
               );
               const expectedMidi = upcoming?.string ?? upcoming?.notes?.[0];
               if (upcoming && expectedMidi !== undefined) {
-                const samePitchClass = ((sample.midi - expectedMidi) % 12 + 12) % 12 === 0;
-                if (samePitchClass) {
-                  attemptRef.current?.("pluck", sample.midi, ts, sample.midi);
+                // Hold cues belong to the hold judge above — an in-tune
+                // first instant must not score them early.
+                if (!upcoming.holdBeats) {
+                  const samePitchClass = ((sample.midi - expectedMidi) % 12 + 12) % 12 === 0;
+                  if (samePitchClass) {
+                    attemptRef.current?.("pluck", sample.midi, ts, sample.midi, { frequencyHz: sample.frequencyHz });
+                  }
                 }
               } else {
                 const onset = pitchDetector.process(
@@ -589,7 +647,7 @@ export function SessionPlayer() {
                   minimumHz,
                   maximumHz,
                 );
-                if (onset) attemptRef.current?.("pluck", onset.midi, onset.onsetMs, onset.midi);
+                if (onset) attemptRef.current?.("pluck", onset.midi, onset.onsetMs, onset.midi, { frequencyHz: onset.frequencyHz });
               }
             }
           } else {
@@ -681,7 +739,13 @@ export function SessionPlayer() {
       if (!visualOnlyRef.current) {
         for (let i = 0; i < notesRef.current.length; i++) {
           if (consumed.current.has(i)) continue;
-          if (elapsed - notesRef.current[i].t > (item.windowMs ?? 230) / 1000) {
+          const note = notesRef.current[i];
+          // Hold cues stay open for their full span (plus the usual hit
+          // window) — the hold judge settles them, not this clock.
+          const expiry = note.holdBeats
+            ? note.t + note.holdBeats * beatLen + (item.windowMs ?? 230) / 1000
+            : note.t + (item.windowMs ?? 230) / 1000;
+          if (elapsed > expiry) {
             consumed.current.add(i);
             onJudge("miss");
           }
@@ -842,6 +906,15 @@ export function SessionPlayer() {
     const id = window.setTimeout(() => goNext(), AUTO_ADVANCE_MS);
     return () => window.clearTimeout(id);
   }, [goNext, phase, visualOnly]);
+
+  // Opt-in MIDI kit (drums sessions): a hit sounds the pad and flashes it —
+  // the same primitives a pad tap uses — but never enters the judging
+  // pipeline. Playing along only; nothing is scored.
+  const midiPadHit = useCallback((pad: number) => {
+    drumHit(pad);
+    setActiveString(pad);
+  }, []);
+  const midiKit = useMidiDrums(midiPadHit);
 
   if (!session || !item) return null;
 
@@ -1080,6 +1153,32 @@ export function SessionPlayer() {
 
             {surface === "pads" ? (
               <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} disabled={requiresMicInput} />
+            ) : null}
+
+            {surface === "pads" ? (
+              <div className="flex flex-col items-center gap-2">
+                <Button
+                  variant="secondary"
+                  aria-pressed={midiKit.status === "on" || midiKit.status === "no-device"}
+                  onClick={() => {
+                    unlockAudio();
+                    midiKit.toggle();
+                  }}
+                >
+                  MIDI kit: {midiKit.status === "on" || midiKit.status === "no-device" ? "on" : "off"}
+                </Button>
+                <p role="status" className="text-center text-xs text-muted">
+                  {midiKit.status === "on"
+                    ? "Play your kit — hits play the pads here. Nothing is scored."
+                    : midiKit.status === "no-device"
+                      ? "MIDI is on, but no kit is connected yet. Plug one in and it will be picked up automatically."
+                      : midiKit.status === "denied"
+                        ? "MIDI permission was blocked, so the kit can't be heard. Taps still work."
+                        : midiKit.status === "unavailable"
+                          ? "This browser has no MIDI support. Taps still work."
+                          : "Have an electronic kit? Turn this on and play the pads from it."}
+                </p>
+              </div>
             ) : null}
 
             {surface === "strings" && isWarm ? (

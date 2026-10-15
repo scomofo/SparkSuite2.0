@@ -247,7 +247,13 @@ function LearnPage() {
                           <div className="mt-5 rounded-lg bg-raised p-4">
                             <p className="studio-label">Hear it in context</p>
                             <p className="mt-2 text-sm leading-relaxed">{lesson.example}</p>
-                            {lesson.demo ? <LessonDemo key={lesson.id} demo={lesson.demo} /> : null}
+                            {lesson.demo ? (
+                              <LessonDemo
+                                key={lesson.id}
+                                demo={lesson.demo}
+                                instrument={lesson.instrument}
+                              />
+                            ) : null}
                           </div>
                           {prerequisite && !data.records[prerequisite.id]?.completedOn ? (
                             <p className="mt-4 text-sm leading-relaxed text-muted">

@@ -38,7 +38,8 @@ export type LearningLesson = {
   answer: number;
   feedback: string;
   prerequisite?: string;
-  /** Optional synthesized pitch reference; each entry is one beat, [] is a rest. */
+  /** Optional synthesized reference; each entry is one step, [] is a rest.
+   *  Pitched instruments use MIDI pitches; drums use GM drum notes (midi-drums.ts). */
   demo?: { label: string; notes: number[][] };
 };
 
@@ -184,10 +185,10 @@ const guitar = path("guitar", [
     title: "Your first clear sound",
     outcome: "Name the six strings and make one note ring.",
     explanation:
-      "A string played without pressing a fret is open. In standard tuning, the thickest to thinnest strings are E–A–D–G–B–E. A fret is a metal divider; pressing just behind it shortens the vibrating string and raises the pitch.",
+      "A string played without pressing a fret is open. In standard tuning, the thickest to thinnest strings are E–A–D–G–B–E. A fret is a metal divider; pressing just behind it shortens the vibrating string and raises the pitch. Before you play, tune each string to its note with a tuner; every later lesson assumes the strings are right.",
     example: "Open low E → first fret F → open E. Use only enough pressure to get a clear sound.",
     practice: [
-      "Rest the guitar securely and find the thickest string.",
+      "Rest the guitar securely, find the thickest string, and use a tuner to bring each string to its note, E–A–D–G–B–E.",
       "Pluck it open, then press just behind the first fret and pluck again.",
       "Release, repeat three times, and notice which note sounds higher.",
     ],
@@ -242,7 +243,7 @@ const guitar = path("guitar", [
     options: ["E–G♯–B", "G–B–D", "E–G–B"],
     answer: 2,
     feedback: "Em is E–G–B. G is its minor third; E–G♯–B would be E major.",
-    demo: { label: "Em then G", notes: [[52, 55, 59], [], [55, 59, 62], []] },
+    demo: { label: "Em then G", notes: [[52, 55, 59], [], [43, 47, 50, 55, 59, 67], []] },
   },
   {
     slug: "eighths",
@@ -295,9 +296,9 @@ const guitar = path("guitar", [
     explanation:
       "A minor pentatonic uses A–C–D–E–G: five notes, with room for silence. A motif is a short idea you repeat or vary. A phrase can answer an earlier phrase by keeping its rhythm and changing the ending.",
     example:
-      "On high E: fret 5 is A and 8 is C. On B: fret 5 is E and 8 is G. Try A–C–A, rest; E–G–A, rest.",
+      "On high E: fret 5 is A and 8 is C. On B: fret 3 is D, 5 is E and 8 is G. Try A–C–A, rest; E–G–A, rest.",
     practice: [
-      "Find the four positions in the example and play each slowly.",
+      "Find the five positions in the example and play each slowly.",
       "Play A–C–A over four counted beats, leaving beat 4 silent.",
       "Answer with E–G–A in the next bar. Repeat the pair twice.",
     ],
@@ -320,7 +321,7 @@ const guitar = path("guitar", [
     explanation:
       "A dominant seventh chord combines a major triad with a minor seventh. E7 is E–G♯–B–D. In C major, E7 borrows G♯ to point toward Am: G♯ rises a semitone to A. This is a secondary dominant, often written V7/vi.",
     example:
-      "C → E7 → Am → G. Guitar E7: 0–2–0–1–0–0 from low E to high E. Am: x–0–2–2–1–0; x means omit that string.",
+      "C → E7 → Am → G. Shapes from low E to high E — C: x–3–2–0–1–0; E7: 0–2–0–1–0–0; Am: x–0–2–2–1–0; x means omit that string.",
     practice: [
       "Play E7 then Am slowly, using the example shapes.",
       "Isolate the G string: fret 1 to fret 2, G♯ to A.",
@@ -331,7 +332,7 @@ const guitar = path("guitar", [
     answer: 0,
     feedback:
       "G♯ is outside C major and leads upward to A. That directed motion helps E7 briefly point toward Am.",
-    demo: { label: "E7 resolving to Am", notes: [[52, 56, 59, 62], [], [57, 60, 64], []] },
+    demo: { label: "E7 resolving to Am", notes: [[40, 47, 50, 56, 59, 64], [], [57, 60, 64], []] },
   },
   {
     slug: "arrangement",
@@ -355,7 +356,7 @@ const guitar = path("guitar", [
     ],
     answer: 1,
     feedback:
-      "Keeping other choices steady lets you hear what the rhythm changed. Your finished miniature is a starting point for further refinement.",
+      "Keeping other choices steady lets you hear what the rhythm changed. That finished miniature is the version the next one gets compared against.",
   },
 ]);
 
@@ -739,11 +740,11 @@ const bass = path("bass", [
     title: "Find one note and its silence",
     outcome: "Name E–A–D–G and stop a note deliberately.",
     explanation:
-      "Standard four-string bass tuning is E–A–D–G, thickest to thinnest. An open string has no fret pressed. Muting means stopping unwanted vibration with a light touch. The end of a bass note is part of the groove.",
+      "Standard four-string bass tuning is E–A–D–G, thickest to thinnest. An open string has no fret pressed. Muting means stopping unwanted vibration with a light touch. The end of a bass note is part of the groove. Before you play, tune each string to its note with a tuner; every later lesson assumes the strings are right.",
     example:
       "Pluck open E, then gently touch the string to stop it. Sound and silence are two separate actions.",
     practice: [
-      "Find and name the four open strings slowly.",
+      "Use a tuner to bring each string to its note, E–A–D–G, naming the four open strings as you tune them.",
       "Pluck E once and stop it with a light touch after two counted beats.",
       "Repeat four times, listening for a clean space after the note.",
     ],
@@ -768,7 +769,7 @@ const bass = path("bass", [
     example: "Count 1–2–3–4 and play open E once on each number. Four bars is sixteen notes.",
     practice: [
       "Count four evenly twice before playing.",
-      "Play open E on the four numbers, using a light pluck.",
+      "Play open E on the four numbers, using a light pluck and alternating index and middle fingers; the lab's Alt tab drills this stroke.",
       "Continue for four bars; if a note is late, rejoin the next number.",
     ],
     question: "How many quarter-note beats are in four bars of 4/4?",
@@ -826,7 +827,7 @@ const bass = path("bass", [
     explanation:
       "Straight eighth notes divide a beat in half: number, and. Syncopation emphasizes a weaker part of the beat. An offbeat bass note still belongs to the same steady grid; counting the silent strong beats helps keep its place.",
     example:
-      "Play E on 1, and-of-2, and 4. Keep counting all eight syllables: 1-and-2-and-3-and-4-and.",
+      "Play E on 1, and-of-2, and on beat 4. Keep counting all eight syllables: 1-and-2-and-3-and-4-and.",
     practice: [
       "Tap the example on your knee while saying the full count.",
       "Play it on open E for two bars, leaving the other positions silent.",
@@ -935,6 +936,7 @@ const drums = path("drums", [
     answer: 2,
     feedback:
       "The top 4 says four beats per bar; the bottom 4 makes the quarter note the beat unit.",
+    demo: { label: "Kick on every beat", notes: [[36], [36], [36], [36]] },
   },
   {
     slug: "backbeat",
@@ -954,6 +956,10 @@ const drums = path("drums", [
     answer: 0,
     feedback:
       "The snare emphasizes 2 and 4. The kick on 1 and 3 gives you a simple complementary pattern.",
+    demo: {
+      label: "Kick on 1 and 3, snare on 2 and 4",
+      notes: [[36], [38], [36], [38], [36], [38], [36], [38]],
+    },
   },
   {
     slug: "eighth-hats",
@@ -961,7 +967,7 @@ const drums = path("drums", [
     title: "Add the hi-hat clock",
     outcome: "Layer even eighth notes over kick and snare.",
     explanation:
-      "Eighth notes divide each quarter-note beat into two equal parts. Count 1-and-2-and-3-and-4-and. The hi-hat can play all eight positions while the kick and snare keep their four-beat pattern. Some sounds happen together.",
+      "Eighth notes divide each quarter-note beat into two equal parts. Count 1-and-2-and-3-and-4-and. The hi-hat can play all eight positions while the kick and snare keep their four-beat pattern. Some sounds happen together. Give the hi-hat to your right hand and the snare to your left, both sticks held the same way (matched grip).",
     example: "Hi-hat on every number and and. Kick on 1 and 3; snare on 2 and 4.",
     practice: [
       "Tap eight even hi-hat strokes while speaking the count.",
@@ -973,6 +979,10 @@ const drums = path("drums", [
     answer: 1,
     feedback:
       "Two eighth notes per beat across four beats gives eight hi-hat strokes. They stay even through the snare hits.",
+    demo: {
+      label: "Hat eighths; kick 1 and 3, snare 2 and 4",
+      notes: [[36, 42], [42], [38, 42], [42], [36, 42], [42], [38, 42], [42]],
+    },
   },
   {
     slug: "first-fill",
@@ -997,6 +1007,28 @@ const drums = path("drums", [
     answer: 2,
     feedback:
       "The bar stays four beats long. A fill replaces time in the groove; a clear next beat 1 is the landing.",
+    demo: {
+      label: "Extra snare on the and of 4, kick on the next 1",
+      notes: [
+        [36],
+        [],
+        [38],
+        [],
+        [36],
+        [],
+        [38],
+        [],
+        [36],
+        [],
+        [38],
+        [],
+        [36],
+        [],
+        [38],
+        [38],
+        [36],
+      ],
+    },
   },
   {
     slug: "sixteenths",
@@ -1017,6 +1049,27 @@ const drums = path("drums", [
     answer: 0,
     feedback:
       "A quarter-note beat contains four sixteenths. A silent position still takes one quarter of that beat.",
+    demo: {
+      label: "Snare on 1, e, and — silent on a",
+      notes: [
+        [38],
+        [38],
+        [38],
+        [],
+        [38],
+        [38],
+        [38],
+        [],
+        [38],
+        [38],
+        [38],
+        [],
+        [38],
+        [38],
+        [38],
+        [],
+      ],
+    },
   },
   {
     slug: "accents",
@@ -1041,6 +1094,10 @@ const drums = path("drums", [
     answer: 1,
     feedback:
       "The ghost note sits at a lower volume. Its quieter role lets it add detail without replacing the backbeat's emphasis.",
+    demo: {
+      label: "Accents on 2 and 4, ghost on the and of 3 (one even level here)",
+      notes: [[], [], [38], [], [], [38], [38], []],
+    },
   },
   {
     slug: "three-over-two",
@@ -1061,6 +1118,10 @@ const drums = path("drums", [
     answer: 2,
     feedback:
       "Slots 1 and 4 are three subdivisions apart. Slots 1, 3, and 5 are two subdivisions apart, producing three against two.",
+    demo: {
+      label: "Hat on slots 1, 3, 5; snare on 1 and 4",
+      notes: [[38, 42], [], [42], [38], [42], [], [38, 42], [], [42], [38], [42], []],
+    },
   },
   {
     slug: "arrange",
@@ -1085,6 +1146,28 @@ const drums = path("drums", [
     answer: 0,
     feedback:
       "Eighth-note hats create more events over the same quarter-note pulse. The tempo need not change.",
+    demo: {
+      label: "Quarter hats, then eighth hats; snare–tom fill, kick on 1",
+      notes: [
+        [36, 42],
+        [],
+        [38, 42],
+        [],
+        [36, 42],
+        [],
+        [38, 42],
+        [],
+        [36, 42],
+        [42],
+        [38, 42],
+        [42],
+        [36, 42],
+        [42],
+        [38],
+        [45],
+        [36, 42],
+      ],
+    },
   },
 ]);
 
@@ -1111,6 +1194,7 @@ const vocals = path("vocals", [
     answer: 1,
     feedback:
       "A comfortable octave or listening keeps the musical task accessible. Matching a reference never requires forcing your voice.",
+    demo: { label: "Hum two counts, rest two", notes: [[60], [60], [], []] },
   },
   {
     slug: "pitch-direction",
@@ -1155,6 +1239,7 @@ const vocals = path("vocals", [
     answer: 0,
     feedback:
       "The rest creates space and a breathing opportunity. Its beat still belongs to the ongoing pulse.",
+    demo: { label: "Here, we, go — then rest", notes: [[60], [60], [60], []] },
   },
   {
     slug: "thirds",
@@ -1194,6 +1279,10 @@ const vocals = path("vocals", [
     answer: 2,
     feedback:
       "The and of 2 is the midpoint between quarter-note beats 2 and 3. Counting the earlier silence prepares the entrance.",
+    demo: {
+      label: "Come on and-of-2, back on 3, home on 4",
+      notes: [[], [], [], [60], [60], [], [60], []],
+    },
   },
   {
     slug: "harmony-line",
@@ -1246,6 +1335,10 @@ const vocals = path("vocals", [
     answer: 1,
     feedback:
       "Keeping the phrase and timing steady lets you hear what the stressed word contributes to meaning.",
+    demo: {
+      label: "Same notes twice — stress I, then home",
+      notes: [[60], [60], [60], [60], [60], [60], [60], [60]],
+    },
   },
   {
     slug: "performance-plan",
@@ -1270,6 +1363,10 @@ const vocals = path("vocals", [
     answer: 2,
     feedback:
       "A specific, changeable observation gives the next attempt a clear task. Broad judgments do not tell you what to practise.",
+    demo: {
+      label: "Two phrases — words on 1-and, 2, 3; rest on 4",
+      notes: [[60], [60], [62], [], [64], [], [], [], [64], [64], [62], [], [60], [], [], []],
+    },
   },
 ]);
 

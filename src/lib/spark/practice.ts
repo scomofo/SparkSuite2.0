@@ -1,5 +1,10 @@
 import { JUDGE_WINDOWS, type HitJudge, type ItemResult, type PlanItem } from "./types.ts";
-import { dailyInstrumentCues, hasInstrumentPattern } from "./instrument-patterns.ts";
+import {
+  dailyInstrumentCues,
+  drumDailyPattern,
+  hasInstrumentPattern,
+  type DrumDailyPattern,
+} from "./instrument-patterns.ts";
 
 export type NoteEvent = {
   t: number;
@@ -12,6 +17,12 @@ export type NoteEvent = {
   muted?: boolean;
   duration?: number;
   label?: string;
+  detail?: string;
+  /** Bespoke vocals cues: pitch judged on unrounded cents when the mic is live. */
+  expectedMidi?: number;
+  /** Bespoke vocals hold cues: beats the expected pitch must be sustained. */
+  holdBeats?: number;
+
 };
 
 export function patternBeats(pattern: string): ("down" | "up" | "rest")[] {
@@ -49,6 +60,10 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
     kind: direction,
     bar: Math.floor(cue.beat / 4), beat: cue.beat % 4,
     notes: cue.notes, muted: cue.muted, duration: cue.duration, label: cue.label, chord: cue.chord,
+    // Only bespoke vocals cues carry these; other instruments' events stay
+    // exactly as before (no new keys on the object).
+    ...(cue.expectedMidi !== undefined ? { expectedMidi: cue.expectedMidi, string: cue.expectedMidi } : {}),
+    ...(cue.holdBeats !== undefined ? { holdBeats: cue.holdBeats } : {}),
     };
   });
   if (item.surface === "pads") return drumTimeline(item);
@@ -104,6 +119,8 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
 }
 
 function drumTimeline(item: PlanItem): NoteEvent[] {
+  const declared = drumDailyPattern(item.lessonId);
+  if (declared) return drumPatternTimeline(item, declared);
   const beatSec = 60 / item.bpm;
   const events: NoteEvent[] = [];
   const id = item.lessonId;
@@ -133,6 +150,35 @@ function drumTimeline(item: PlanItem): NoteEvent[] {
         bar,
         beat,
       });
+    }
+  }
+  return events;
+}
+
+/**
+ * Expand a declared drums pattern (instrument-patterns.ts) across the
+ * lesson's bars. The phrase loops; hits at or past the final beat are
+ * clipped, so plan-level bar changes cannot push events past the end.
+ */
+function drumPatternTimeline(item: PlanItem, pattern: DrumDailyPattern): NoteEvent[] {
+  const beatSec = 60 / item.bpm;
+  const total = item.bars * 4;
+  const events: NoteEvent[] = [];
+  for (let offset = 0; offset < total; offset += pattern.beats) {
+    for (const hit of pattern.hits) {
+      const absBeat = offset + hit.beat;
+      if (absBeat >= total) continue;
+      for (const pad of hit.pads) {
+        events.push({
+          t: absBeat * beatSec,
+          kind: "pluck",
+          string: pad,
+          bar: Math.floor(absBeat / 4),
+          beat: absBeat % 4,
+          label: hit.label,
+          detail: hit.detail,
+        });
+      }
     }
   }
   return events;
