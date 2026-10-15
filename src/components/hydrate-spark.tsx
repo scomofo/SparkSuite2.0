@@ -130,7 +130,7 @@ export function HydrateSpark() {
         message: "Syncing your progress…",
       });
       try {
-        const result = await synchronizeProfile(currentUserId, choice);
+        const result = await synchronizeProfile(currentUserId!, choice);
         if (result.applied) {
           reload();
           reloadLearning();
