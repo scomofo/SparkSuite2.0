@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { isMuted } from "@/lib/spark/audio";
 import { playSharedPhrase, sharedPhrasePattern } from "@/lib/spark/shared-phrase";
+import { notifyProfileChanged } from "@/lib/spark/profile-events";
 
 const BARS = ["1 · 2 · 3 · 4", "1 · 2 & · 3 · 4", "1 · 2 · 3 · 4", "1 · 2 & · 3 · rest"];
 const ACTIONS: Record<string, string> = {
@@ -71,6 +72,7 @@ export function SharedPhrase({ instrument = "theory" }: { instrument?: string })
     setStage(next);
     try {
       localStorage.setItem(storageKey, JSON.stringify({ stage: next, note }));
+      notifyProfileChanged();
       setNotice("Saved on this device. This is a good place to stop.");
     } catch {
       setNotice("Could not save. Keep this tab open, or copy your note before leaving.");
