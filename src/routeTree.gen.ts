@@ -10,8 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AccountRouteImport } from './routes/account'
 import { Route as CoachRouteImport } from './routes/coach'
 import { Route as LearnRouteImport } from './routes/learn'
+import { Route as LoginRouteImport } from './routes/login'
 import { Route as MilestoneRouteImport } from './routes/milestone'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as ProgressRouteImport } from './routes/progress'
@@ -19,15 +21,22 @@ import { Route as ResultsRouteImport } from './routes/results'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SkillsRouteImport } from './routes/skills'
 import { Route as StartRouteImport } from './routes/start'
+import { Route as StemsRouteImport } from './routes/stems'
 import { Route as TechniquesRouteImport } from './routes/techniques'
 import { Route as TheoryRouteImport } from './routes/theory'
 import { Route as TodayRouteImport } from './routes/today'
 import { Route as TunerRouteImport } from './routes/tuner'
 import { Route as ApiCoachRouteImport } from './routes/api/coach'
+import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRoute = AccountRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CoachRoute = CoachRouteImport.update({
@@ -38,6 +47,11 @@ const CoachRoute = CoachRouteImport.update({
 const LearnRoute = LearnRouteImport.update({
   id: '/learn',
   path: '/learn',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MilestoneRoute = MilestoneRouteImport.update({
@@ -75,6 +89,11 @@ const StartRoute = StartRouteImport.update({
   path: '/start',
   getParentRoute: () => rootRouteImport,
 } as any)
+const StemsRoute = StemsRouteImport.update({
+  id: '/stems',
+  path: '/stems',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TechniquesRoute = TechniquesRouteImport.update({
   id: '/techniques',
   path: '/techniques',
@@ -100,11 +119,18 @@ const ApiCoachRoute = ApiCoachRouteImport.update({
   path: '/api/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
+  id: '/api/auth/$',
+  path: '/api/auth/$',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/coach': typeof CoachRoute
   '/learn': typeof LearnRoute
+  '/login': typeof LoginRoute
   '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
@@ -112,16 +138,20 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/start': typeof StartRoute
+  '/stems': typeof StemsRoute
   '/techniques': typeof TechniquesRoute
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
   '/tuner': typeof TunerRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/coach': typeof CoachRoute
   '/learn': typeof LearnRoute
+  '/login': typeof LoginRoute
   '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
@@ -129,17 +159,21 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/start': typeof StartRoute
+  '/stems': typeof StemsRoute
   '/techniques': typeof TechniquesRoute
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
   '/tuner': typeof TunerRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRoute
   '/coach': typeof CoachRoute
   '/learn': typeof LearnRoute
+  '/login': typeof LoginRoute
   '/milestone': typeof MilestoneRoute
   '/practice': typeof PracticeRoute
   '/progress': typeof ProgressRoute
@@ -147,18 +181,22 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/skills': typeof SkillsRoute
   '/start': typeof StartRoute
+  '/stems': typeof StemsRoute
   '/techniques': typeof TechniquesRoute
   '/theory': typeof TheoryRoute
   '/today': typeof TodayRoute
   '/tuner': typeof TunerRoute
   '/api/coach': typeof ApiCoachRoute
+  '/api/auth/$': typeof ApiAuthSplatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
     | '/coach'
     | '/learn'
+    | '/login'
     | '/milestone'
     | '/practice'
     | '/progress'
@@ -166,16 +204,20 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/start'
+    | '/stems'
     | '/techniques'
     | '/theory'
     | '/today'
     | '/tuner'
     | '/api/coach'
+    | '/api/auth/$'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/account'
     | '/coach'
     | '/learn'
+    | '/login'
     | '/milestone'
     | '/practice'
     | '/progress'
@@ -183,16 +225,20 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/start'
+    | '/stems'
     | '/techniques'
     | '/theory'
     | '/today'
     | '/tuner'
     | '/api/coach'
+    | '/api/auth/$'
   id:
     | '__root__'
     | '/'
+    | '/account'
     | '/coach'
     | '/learn'
+    | '/login'
     | '/milestone'
     | '/practice'
     | '/progress'
@@ -200,17 +246,21 @@ export interface FileRouteTypes {
     | '/settings'
     | '/skills'
     | '/start'
+    | '/stems'
     | '/techniques'
     | '/theory'
     | '/today'
     | '/tuner'
     | '/api/coach'
+    | '/api/auth/$'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRoute: typeof AccountRoute
   CoachRoute: typeof CoachRoute
   LearnRoute: typeof LearnRoute
+  LoginRoute: typeof LoginRoute
   MilestoneRoute: typeof MilestoneRoute
   PracticeRoute: typeof PracticeRoute
   ProgressRoute: typeof ProgressRoute
@@ -218,11 +268,13 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SkillsRoute: typeof SkillsRoute
   StartRoute: typeof StartRoute
+  StemsRoute: typeof StemsRoute
   TechniquesRoute: typeof TechniquesRoute
   TheoryRoute: typeof TheoryRoute
   TodayRoute: typeof TodayRoute
   TunerRoute: typeof TunerRoute
   ApiCoachRoute: typeof ApiCoachRoute
+  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -232,6 +284,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/coach': {
@@ -246,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/learn'
       fullPath: '/learn'
       preLoaderRoute: typeof LearnRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/milestone': {
@@ -297,6 +363,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StartRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/stems': {
+      id: '/stems'
+      path: '/stems'
+      fullPath: '/stems'
+      preLoaderRoute: typeof StemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/techniques': {
       id: '/techniques'
       path: '/techniques'
@@ -332,13 +405,22 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCoachRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/auth/$': {
+      id: '/api/auth/$'
+      path: '/api/auth/$'
+      fullPath: '/api/auth/$'
+      preLoaderRoute: typeof ApiAuthSplatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRoute: AccountRoute,
   CoachRoute: CoachRoute,
   LearnRoute: LearnRoute,
+  LoginRoute: LoginRoute,
   MilestoneRoute: MilestoneRoute,
   PracticeRoute: PracticeRoute,
   ProgressRoute: ProgressRoute,
@@ -346,11 +428,13 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SkillsRoute: SkillsRoute,
   StartRoute: StartRoute,
+  StemsRoute: StemsRoute,
   TechniquesRoute: TechniquesRoute,
   TheoryRoute: TheoryRoute,
   TodayRoute: TodayRoute,
   TunerRoute: TunerRoute,
   ApiCoachRoute: ApiCoachRoute,
+  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

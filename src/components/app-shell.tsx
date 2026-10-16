@@ -7,6 +7,7 @@ import {
   Flame,
   Gauge,
   Home,
+  Layers,
   LayoutGrid,
   Music2,
   Settings,
@@ -38,6 +39,7 @@ export function AppShell({
     { to: "/today" as const, label: "Today", icon: Home },
     { to: "/learn" as const, label: "Learn", icon: BookOpen },
     third,
+    { to: "/stems" as const, label: "Stems", icon: Layers },
     { to: "/progress" as const, label: "Progress", icon: ChartNoAxesColumnIncreasing },
     { to: "/tuner" as const, label: "Tuner", icon: Gauge },
   ];
