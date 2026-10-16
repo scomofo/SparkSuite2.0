@@ -580,6 +580,120 @@ export const GUITAR_DAILY_CUES: Record<string, { beats: number; cues: PracticeCu
   },
 };
 
+/**
+ * Bespoke daily ukulele cues: the famous-song lessons. Two strum shapes —
+ * plain downstrums (one a beat) and the island strum (D, D U, U D U across
+ * the bar) — over each song's chord loop. Notes are the shape's strings in
+ * G–C–E–A order, judged as chord tones.
+ */
+const UKE_CHORD_TONES: Record<string, number[]> = {
+  C: [67, 60, 64, 72],
+  G7: [67, 62, 65, 71],
+  F: [69, 60, 65, 69],
+  G: [67, 62, 67, 71],
+  Am: [69, 60, 64, 69],
+  Em: [67, 64, 67, 71],
+};
+
+function ukeStrumBars(
+  bars: { chord: string; detail: string }[],
+  style: "down" | "island",
+): PracticeCue[] {
+  const hits: { at: number; dir: "↓" | "↑" }[] =
+    style === "down"
+      ? [0, 1, 2, 3].map((at) => ({ at, dir: "↓" as const }))
+      : [
+          { at: 0, dir: "↓" },
+          { at: 1, dir: "↓" },
+          { at: 1.5, dir: "↑" },
+          { at: 2.5, dir: "↑" },
+          { at: 3, dir: "↓" },
+          { at: 3.5, dir: "↑" },
+        ];
+  return bars.flatMap((bar, barIndex) =>
+    hits.map((hit) => ({
+      beat: barIndex * 4 + hit.at,
+      label: `${bar.chord} ${hit.dir}`,
+      notes: UKE_CHORD_TONES[bar.chord],
+      detail:
+        hit.at === 0 ? bar.detail : hit.dir === "↓" ? `${bar.chord} — down` : `${bar.chord} — up, light`,
+      duration: style === "down" ? 0.85 : 0.4,
+      chord: bar.chord,
+    })),
+  );
+}
+
+export const UKE_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
+  // Lava (2014): C–G7–F–G7, one calm downstrum a beat.
+  lesson_uke_lava_01: {
+    beats: 16,
+    cues: ukeStrumBars(
+      [
+        { chord: "C", detail: "C — one finger, third fret, A string" },
+        { chord: "G7", detail: "G7 — the tight triangle" },
+        { chord: "F", detail: "F — two fingers, light squeeze" },
+        { chord: "G7", detail: "G7 — back to the triangle, then home to C" },
+      ],
+      "down",
+    ),
+  },
+  // Riptide (Vance Joy): Am–G–C–C under the island strum.
+  lesson_uke_riptide_01: {
+    beats: 16,
+    cues: ukeStrumBars(
+      [
+        { chord: "Am", detail: "Am — island strum: down, down-up, up-down-up" },
+        { chord: "G", detail: "G — keep the hand moving through the change" },
+        { chord: "C", detail: "C — the hand doesn't stop" },
+        { chord: "C", detail: "C — a second bar; don't rush back" },
+      ],
+      "island",
+    ),
+  },
+  // I'm Yours (Jason Mraz): C–G–Am–F, island strum, porch-swing pace.
+  lesson_uke_im_yours_01: {
+    beats: 16,
+    cues: ukeStrumBars(
+      [
+        { chord: "C", detail: "C — island strum, unhurried" },
+        { chord: "G", detail: "G — keep the wave going" },
+        { chord: "Am", detail: "Am — one finger, second fret, G string" },
+        { chord: "F", detail: "F — then the loop comes round" },
+      ],
+      "island",
+    ),
+  },
+  // Over the Rainbow (Israel Kamakawiwoʻole): C–Em–F–C, gentle downstrums.
+  // This lesson teaches Em: the staircase — C string fret 4, E string
+  // fret 3, A string fret 2 — sounding [67, 64, 67, 71].
+  lesson_uke_rainbow_01: {
+    beats: 16,
+    cues: ukeStrumBars(
+      [
+        { chord: "C", detail: "C — gentle downstrums" },
+        { chord: "Em", detail: "Em — the new shape: a staircase, frets 4, 3, 2 down the C, E and A strings" },
+        { chord: "F", detail: "F — two fingers" },
+        { chord: "C", detail: "C — home, then round again" },
+      ],
+      "down",
+    ),
+  },
+  // Count on Me (Bruno Mars): C–Em–Am–G–F — Em reused from Rainbow.
+  lesson_uke_count_on_me_01: {
+    beats: 20,
+    cues: ukeStrumBars(
+      [
+        { chord: "C", detail: "C — island strum" },
+        { chord: "Em", detail: "Em — the staircase from Over the Rainbow" },
+        { chord: "Am", detail: "Am — one finger" },
+        { chord: "G", detail: "G — three fingers, one beat of setup" },
+        { chord: "F", detail: "F — then the loop comes round" },
+      ],
+      "island",
+    ),
+  },
+};
+
 const VIOLIN_NOTE_NAME: Record<number, string> = {
   55: "G", 57: "A", 59: "B", 60: "C", 62: "D", 64: "E", 65: "F", 66: "F♯", 67: "G",
   69: "A", 71: "B", 72: "C", 73: "C♯", 74: "D",
@@ -1033,6 +1147,7 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
       !!LAPSTEEL_DAILY_CUES[item.lessonId ?? ""] ||
       !!BASS_DAILY_CUES[item.lessonId ?? ""] ||
       !!GUITAR_DAILY_CUES[item.lessonId ?? ""] ||
+      !!UKE_DAILY_CUES[item.lessonId ?? ""] ||
       !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
   );
 }
@@ -1485,7 +1600,8 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   const lapsteelBespoke = LAPSTEEL_DAILY_CUES[item.lessonId ?? ""];
   const bassBespoke = BASS_DAILY_CUES[item.lessonId ?? ""];
   const guitarBespoke = GUITAR_DAILY_CUES[item.lessonId ?? ""];
-  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke ?? bassBespoke ?? guitarBespoke;
+  const ukeBespoke = UKE_DAILY_CUES[item.lessonId ?? ""];
+  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke ?? bassBespoke ?? guitarBespoke ?? ukeBespoke;
   if (bespoke) {
     const cues: PracticeCue[] = [];
     const total = item.bars * beatsPerBarOf(item);
