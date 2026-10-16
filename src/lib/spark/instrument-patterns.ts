@@ -282,6 +282,92 @@ export const LAPSTEEL_DAILY_CUES: Record<string, { beats: number; cues: Practice
   lesson_lapsteel_hsh_01: { beats: 28, cues: homeSweetHomeCues() },
 };
 
+/**
+ * Bespoke daily bass cues: the famous-riff song lessons. Every cue is a
+ * single judged note in the shape the bass lab exercises use — the mic
+ * hears the pitch and the session scores it against `notes`. Open strings:
+ * E is MIDI 28, A is 33, D is 38, G is 43.
+ */
+function bassEighthRoots(bars: { midi: number; label: string; detail: string }[]): PracticeCue[] {
+  return bars.flatMap((bar, barIndex) =>
+    Array.from({ length: 8 }, (_, i) => ({
+      beat: barIndex * 4 + i * 0.5,
+      label: bar.label,
+      notes: [bar.midi],
+      detail: bar.detail,
+      duration: 0.42,
+    })),
+  );
+}
+
+export const BASS_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
+  // I Love Rock 'n' Roll (Joan Jett & the Blackhearts): the chorus roots in
+  // eighth notes — two bars of E, then A, then B, and the loop comes round.
+  lesson_bass_rocknroll_01: {
+    beats: 16,
+    cues: bassEighthRoots([
+      { midi: 28, label: "E", detail: "E string, open — alternate index and middle" },
+      { midi: 28, label: "E", detail: "E string, open" },
+      { midi: 33, label: "A", detail: "A string, open" },
+      { midi: 35, label: "B", detail: "A string, fret 2" },
+    ]),
+  },
+  // Seven Nation Army (The White Stripes): the line on the A string —
+  // E E G E D C B. The first E is held, the second is the pick-up into G.
+  lesson_bass_seven_nation_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "E", notes: [40], detail: "A string, fret 7", duration: 1.4 },
+      { beat: 1.5, label: "E", notes: [40], detail: "A string, fret 7", duration: 0.45 },
+      { beat: 2, label: "G", notes: [43], detail: "A string, fret 10 — the shift: look first", duration: 0.9 },
+      { beat: 3, label: "E", notes: [40], detail: "A string, fret 7", duration: 0.9 },
+      { beat: 4, label: "D", notes: [38], detail: "A string, fret 5", duration: 0.9 },
+      { beat: 5, label: "C", notes: [36], detail: "A string, fret 3", duration: 0.9 },
+      { beat: 6, label: "B", notes: [35], detail: "A string, fret 2 — let it ring", duration: 1.9 },
+    ],
+  },
+  // Something in the Way (Nirvana): two bars of F♯, two bars of D, half
+  // notes left ringing — the whole song is this loop.
+  lesson_bass_something_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "F♯", notes: [30], detail: "E string, fret 2 — F♯: let it ring", duration: 1.95 },
+      { beat: 2, label: "F♯", notes: [30], detail: "E string, fret 2 — let it ring", duration: 1.95 },
+      { beat: 4, label: "F♯", notes: [30], detail: "E string, fret 2 — let it ring", duration: 1.95 },
+      { beat: 6, label: "F♯", notes: [30], detail: "E string, fret 2 — let it ring", duration: 1.95 },
+      { beat: 8, label: "D", notes: [38], detail: "A string, fret 5 — D: let it ring", duration: 1.95 },
+      { beat: 10, label: "D", notes: [38], detail: "A string, fret 5 — let it ring", duration: 1.95 },
+      { beat: 12, label: "D", notes: [38], detail: "A string, fret 5 — let it ring", duration: 1.95 },
+      { beat: 14, label: "D", notes: [38], detail: "A string, fret 5 — let it ring", duration: 1.95 },
+    ],
+  },
+  // Zombie (The Cranberries): eighth notes on the roots of the loop —
+  // Em, C, G, F♯ — and no bar lets up.
+  lesson_bass_zombie_01: {
+    beats: 16,
+    cues: bassEighthRoots([
+      { midi: 28, label: "E", detail: "E string, open — Em root" },
+      { midi: 36, label: "C", detail: "A string, fret 3 — C root" },
+      { midi: 31, label: "G", detail: "E string, fret 3 — G root" },
+      { midi: 30, label: "F♯", detail: "E string, fret 2 — F♯ root" },
+    ]),
+  },
+  // Under Pressure (Queen & David Bowie): three Ds on the beat, three in
+  // the gaps after beat 2, then an A that rings for a whole bar.
+  lesson_bass_under_pressure_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "D", notes: [38], detail: "A string, fret 5 — on the beat", duration: 0.9 },
+      { beat: 1, label: "D", notes: [38], detail: "A string, fret 5 — on the beat", duration: 0.9 },
+      { beat: 2, label: "D", notes: [38], detail: "A string, fret 5 — on the beat", duration: 0.9 },
+      { beat: 2.5, label: "D", notes: [38], detail: "A string, fret 5 — off the beat", duration: 0.45 },
+      { beat: 3, label: "D", notes: [38], detail: "A string, fret 5 — off the beat", duration: 0.45 },
+      { beat: 3.5, label: "D", notes: [38], detail: "A string, fret 5 — off the beat", duration: 0.45 },
+      { beat: 4, label: "A", notes: [33], detail: "A string, open — ring the whole bar", duration: 3.8 },
+    ],
+  },
+};
+
 const VIOLIN_NOTE_NAME: Record<number, string> = {
   55: "G", 57: "A", 59: "B", 60: "C", 62: "D", 64: "E", 65: "F", 66: "F♯", 67: "G",
   69: "A", 71: "B", 72: "C", 73: "C♯", 74: "D",
@@ -626,6 +712,7 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
       !!VOCAL_DAILY_CUES[item.lessonId ?? ""] ||
       !!VIOLIN_DAILY_CUES[item.lessonId ?? ""] ||
       !!LAPSTEEL_DAILY_CUES[item.lessonId ?? ""] ||
+      !!BASS_DAILY_CUES[item.lessonId ?? ""] ||
       !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
   );
 }
@@ -926,7 +1013,8 @@ function clawhammerBar(beat: number): PracticeCue[] {
 export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (item.process === "respond" || item.process === "create") return undefined;
   const lapsteelBespoke = LAPSTEEL_DAILY_CUES[item.lessonId ?? ""];
-  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke;
+  const bassBespoke = BASS_DAILY_CUES[item.lessonId ?? ""];
+  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke ?? bassBespoke;
   if (bespoke) {
     const cues: PracticeCue[] = [];
     const total = item.bars * beatsPerBarOf(item);
