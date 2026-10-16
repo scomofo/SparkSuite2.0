@@ -776,6 +776,118 @@ export const UKE_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[]
   },
 };
 
+/**
+ * Bespoke daily banjo cues: the famous-song lessons. Roll lessons run the
+ * forward-roll string order (3–2–1–5–2–1–3–1, fingers T–I–M–T–I–M–T–M)
+ * under each bar's shape; pitches are the strings as fretted in that shape
+ * (open gDGBD: string 3 = 55, 2 = 59, 1 = 62, short 5th = 67).
+ */
+const BANJO_ROLL_STRINGS: { string: number; finger: string }[] = [
+  { string: 3, finger: "T" },
+  { string: 2, finger: "I" },
+  { string: 1, finger: "M" },
+  { string: 5, finger: "T" },
+  { string: 2, finger: "I" },
+  { string: 1, finger: "M" },
+  { string: 3, finger: "T" },
+  { string: 1, finger: "M" },
+];
+
+function banjoRollBars(
+  bars: { chord: string; byString: Record<number, number>; detail: string }[],
+): PracticeCue[] {
+  return bars.flatMap((bar, barIndex) =>
+    BANJO_ROLL_STRINGS.map((slot, i) => ({
+      beat: barIndex * 4 + i * 0.5,
+      label: bar.chord,
+      notes: [bar.byString[slot.string]],
+      detail:
+        i === 0 ? bar.detail : `String ${slot.string} — ${slot.finger === "T" ? "thumb" : slot.finger === "I" ? "index" : "middle"}`,
+      duration: 0.42,
+      chord: bar.chord,
+    })),
+  );
+}
+
+const BANJO_ROLL_SHAPES: Record<string, Record<number, number>> = {
+  G: { 3: 55, 2: 59, 1: 62, 5: 67 },
+  Em: { 3: 55, 2: 59, 1: 64, 5: 67 },
+  D7: { 3: 57, 2: 60, 1: 62, 5: 67 },
+  C: { 3: 55, 2: 60, 1: 64, 5: 67 },
+};
+
+export const BANJO_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
+  // Foggy Mountain Breakdown (Flatt & Scruggs): the opening break at half
+  // tempo — forward roll over G, G, Em, Em, G, G, D7, G. The lesson copy
+  // owns both the excerpt and the tempo.
+  lesson_banjo_foggy_01: {
+    beats: 32,
+    cues: banjoRollBars([
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — open: the break starts; forward roll" },
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — keep rolling" },
+      { chord: "Em", byString: BANJO_ROLL_SHAPES.Em, detail: "Em — the dip: first string moves to fret 2" },
+      { chord: "Em", byString: BANJO_ROLL_SHAPES.Em, detail: "Em — the roll doesn't stop" },
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — back to open" },
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — keep rolling" },
+      { chord: "D7", byString: BANJO_ROLL_SHAPES.D7, detail: "D7 — third string fret 2, second string fret 1" },
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — home; the break lands" },
+    ]),
+  },
+  // Dueling Banjos (Arthur Smith / Deliverance): the banjo's answering
+  // phrase as picked notes, then two bars of roll-out on G.
+  lesson_banjo_dueling_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "D", notes: [62], detail: "1st string, open — the answer starts", duration: 0.9, chord: "G" },
+      { beat: 1, label: "B", notes: [59], detail: "2nd string, open", duration: 0.9, chord: "G" },
+      { beat: 2, label: "G", notes: [55], detail: "3rd string, open", duration: 0.9, chord: "G" },
+      { beat: 3, label: "B", notes: [59], detail: "2nd string, open", duration: 0.9, chord: "G" },
+      { beat: 4, label: "D", notes: [62], detail: "1st string, open", duration: 0.9, chord: "G" },
+      { beat: 5, label: "g", notes: [67], detail: "5th string — the short g answers high", duration: 0.9, chord: "G" },
+      { beat: 6, label: "D", notes: [62], detail: "1st string, open", duration: 0.9, chord: "G" },
+      { beat: 7, label: "B", notes: [59], detail: "2nd string, open — then the roll-out", duration: 0.9, chord: "G" },
+      ...banjoRollBars([
+        { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — the roll-out: forward roll" },
+        { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — roll it home" },
+      ]).map((cue) => ({ ...cue, beat: cue.beat + 8 })),
+    ],
+  },
+  // The Ballad of Jed Clampett (Flatt & Scruggs): the theme's chord bed —
+  // forward roll over G–C–G–D7, twice round.
+  lesson_banjo_jed_01: {
+    beats: 32,
+    cues: banjoRollBars([
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — open: forward roll" },
+      { chord: "C", byString: BANJO_ROLL_SHAPES.C, detail: "C — the roll doesn't stop for the shape" },
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — back to open" },
+      { chord: "D7", byString: BANJO_ROLL_SHAPES.D7, detail: "D7 — then the loop comes round" },
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — second round" },
+      { chord: "C", byString: BANJO_ROLL_SHAPES.C, detail: "C — keep rolling" },
+      { chord: "G", byString: BANJO_ROLL_SHAPES.G, detail: "G — back to open" },
+      { chord: "D7", byString: BANJO_ROLL_SHAPES.D7, detail: "D7 — lands the loop" },
+    ]),
+  },
+  // Wagon Wheel (Old Crow Medicine Show): the backup vamp — brush on 1
+  // and 3, muted chop on 2 and 4 — over G–D–Em–C (strings 4–1 sets).
+  lesson_banjo_wagon_wheel_01: {
+    beats: 16,
+    cues: [
+      { chord: "G", notes: [50, 55, 59, 62], detail: "G — open: brush on 1" },
+      { chord: "D", notes: [50, 57, 62, 66], detail: "D — the full shape: brush on 1" },
+      { chord: "Em", notes: [52, 55, 59, 64], detail: "Em — fourth and first strings at fret 2: brush on 1" },
+      { chord: "C", notes: [52, 55, 60, 64], detail: "C — brush on 1, then the loop comes round" },
+    ].flatMap((bar, barIndex) => {
+      const base = barIndex * 4;
+      return [
+        { beat: base, label: `${bar.chord} ↓`, notes: bar.notes, detail: bar.detail, duration: 0.9, chord: bar.chord },
+        { beat: base + 1, label: "Chop", detail: "Muted chop on 2 — keep the shape down, strike short", muted: true, chord: bar.chord },
+        { beat: base + 2, label: `${bar.chord} ↓`, notes: bar.notes, detail: `${bar.chord} — brush on 3`, duration: 0.9, chord: bar.chord },
+        { beat: base + 3, label: "Chop", detail: "Muted chop on 4", muted: true, chord: bar.chord },
+      ];
+    }),
+  },
+};
+
 const VIOLIN_NOTE_NAME: Record<number, string> = {
   55: "G", 57: "A", 59: "B", 60: "C", 62: "D", 64: "E", 65: "F", 66: "F♯", 67: "G",
   69: "A", 71: "B", 72: "C", 73: "C♯", 74: "D",
@@ -1230,6 +1342,7 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
       !!BASS_DAILY_CUES[item.lessonId ?? ""] ||
       !!GUITAR_DAILY_CUES[item.lessonId ?? ""] ||
       !!UKE_DAILY_CUES[item.lessonId ?? ""] ||
+      !!BANJO_DAILY_CUES[item.lessonId ?? ""] ||
       !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
   );
 }
@@ -1683,7 +1796,8 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   const bassBespoke = BASS_DAILY_CUES[item.lessonId ?? ""];
   const guitarBespoke = GUITAR_DAILY_CUES[item.lessonId ?? ""];
   const ukeBespoke = UKE_DAILY_CUES[item.lessonId ?? ""];
-  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke ?? bassBespoke ?? guitarBespoke ?? ukeBespoke;
+  const banjoBespoke = BANJO_DAILY_CUES[item.lessonId ?? ""];
+  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke ?? bassBespoke ?? guitarBespoke ?? ukeBespoke ?? banjoBespoke;
   if (bespoke) {
     const cues: PracticeCue[] = [];
     const total = item.bars * beatsPerBarOf(item);
