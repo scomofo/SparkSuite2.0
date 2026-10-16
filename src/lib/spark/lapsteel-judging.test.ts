@@ -223,11 +223,11 @@ describe("lap steel session gate simulations", () => {
 describe("lap steel daily curriculum with bar judging", () => {
   const lessons = lessonsFor("lapsteel");
 
-  it("has sixteen daily lessons, orders 1–16 unique", () => {
-    assert.equal(lessons.length, 16);
+  it("has twenty daily lessons, orders 1–20 unique", () => {
+    assert.equal(lessons.length, 20);
     assert.deepEqual(
       lessons.map((l) => l.order).sort((a, b) => a - b),
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16],
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20],
     );
   });
 

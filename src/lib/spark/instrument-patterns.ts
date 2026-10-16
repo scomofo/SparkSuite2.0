@@ -280,6 +280,88 @@ export const LAPSTEEL_DAILY_CUES: Record<string, { beats: number; cues: Practice
     ],
   },
   lesson_lapsteel_hsh_01: { beats: 28, cues: homeSweetHomeCues() },
+  // Sleep Walk (Santo & Johnny): the theme as a slow slide down the
+  // 2nd-string ladder Home Sweet Home teaches — high C to home.
+  lesson_lapsteel_sleep_walk_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "C", notes: [72], detail: "2nd string, fret 12 — high home: C an octave up. Let it ring", duration: 1.9 },
+      { beat: 2, label: "B", notes: [71], detail: "2nd string, fret 11", duration: 0.9 },
+      { beat: 3, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 4, label: "G", notes: [67], detail: "2nd string, fret 7 — settle here a moment", duration: 1.4 },
+      { beat: 6, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 7, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 8, label: "E", notes: [64], detail: "2nd string, fret 4 — let it ring", duration: 1.9 },
+      { beat: 10, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 11, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 12, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.9 },
+      { beat: 13, label: "D", notes: [62], detail: "2nd string, fret 2", duration: 0.9 },
+      { beat: 14, label: "C", notes: [60], detail: "2nd string, open — home. Hold it", duration: 1.9 },
+    ],
+  },
+  // Steel Guitar Rag (McAuliffe / Bob Wills): the head as a single-note
+  // line only — eighth notes up and down the 2nd string, with the low A
+  // of the open 3rd string answering at the end. No brush judging.
+  lesson_lapsteel_rag_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "C", notes: [60], detail: "2nd string, open — the head, one note at a time", duration: 0.42 },
+      { beat: 0.5, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.42 },
+      { beat: 1, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.42 },
+      { beat: 1.5, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.42 },
+      { beat: 2, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.42 },
+      { beat: 2.5, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.42 },
+      { beat: 3, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.42 },
+      { beat: 3.5, label: "C", notes: [60], detail: "2nd string, open", duration: 0.42 },
+      { beat: 4, label: "D", notes: [62], detail: "2nd string, fret 2", duration: 0.42 },
+      { beat: 4.5, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.42 },
+      { beat: 5, label: "F", notes: [65], detail: "2nd string, fret 5", duration: 0.42 },
+      { beat: 5.5, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.42 },
+      { beat: 6, label: "D", notes: [62], detail: "2nd string, fret 2", duration: 0.42 },
+      { beat: 6.5, label: "C", notes: [60], detail: "2nd string, open", duration: 0.42 },
+      { beat: 7, label: "A", notes: [57], detail: "3rd string, open — the low A answers; let it ring", duration: 0.9 },
+    ],
+  },
+  // Blue Hawaii (Elvis Presley): a slow climb up the ladder and back.
+  lesson_lapsteel_blue_hawaii_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "E", notes: [64], detail: "2nd string, fret 4 — let it ring", duration: 1.9 },
+      { beat: 2, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 3, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 4, label: "C", notes: [72], detail: "2nd string, fret 12 — the high home; let it ring", duration: 1.9 },
+      { beat: 6, label: "B", notes: [71], detail: "2nd string, fret 11", duration: 0.9 },
+      { beat: 7, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 8, label: "G", notes: [67], detail: "2nd string, fret 7 — let it ring", duration: 1.9 },
+      { beat: 10, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 11, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 12, label: "E", notes: [64], detail: "2nd string, fret 4 — let it ring", duration: 1.9 },
+      { beat: 14, label: "D", notes: [62], detail: "2nd string, fret 2", duration: 0.9 },
+      { beat: 15, label: "C", notes: [60], detail: "2nd string, open — home", duration: 0.9 },
+    ],
+  },
+  // Your Cheatin' Heart (Hank Williams): the Don Helms intro figure as
+  // a single line — up the ladder, home, then once to the high C.
+  lesson_lapsteel_cheatin_heart_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "E", notes: [64], detail: "2nd string, fret 4 — the intro figure starts", duration: 0.9 },
+      { beat: 1, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 2, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 3, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 4, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.9 },
+      { beat: 5, label: "D", notes: [62], detail: "2nd string, fret 2", duration: 0.9 },
+      { beat: 6, label: "C", notes: [60], detail: "2nd string, open — home; let it ring", duration: 1.9 },
+      { beat: 8, label: "E", notes: [64], detail: "2nd string, fret 4 — the second line climbs higher", duration: 0.9 },
+      { beat: 9, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 10, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 11, label: "C", notes: [72], detail: "2nd string, fret 12 — the high home, once", duration: 0.9 },
+      { beat: 12, label: "A", notes: [69], detail: "2nd string, fret 9", duration: 0.9 },
+      { beat: 13, label: "G", notes: [67], detail: "2nd string, fret 7", duration: 0.9 },
+      { beat: 14, label: "E", notes: [64], detail: "2nd string, fret 4", duration: 0.9 },
+      { beat: 15, label: "C", notes: [60], detail: "2nd string, open — home", duration: 0.9 },
+    ],
+  },
 };
 
 /**
