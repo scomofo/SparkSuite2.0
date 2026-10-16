@@ -454,6 +454,132 @@ export const BASS_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[
   },
 };
 
+/**
+ * Bespoke daily guitar cues: the famous-riff and famous-song lessons.
+ * Riff cues carry the line's notes (Smoke's pairs are two-note sets —
+ * judged as the chord tones a pair is); song cues strike the chord's
+ * tones once a beat, the mandolin song pattern on six strings.
+ */
+function guitarStrumBars(
+  bars: { chord: string; notes: number[]; detail: string }[],
+): PracticeCue[] {
+  return bars.flatMap((bar, barIndex) =>
+    [0, 1, 2, 3].map((beatInBar) => ({
+      beat: barIndex * 4 + beatInBar,
+      label: `${bar.chord} ↓`,
+      notes: bar.notes,
+      detail: beatInBar === 0 ? bar.detail : `${bar.chord} — keep strumming`,
+      duration: 0.85,
+      chord: bar.chord,
+    })),
+  );
+}
+
+const GUITAR_CHORD_TONES: Record<string, number[]> = {
+  Em: [40, 45, 50, 55, 59, 64],
+  D6: [42, 45, 50, 57, 59, 64],
+  G: [43, 47, 50, 55, 59, 67],
+  D: [50, 57, 62, 66],
+  Am: [45, 52, 57, 60, 64],
+  Cadd9: [48, 52, 55, 62, 67],
+};
+
+export const GUITAR_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
+  // Smoke on the Water (Deep Purple): pairs on the D and G strings —
+  // fret f rings [50 + f, 55 + f]. The four-note door, then the turn.
+  lesson_guitar_smoke_water_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, fret: 0, duration: 0.9 },
+      { beat: 1, fret: 3, duration: 0.9 },
+      { beat: 2, fret: 5, duration: 0.9 },
+      { beat: 3, fret: 0, duration: 0.9 },
+      { beat: 4, fret: 3, duration: 0.9 },
+      { beat: 5, fret: 6, duration: 0.9 },
+      { beat: 6, fret: 5, duration: 1.85 },
+      { beat: 8, fret: 0, duration: 0.9 },
+      { beat: 9, fret: 3, duration: 0.9 },
+      { beat: 10, fret: 5, duration: 0.9 },
+      { beat: 11, fret: 3, duration: 0.9 },
+      { beat: 12, fret: 0, duration: 3.8 },
+    ].map(({ beat, fret, duration }) => ({
+      beat,
+      label: fret === 0 ? "Pair · open" : `Pair · fret ${fret}`,
+      notes: [50 + fret, 55 + fret],
+      detail:
+        fret === 0
+          ? "D and G strings, open — both together, one pick stroke"
+          : `D and G strings at fret ${fret} — both together`,
+      duration,
+    })),
+  },
+  // Come As You Are (Nirvana): eighth notes on the two lowest strings —
+  // E E F G B G F E, twice round. Standard tuning (the record sits lower).
+  lesson_guitar_come_as_you_are_01: {
+    beats: 8,
+    cues: [0, 1].flatMap((round) =>
+      (
+        [
+          [40, "Low E string, open"],
+          [40, "Low E string, open"],
+          [41, "Low E string, fret 1"],
+          [43, "Low E string, fret 2"],
+          [47, "A string, fret 2 — the top note"],
+          [43, "Low E string, fret 2"],
+          [41, "Low E string, fret 1"],
+          [40, "Low E string, open — home"],
+        ] as [number, string][]
+      ).map(([midi, detail], i) => ({
+        beat: round * 4 + i * 0.5,
+        label: "Riff",
+        notes: [midi],
+        detail,
+        duration: 0.42,
+      })),
+    ),
+  },
+  // Sunshine of Your Love (Cream): the D ladder down — D D C D, the
+  // A♭–G turn, and the F–D landing. Open-position arrangement.
+  lesson_guitar_sunshine_love_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "D", notes: [50], detail: "D string, open", duration: 0.9 },
+      { beat: 1, label: "D", notes: [50], detail: "D string, open", duration: 0.42 },
+      { beat: 1.5, label: "C", notes: [48], detail: "A string, fret 3 — C", duration: 0.42 },
+      { beat: 2, label: "D", notes: [50], detail: "D string, open — let it ring", duration: 1.85 },
+      { beat: 4, label: "A♭", notes: [44], detail: "Low E string, fret 4 — A♭, the blue note", duration: 0.42 },
+      { beat: 4.5, label: "G", notes: [43], detail: "Low E string, fret 3 — G", duration: 0.42 },
+      { beat: 5, label: "D", notes: [50], detail: "D string, open", duration: 0.9 },
+      { beat: 6, label: "F", notes: [53], detail: "D string, fret 3 — F", duration: 0.42 },
+      { beat: 6.5, label: "D", notes: [50], detail: "D string, open — home", duration: 1.4 },
+    ],
+  },
+  // Horse with No Name (America): Em and D6, a bar each, strummed through.
+  lesson_guitar_horse_no_name_01: {
+    beats: 8,
+    cues: guitarStrumBars([
+      { chord: "Em", notes: GUITAR_CHORD_TONES.Em, detail: "Em — middle and ring on strings 5 and 4" },
+      { chord: "D6", notes: GUITAR_CHORD_TONES.D6, detail: "D6 — both fingers slide outward, to strings 6 and 3" },
+    ]),
+  },
+  // Knockin' on Heaven's Door (Bob Dylan): G–D–Am Am, G–D–Cadd9 Cadd9.
+  // Cadd9 stands in for the record's C so the anchor fingers stay planted
+  // (the lesson copy says so).
+  lesson_guitar_knockin_heaven_01: {
+    beats: 32,
+    cues: guitarStrumBars([
+      { chord: "G", notes: GUITAR_CHORD_TONES.G, detail: "G — set ring and pinky on the top strings; they stay for three chords" },
+      { chord: "D", notes: GUITAR_CHORD_TONES.D, detail: "D — the anchors stay; index and middle do the moving" },
+      { chord: "Am", notes: GUITAR_CHORD_TONES.Am, detail: "Am — one bar" },
+      { chord: "Am", notes: GUITAR_CHORD_TONES.Am, detail: "Am — the second bar" },
+      { chord: "G", notes: GUITAR_CHORD_TONES.G, detail: "G — back home" },
+      { chord: "D", notes: GUITAR_CHORD_TONES.D, detail: "D — anchors still planted" },
+      { chord: "Cadd9", notes: GUITAR_CHORD_TONES.Cadd9, detail: "Cadd9 — G's footprint with the bass moved: the anchors never lifted" },
+      { chord: "Cadd9", notes: GUITAR_CHORD_TONES.Cadd9, detail: "Cadd9 — the second bar, then the loop comes round" },
+    ]),
+  },
+};
+
 const VIOLIN_NOTE_NAME: Record<number, string> = {
   55: "G", 57: "A", 59: "B", 60: "C", 62: "D", 64: "E", 65: "F", 66: "F♯", 67: "G",
   69: "A", 71: "B", 72: "C", 73: "C♯", 74: "D",
@@ -799,6 +925,7 @@ export function hasInstrumentPattern(item: { lessonId?: string; process?: string
       !!VIOLIN_DAILY_CUES[item.lessonId ?? ""] ||
       !!LAPSTEEL_DAILY_CUES[item.lessonId ?? ""] ||
       !!BASS_DAILY_CUES[item.lessonId ?? ""] ||
+      !!GUITAR_DAILY_CUES[item.lessonId ?? ""] ||
       !!MANDOLIN_DAILY_CUES[item.lessonId ?? ""])
   );
 }
@@ -1100,7 +1227,8 @@ export function dailyInstrumentCues(item: PlanItem): PracticeCue[] | undefined {
   if (item.process === "respond" || item.process === "create") return undefined;
   const lapsteelBespoke = LAPSTEEL_DAILY_CUES[item.lessonId ?? ""];
   const bassBespoke = BASS_DAILY_CUES[item.lessonId ?? ""];
-  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke ?? bassBespoke;
+  const guitarBespoke = GUITAR_DAILY_CUES[item.lessonId ?? ""];
+  const bespoke = MANDOLIN_DAILY_CUES[item.lessonId ?? ""] ?? lapsteelBespoke ?? bassBespoke ?? guitarBespoke;
   if (bespoke) {
     const cues: PracticeCue[] = [];
     const total = item.bars * beatsPerBarOf(item);
