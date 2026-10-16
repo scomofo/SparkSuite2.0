@@ -107,3 +107,13 @@ export function labCardFor(id: InstrumentId): LabCard | null {
       return null;
   }
 }
+
+/** The Stem Lab is instrument-agnostic, so it gets its own card, not a case above. */
+export function stemLabCard(): LabCard {
+  return {
+    kicker: "Stem lab",
+    title: "Play along with the song",
+    body: "A song split into stems elsewhere, mixed here. Mute your part and play it against the band.",
+    cta: "Open the stem lab",
+  };
+}

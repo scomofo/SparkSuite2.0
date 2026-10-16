@@ -11,7 +11,7 @@ import { PianoKeyboard } from "@/components/piano-keyboard";
 import { unlockAudio } from "@/lib/spark/audio";
 import { rankFor, sparksFor, weekPulse, xpProgress } from "@/lib/spark/game";
 import { BANJO_CHORDS, instrumentById, LAPSTEEL_CHORDS, lessonsFor, MANDOLIN_CHORDS, PIANO_VOICINGS, tracksFor, UKE_CHORDS } from "@/lib/spark/instruments";
-import { labCardFor, labSearchFor } from "@/lib/spark/labs";
+import { labCardFor, labSearchFor, stemLabCard } from "@/lib/spark/labs";
 import { dayCue, streakTone } from "@/lib/spark/psychology";
 import { feelCue, newThingLine } from "@/lib/spark/udl";
 import { DEFAULT_THEORY_SEARCH } from "@/lib/spark/theory";
@@ -38,6 +38,7 @@ function TodayPage() {
   const tracks = tracksFor(instrument);
   const lessons = lessonsFor(instrument);
   const lab = labCardFor(instrument);
+  const stemCard = stemLabCard();
   const tone = streakTone(progress, today);
   const rank = rankFor(progress.level);
   const xp = xpProgress(progress.xp);
@@ -175,6 +176,19 @@ function TodayPage() {
           </section>
         )
       ) : null}
+
+      <section className="mx-4 mt-4 rounded-xl border border-border bg-surface p-5">
+        <p className="text-[11px] uppercase tracking-[0.18em] text-dim">{stemCard.kicker}</p>
+        <h2 className="mt-1 font-display text-xl font-semibold">{stemCard.title}</h2>
+        <p className="mt-2 text-pretty text-sm text-muted">{stemCard.body}</p>
+        <Button
+          variant="secondary"
+          className="mt-4 w-full"
+          onClick={() => void navigate({ to: "/stems" })}
+        >
+          {stemCard.cta}
+        </Button>
+      </section>
 
       {done ? (
         <section className="px-5 pt-8 pb-4">
