@@ -1137,6 +1137,85 @@ export const VIOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCu
   // The whole tune is one 48-beat phrase (12 bars at the lesson's bars: 12),
   // so it plays through once — no looping.
   lesson_violin_twinkle_01: { beats: 48, cues: twinkleCues() },
+  // Ashokan Farewell (Jay Ungar): the theme in D, first position — two
+  // halves, phrase endings held. Table rows: [beat, midi, duration].
+  lesson_violin_ashokan_01: {
+    beats: 32,
+    cues: (
+      [
+        [0, 62, 1.9], [2, 66, 0.9], [3, 69, 0.9], [4, 71, 1.9], [6, 69, 0.9], [7, 66, 0.9],
+        [8, 64, 1.9], [10, 62, 1.9], [12, 62, 1.9], [14, 64, 0.9], [15, 66, 0.9],
+        [16, 69, 1.9], [18, 71, 0.9], [19, 74, 0.9], [20, 71, 1.9], [22, 69, 0.9], [23, 66, 0.9],
+        [24, 64, 1.9], [26, 62, 1.9], [28, 62, 3.8],
+      ] as [number, number, number][]
+    ).map(([beat, midi, duration], attack) => ({
+      beat,
+      label: VIOLIN_NOTE_NAME[midi] + (attack % 2 === 0 ? " ⊓" : " ∨"),
+      notes: [midi],
+      detail: VIOLIN_FINGERING[midi] + (duration > 1.5 ? " — hold it" : ""),
+      duration,
+    })),
+  },
+  // Bittersweet Symphony (The Verve): the string loop in D — a four-note
+  // figure on the A string, down and back, in quarters.
+  lesson_violin_bittersweet_01: {
+    beats: 8,
+    cues: [74, 73, 71, 69, 71, 73, 74, 73].map((midi, attack) => ({
+      beat: attack,
+      label: VIOLIN_NOTE_NAME[midi] + (attack % 2 === 0 ? " ⊓" : " ∨"),
+      notes: [midi],
+      detail: VIOLIN_FINGERING[midi] + (attack === 0 ? " — the loop: down and back, all lesson" : ""),
+      duration: 0.9,
+    })),
+  },
+  // Viva la Vida (Coldplay): the string figure as pulsing eighths over
+  // Am–F–C–G. The record is in C♯ minor; this is the same figure in
+  // A minor, first position — the lesson copy says so.
+  lesson_violin_viva_01: {
+    beats: 16,
+    cues: [
+      [69, 72, 69, 72, 74, 72, 69, 72],
+      [65, 69, 65, 69, 72, 69, 65, 69],
+      [67, 72, 67, 72, 74, 72, 67, 72],
+      [67, 71, 67, 71, 74, 71, 67, 71],
+    ].flatMap((bar, barIndex) =>
+      bar.map((midi, i) => {
+        const attack = barIndex * 8 + i;
+        return {
+          beat: barIndex * 4 + i * 0.5,
+          label: VIOLIN_NOTE_NAME[midi] + (attack % 2 === 0 ? " ⊓" : " ∨"),
+          notes: [midi],
+          detail:
+            VIOLIN_FINGERING[midi] +
+            (i === 0 ? ` — ${["Am", "F", "C", "G"][barIndex]} bar: keep the pulse even` : ""),
+          duration: 0.42,
+        };
+      }),
+    ),
+  },
+  // Hallelujah (Leonard Cohen): the verse in G, first position — the
+  // vocals track's line a fourth up, on the D and A strings.
+  lesson_violin_hallelujah_01: {
+    beats: 32,
+    cues: (
+      [
+        [0, 62], [1, 67], [2, 69], [3, 71],
+        [4, 69], [5, 67], [6, 69], [7, 71],
+        [8, 62], [9, 67], [10, 69], [11, 71],
+        [12, 72], [13, 71], [14, 69], [15, 67],
+        [16, 67], [17, 69], [18, 71], [19, 72],
+        [20, 72], [21, 71], [22, 69], [23, 71],
+        [24, 69], [25, 69], [26, 71],
+        [28, 74], [29, 74], [30, 74], [31, 74],
+      ] as [number, number][]
+    ).map(([beat, midi], attack) => ({
+      beat,
+      label: VIOLIN_NOTE_NAME[midi] + (attack % 2 === 0 ? " ⊓" : " ∨"),
+      notes: [midi],
+      detail: VIOLIN_FINGERING[midi] + (beat === 26 ? " — hold it for two beats" : ""),
+      duration: beat === 26 ? 1.9 : 0.9,
+    })),
+  },
 };
 
 /** Violin's open strings — the only pitches that are not finger placements. */
