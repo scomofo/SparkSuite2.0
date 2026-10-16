@@ -1392,6 +1392,65 @@ const waltzFillPhrase: DrumPatternHit[] = [
   drumHitCue(11.5, [2], "Hat."),
 ];
 
+/**
+ * The famous-groove family: real songs, one groove each, played through.
+ * Rock You is three hits and a bar of space; Back in Black joins the
+ * backbeat to the eighth-note hats with Rudd's extra kick on the and
+ * of 4; Billie Jean adds its single push on the and of 2; Another One
+ * Bites the Dust runs four on the floor under offbeat hats; Come
+ * Together opens with a bar of loping tom hits before the groove lands.
+ */
+const rockYouBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Stomp: kick on 1."),
+  drumHitCue(1, [0], "Stomp: kick on 2."),
+  drumHitCue(2, [1], "Clap on 3 — the snare plays the clap."),
+];
+
+const backInBlackBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(0.5, [2], "Hat — right hand."),
+  drumHitCue(1, [1], "Snare on 2."),
+  drumHitCue(1.5, [2], "Hat."),
+  drumHitCue(2, [0], "Kick on 3."),
+  drumHitCue(2.5, [2], "Hat."),
+  drumHitCue(3, [1], "Snare on 4."),
+  drumHitCue(3.5, [0, 2], "Kick: the push on the and of 4 — the hat keeps going."),
+];
+
+const billieJeanBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(0.5, [2], "Hat."),
+  drumHitCue(1, [1], "Snare on 2."),
+  drumHitCue(1.5, [0, 2], "Kick: the push on the and of 2 — the hat keeps going."),
+  drumHitCue(2, [0], "Kick on 3."),
+  drumHitCue(2.5, [2], "Hat."),
+  drumHitCue(3, [1], "Snare on 4."),
+  drumHitCue(3.5, [2], "Hat."),
+];
+
+const anotherOneBar: DrumPatternHit[] = [
+  drumHitCue(0, [0], "Kick on 1."),
+  drumHitCue(0.5, [2], "Hat — offbeat, light."),
+  drumHitCue(1, [0, 1], "Kick and snare on 2."),
+  drumHitCue(1.5, [2], "Hat — offbeat."),
+  drumHitCue(2, [0], "Kick on 3."),
+  drumHitCue(2.5, [2], "Hat — offbeat."),
+  drumHitCue(3, [0, 1], "Kick and snare on 4."),
+  drumHitCue(3.5, [2], "Hat — offbeat."),
+];
+
+const comeTogetherPhrase: DrumPatternHit[] = [
+  drumHitCue(0, [3], "Tom — the first swampy hit."),
+  drumHitCue(1, [3], "Tom."),
+  drumHitCue(1.5, [3], "Tom — a quick second hit."),
+  drumHitCue(2, [3], "Tom."),
+  drumHitCue(3, [3], "Tom — the last one; get ready to land."),
+  drumHitCue(4, [0], "Kick on 1 — the groove lands."),
+  drumHitCue(5, [1], "Snare on 2."),
+  drumHitCue(6, [0], "Kick on 3."),
+  drumHitCue(7, [1], "Snare on 4."),
+];
+
 const DRUM_DAILY_PATTERNS: Record<string, DrumDailyPattern> = {
   lesson_drums_hats_eighths_01: { beats: 4, hits: hatsGrooveBar },
   lesson_drums_fill_land_01: { beats: 20, hits: fillPhrase },
@@ -1416,6 +1475,11 @@ const DRUM_DAILY_PATTERNS: Record<string, DrumDailyPattern> = {
   lesson_drums_waltz_snare_01: { beats: 3, hits: waltzSnareBar },
   lesson_drums_waltz_eighths_01: { beats: 3, hits: waltzEighthsBar },
   lesson_drums_waltz_fill_01: { beats: 12, hits: waltzFillPhrase },
+  lesson_drums_rock_you_01: { beats: 4, hits: rockYouBar },
+  lesson_drums_back_in_black_01: { beats: 4, hits: backInBlackBar },
+  lesson_drums_billie_jean_01: { beats: 4, hits: billieJeanBar },
+  lesson_drums_another_one_01: { beats: 4, hits: anotherOneBar },
+  lesson_drums_come_together_01: { beats: 8, hits: comeTogetherPhrase },
 };
 
 /** Declared pad pattern for a daily drums lesson, if it has one. */
