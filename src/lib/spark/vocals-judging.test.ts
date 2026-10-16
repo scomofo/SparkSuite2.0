@@ -281,11 +281,11 @@ describe("legacy vocals timelines are untouched", () => {
 describe("vocals daily curriculum after tiers 2a–2b", () => {
   const lessons = lessonsFor("vocals");
 
-  it("has eleven daily lessons, orders 1–11 unique", () => {
-    assert.equal(lessons.length, 11);
+  it("has fifteen daily lessons, orders 1–15 unique", () => {
+    assert.equal(lessons.length, 15);
     assert.deepEqual(
       lessons.map((l) => l.order).sort((a, b) => a - b),
-      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
+      [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
     );
   });
 
