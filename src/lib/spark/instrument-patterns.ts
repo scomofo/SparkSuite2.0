@@ -902,6 +902,109 @@ function pedalCues(): PracticeCue[] {
   return cues;
 }
 
+/** Two hands on a bar pattern: beat 0 bundles the left-hand root with the
+ * first right-hand tone; the right hand then rolls root–third–fifth–third. */
+function brokenChordSongCues(
+  bars: { chord: string; root: number; rootName: string; tones: [number, number, number] }[],
+): PracticeCue[] {
+  const cues: PracticeCue[] = [];
+  bars.forEach((bar, barIndex) => {
+    const base = barIndex * 4;
+    const roll = [bar.tones[0], bar.tones[1], bar.tones[2], bar.tones[1]];
+    roll.forEach((midi, i) => {
+      cues.push(
+        i === 0
+          ? pc(base, bar.chord, [bar.root, midi], `Left hand: ${bar.rootName} root — right hand rolls ${bar.chord}`)
+          : pc(base + i, NOTE_NAME[midi], [midi], "Right hand: keep the roll even"),
+      );
+    });
+  });
+  return cues;
+}
+
+/** Heart and Soul: the duet — left-hand roots, right-hand chords on 1 and 3. */
+function heartAndSoulCues(): PracticeCue[] {
+  const blocks: { chord: string; root: number; rootName: string; tones: [number, number, number] }[] = [
+    { chord: "C", root: 48, rootName: "C", tones: [60, 64, 67] },
+    { chord: "Am", root: 45, rootName: "A", tones: [57, 60, 64] },
+    { chord: "F", root: 41, rootName: "F", tones: [53, 57, 60] },
+    { chord: "G", root: 43, rootName: "G", tones: [67, 71, 74] },
+  ];
+  const cues: PracticeCue[] = [];
+  for (let round = 0; round < 2; round++) {
+    blocks.forEach((block, i) => {
+      const base = (round * 4 + i) * 4;
+      cues.push(
+        pc(base, block.chord, [block.root, ...block.tones], `Left hand: ${block.rootName} root — right hand: ${block.chord} chord`, 1.9),
+      );
+      cues.push(pc(base + 2, block.chord, [...block.tones], `Right hand: ${block.chord} again on 3`, 1.9));
+    });
+  }
+  return cues;
+}
+
+/** Hallelujah: the verse melody in the right hand, roots in the left.
+ * The melody is the vocals track's line (same pitches, first eight bars). */
+function hallelujahPianoCues(): PracticeCue[] {
+  const bars: { root: number; rootName: string; notes: number[] }[] = [
+    { root: 48, rootName: "C", notes: [55, 60, 62, 64] },
+    { root: 45, rootName: "A", notes: [62, 60, 62, 64] },
+    { root: 48, rootName: "C", notes: [55, 60, 62, 64] },
+    { root: 45, rootName: "A", notes: [65, 64, 62, 60] },
+    { root: 41, rootName: "F", notes: [60, 62, 64, 65] },
+    { root: 43, rootName: "G", notes: [65, 64, 62, 64] },
+    { root: 48, rootName: "C", notes: [62, 62, 64] },
+    { root: 48, rootName: "C", notes: [67, 67, 67, 67] },
+  ];
+  const cues: PracticeCue[] = [];
+  bars.forEach((bar, barIndex) => {
+    const base = barIndex * 4;
+    bar.notes.forEach((midi, i) => {
+      const held = bar.notes.length === 3 && i === 2;
+      cues.push(
+        pc(
+          base + i,
+          NOTE_NAME[midi] ?? String(midi),
+          i === 0 ? [bar.root, midi] : [midi],
+          i === 0
+            ? `Left hand: ${bar.rootName} root — right hand: ${NOTE_NAME[midi] ?? midi}`
+            : `Right hand: ${NOTE_NAME[midi] ?? midi}`,
+          held ? 1.9 : 0.9,
+        ),
+      );
+    });
+  });
+  return cues;
+}
+
+/** Imagine: C–Cmaj7–F, the rolling figure; the Cmaj7's B is the colour. */
+function imagineCues(): PracticeCue[] {
+  const block = (chord: string, root: number, rootName: string, tones: [number, number, number]) => ({
+    chord, root, rootName, tones,
+  });
+  return brokenChordSongCues([
+    block("C", 48, "C", [60, 64, 67]),
+    block("Cmaj7", 48, "C", [60, 64, 71]),
+    block("F", 41, "F", [65, 69, 72]),
+    block("F", 41, "F", [65, 69, 72]),
+    block("C", 48, "C", [60, 64, 67]),
+    block("Cmaj7", 48, "C", [60, 64, 71]),
+    block("F", 41, "F", [65, 69, 72]),
+    block("F", 41, "F", [65, 69, 72]),
+  ]);
+}
+
+/** Let It Be: the four chords as the rolling piano part, two rounds. */
+function letItBeCues(): PracticeCue[] {
+  const loop: { chord: string; root: number; rootName: string; tones: [number, number, number] }[] = [
+    { chord: "C", root: 48, rootName: "C", tones: [60, 64, 67] },
+    { chord: "G", root: 43, rootName: "G", tones: [55, 59, 62] },
+    { chord: "Am", root: 45, rootName: "A", tones: [57, 60, 64] },
+    { chord: "F", root: 41, rootName: "F", tones: [53, 57, 60] },
+  ];
+  return brokenChordSongCues([...loop, ...loop]);
+}
+
 /**
  * Piano daily lessons with through-composed cue sets (the tiling above is for
  * short looping exercises). Authored at absolute beats, played as written.
@@ -913,6 +1016,10 @@ const PIANO_DAILY_CUES: Record<string, PracticeCue[]> = {
   lesson_piano_scale_c_01: cMajorScaleCues(),
   lesson_piano_arpeggio_01: arpeggioCues(),
   lesson_piano_pedal_01: pedalCues(),
+  lesson_piano_heart_soul_01: heartAndSoulCues(),
+  lesson_piano_hallelujah_01: hallelujahPianoCues(),
+  lesson_piano_imagine_01: imagineCues(),
+  lesson_piano_let_it_be_01: letItBeCues(),
 };
 
 export function hasInstrumentPattern(item: { lessonId?: string; process?: string }) {
