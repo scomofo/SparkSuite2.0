@@ -48,7 +48,7 @@ const DAILY_EXERCISES: Record<string, string> = {
  * `beats` is the length of one pass; dailyInstrumentCues repeats the pass
  * until it fills the lesson's bars.
  */
-const MANDOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
+export const MANDOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }> = {
   // The eight-note line from "Melody, then backing", on its own.
   lesson_mandolin_melody_01: {
     beats: 8,
@@ -82,6 +82,126 @@ const MANDOLIN_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[] }
       { beat: 8, label: "D ↓", notes: [57, 62, 69, 78], chord: "D", detail: "D: change on beat 1", duration: 0.9 },
       { beat: 12, label: "Am ↓", notes: [57, 64, 72, 76], chord: "Am", detail: "Am: the minor shape lands the loop", duration: 0.9 },
     ],
+  },
+  // Losing My Religion (R.E.M.): the riff pattern in eighths at practice
+  // tempo — the record runs it in sixteenths, and the lesson copy says so.
+  // Am bars roll A–E–C–E; Em bars (two-finger Em: D and A courses, fret 2)
+  // roll E–B–G–B.
+  lesson_mandolin_losing_religion_01: {
+    beats: 16,
+    cues: [
+      ...[0, 1].flatMap((bar) =>
+        [69, 76, 72, 76, 69, 76, 72, 76].map((midi, i) => ({
+          beat: bar * 4 + i * 0.5,
+          label: `${{ 69: "A", 72: "C", 76: "E" }[midi]} ${i % 2 === 0 ? "↓" : "↑"}`,
+          notes: [midi],
+          detail:
+            i === 0 && bar === 0
+              ? "Am — A course, open: the pattern starts; alternate picking throughout"
+              : midi === 72
+                ? "A course, fret 3 — C"
+                : midi === 76
+                  ? "E course, open"
+                  : "A course, open",
+          duration: 0.42,
+          chord: "Am",
+        })),
+      ),
+      ...[2, 3].flatMap((bar) =>
+        [76, 71, 67, 71, 76, 71, 67, 71].map((midi, i) => ({
+          beat: bar * 4 + i * 0.5,
+          label: `${{ 67: "G", 71: "B", 76: "E" }[midi]} ${i % 2 === 0 ? "↓" : "↑"}`,
+          notes: [midi],
+          detail:
+            i === 0 && bar === 2
+              ? "Em — the pick doesn't stop for the change"
+              : midi === 71
+                ? "A course, fret 2 — B"
+                : midi === 67
+                  ? "D course, fret 5 — G"
+                  : "E course, open",
+          duration: 0.42,
+          chord: "Em",
+        })),
+      ),
+    ],
+  },
+  // Copperhead Road (Steve Earle): the drone figure — open D course under
+  // A-course answers, an F♯ lift in the second bar.
+  lesson_mandolin_copperhead_01: {
+    beats: 8,
+    cues: [
+      [62, 62, 69, 62, 62, 62, 69, 71],
+      [62, 62, 69, 62, 62, 64, 66, 62],
+    ].flatMap((bar, barIndex) =>
+      bar.map((midi, i) => ({
+        beat: barIndex * 4 + i * 0.5,
+        label: `${{ 62: "D", 64: "E", 66: "F♯", 69: "A", 71: "B" }[midi]} ${i % 2 === 0 ? "↓" : "↑"}`,
+        notes: [midi],
+        detail:
+          midi === 62
+            ? "D course, open — the drone"
+            : midi === 69
+              ? "A course, open — the answer"
+              : midi === 71
+                ? "A course, fret 2 — B"
+                : midi === 64
+                  ? "D course, fret 2 — E"
+                  : "D course, fret 4 — F♯: the lift",
+        duration: 0.42,
+        chord: "D",
+      })),
+    ),
+  },
+  // Maggie May (Rod Stewart): a picked melody in D on the A and E courses,
+  // in the spirit of the record's mandolin break.
+  lesson_mandolin_maggie_may_01: {
+    beats: 16,
+    cues: [
+      { beat: 0, label: "D", notes: [74], detail: "A course, fret 5 — D: the phrase starts high", duration: 0.9 },
+      { beat: 1, label: "B", notes: [71], detail: "A course, fret 2 — B", duration: 0.9 },
+      { beat: 2, label: "A", notes: [69], detail: "A course, open", duration: 0.9 },
+      { beat: 3, label: "B", notes: [71], detail: "A course, fret 2 — B", duration: 0.9 },
+      { beat: 4, label: "D", notes: [74], detail: "A course, fret 5 — D", duration: 0.9 },
+      { beat: 5, label: "E", notes: [76], detail: "E course, open — the top", duration: 0.9 },
+      { beat: 6, label: "D", notes: [74], detail: "A course, fret 5 — D", duration: 0.9 },
+      { beat: 7, label: "B", notes: [71], detail: "A course, fret 2 — B", duration: 0.9 },
+      { beat: 8, label: "A", notes: [69], detail: "A course, open", duration: 0.9 },
+      { beat: 9, label: "B", notes: [71], detail: "A course, fret 2 — B", duration: 0.9 },
+      { beat: 10, label: "D", notes: [74], detail: "A course, fret 5 — D", duration: 0.9 },
+      { beat: 11, label: "B", notes: [71], detail: "A course, fret 2 — B", duration: 0.9 },
+      { beat: 12, label: "A", notes: [69], detail: "A course, open", duration: 0.9 },
+      { beat: 13, label: "B", notes: [71], detail: "A course, fret 2 — B", duration: 0.9 },
+      { beat: 14, label: "D", notes: [74], detail: "A course, fret 5 — D", duration: 0.9 },
+      { beat: 15, label: "A", notes: [69], detail: "A course, open — let it ring", duration: 1.9 },
+    ],
+  },
+  // The Battle of Evermore (Led Zeppelin): the rolling Am figure — up the
+  // courses to the G on the E course, and back down.
+  lesson_mandolin_evermore_01: {
+    beats: 8,
+    cues: [
+      [69, 72, 76, 72, 69, 72, 76, 79],
+      [69, 72, 76, 72, 76, 74, 72, 69],
+    ].flatMap((bar, barIndex) =>
+      bar.map((midi, i) => ({
+        beat: barIndex * 4 + i * 0.5,
+        label: `${{ 69: "A", 72: "C", 74: "D", 76: "E", 79: "G" }[midi]} ${i % 2 === 0 ? "↓" : "↑"}`,
+        notes: [midi],
+        detail:
+          midi === 79
+            ? "E course, fret 3 — G: the top of the figure"
+            : midi === 76
+              ? "E course, open"
+              : midi === 74
+                ? "A course, fret 5 — D"
+                : midi === 72
+                  ? "A course, fret 3 — C"
+                  : "A course, open",
+        duration: 0.42,
+        chord: "Am",
+      })),
+    ),
   },
   // The traditional chorus, in G: B and C on the A course, A open, G on the
   // D course. Held notes take two beats, as the song is sung.
