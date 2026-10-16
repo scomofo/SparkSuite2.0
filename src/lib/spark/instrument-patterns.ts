@@ -366,6 +366,92 @@ export const BASS_DAILY_CUES: Record<string, { beats: number; cues: PracticeCue[
       { beat: 4, label: "A", notes: [33], detail: "A string, open — ring the whole bar", duration: 3.8 },
     ],
   },
+  // Peter Gunn (Henry Mancini): the theme's ostinato — a two-bar loop of
+  // eighth notes on the E string, with one lift to the open A per pass.
+  lesson_bass_peter_gunn_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "E", notes: [28], detail: "E string, open — alternate index and middle", duration: 0.42 },
+      { beat: 0.5, label: "E", notes: [28], detail: "E string, open", duration: 0.42 },
+      { beat: 1, label: "F♯", notes: [30], detail: "E string, fret 2", duration: 0.42 },
+      { beat: 1.5, label: "E", notes: [28], detail: "E string, open", duration: 0.42 },
+      { beat: 2, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.42 },
+      { beat: 2.5, label: "E", notes: [28], detail: "E string, open", duration: 0.42 },
+      { beat: 3, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.42 },
+      { beat: 3.5, label: "E", notes: [28], detail: "E string, open", duration: 0.42 },
+      { beat: 4, label: "E", notes: [28], detail: "E string, open — second bar, same cell", duration: 0.42 },
+      { beat: 4.5, label: "E", notes: [28], detail: "E string, open", duration: 0.42 },
+      { beat: 5, label: "F♯", notes: [30], detail: "E string, fret 2", duration: 0.42 },
+      { beat: 5.5, label: "E", notes: [28], detail: "E string, open", duration: 0.42 },
+      { beat: 6, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.42 },
+      { beat: 6.5, label: "E", notes: [28], detail: "E string, open", duration: 0.42 },
+      { beat: 7, label: "A", notes: [33], detail: "A string, open — the lift", duration: 0.42 },
+      { beat: 7.5, label: "G", notes: [31], detail: "E string, fret 3 — then the loop slams back to E", duration: 0.42 },
+    ],
+  },
+  // Godzilla (Blue Öyster Cult): the main riff spaced the way the record
+  // leaves it — a heavy E, a breath, then A and the B♭ stab.
+  lesson_bass_godzilla_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "E", notes: [28], detail: "E string, open — full weight, then space", duration: 1.8 },
+      { beat: 2, label: "E", notes: [28], detail: "E string, open — same weight again", duration: 0.85 },
+      { beat: 3, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.85 },
+      { beat: 4, label: "A", notes: [33], detail: "A string, open", duration: 0.85 },
+      { beat: 5, label: "B♭", notes: [34], detail: "A string, fret 1 — the flat-five stab", duration: 0.85 },
+      { beat: 6, label: "A", notes: [33], detail: "A string, open", duration: 0.85 },
+      { beat: 7, label: "E", notes: [28], detail: "E string, open — home, and the loop turns", duration: 0.85 },
+    ],
+  },
+  // Smooth Operator (Sade): Paul Denman's verse groove, arranged inside
+  // one octave — the root held long, a soft pickup, the line leaning on.
+  lesson_bass_smooth_operator_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "D", notes: [38], detail: "A string, fret 5 — hold it into the pickup", duration: 1.4 },
+      { beat: 1.5, label: "F", notes: [41], detail: "A string, fret 8 — the pickup, soft", duration: 0.45 },
+      { beat: 2, label: "A", notes: [33], detail: "A string, open — drop down, same soft weight", duration: 0.9 },
+      { beat: 3, label: "C", notes: [36], detail: "A string, fret 3", duration: 0.9 },
+      { beat: 4, label: "D", notes: [38], detail: "A string, fret 5 — hold it into the pickup", duration: 1.4 },
+      { beat: 5.5, label: "F", notes: [41], detail: "A string, fret 8 — the pickup, soft", duration: 0.45 },
+      { beat: 6, label: "G", notes: [43], detail: "G string, open — the top of the line", duration: 0.9 },
+      { beat: 7, label: "F", notes: [41], detail: "A string, fret 8 — fall back toward D", duration: 0.9 },
+    ],
+  },
+  // bad guy (Billie Eilish): the synth-bass hook trimmed to its two-bar
+  // call and answer — every note punched and cut short.
+  lesson_bass_bad_guy_01: {
+    beats: 8,
+    cues: [
+      { beat: 0, label: "G", notes: [31], detail: "E string, fret 3 — punch it, mute it", duration: 0.3 },
+      { beat: 1, label: "G", notes: [31], detail: "E string, fret 3 — same tiny length", duration: 0.3 },
+      { beat: 2, label: "B♭", notes: [34], detail: "A string, fret 1", duration: 0.3 },
+      { beat: 3, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.3 },
+      { beat: 4, label: "C", notes: [36], detail: "A string, fret 3 — the answer", duration: 0.3 },
+      { beat: 5, label: "B♭", notes: [34], detail: "A string, fret 1", duration: 0.3 },
+      { beat: 6, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.3 },
+      { beat: 7, label: "G", notes: [31], detail: "E string, fret 3 — a touch longer, then the loop", duration: 0.55 },
+    ],
+  },
+  // Mission: Impossible Theme (Lalo Schifrin): the 5/4 ostinato — two
+  // five-beat bars per phrase, counted 3 + 2, the second bar falling
+  // F–E♭–D back home. Authored on the 5-grid; the lesson's beatsPerBar
+  // is 5, so the phrase tiles at beats 0, 10, 20 of a 30-beat lesson.
+  lesson_bass_mission_01: {
+    beats: 10,
+    cues: [
+      { beat: 0, label: "G", notes: [31], detail: "E string, fret 3 — count 3 + 2: ONE", duration: 0.9 },
+      { beat: 1, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.45 },
+      { beat: 2, label: "B♭", notes: [34], detail: "A string, fret 1 — the three is done", duration: 0.9 },
+      { beat: 3, label: "C", notes: [36], detail: "A string, fret 3 — the two begins", duration: 0.9 },
+      { beat: 4, label: "G", notes: [31], detail: "E string, fret 3 — last beat of the bar", duration: 0.9 },
+      { beat: 5, label: "G", notes: [31], detail: "E string, fret 3 — second bar: ONE again", duration: 0.9 },
+      { beat: 6, label: "G", notes: [31], detail: "E string, fret 3", duration: 0.45 },
+      { beat: 7, label: "F", notes: [29], detail: "E string, fret 1 — the fall begins", duration: 0.9 },
+      { beat: 8, label: "E♭", notes: [39], detail: "D string, fret 1", duration: 0.9 },
+      { beat: 9, label: "D", notes: [38], detail: "D string, open — lands the turn, back to G", duration: 0.9 },
+    ],
+  },
 };
 
 const VIOLIN_NOTE_NAME: Record<number, string> = {
