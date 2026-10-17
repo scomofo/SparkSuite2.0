@@ -27,14 +27,14 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_mandolin_losing_religion_01", order: 19, title: "Losing My Religion", artist: "R.E.M.", bpm: 84, prereq: ["lesson_mandolin_am_song_01"], cues: 64 },
-  { id: "lesson_mandolin_copperhead_01", order: 20, title: "Copperhead Road", artist: "Steve Earle", bpm: 88, prereq: ["lesson_mandolin_losing_religion_01"], cues: 64 },
-  { id: "lesson_mandolin_maggie_may_01", order: 21, title: "Maggie May", artist: "Rod Stewart", bpm: 80, prereq: ["lesson_mandolin_copperhead_01"], cues: 32 },
+  { id: "lesson_mandolin_losing_religion_01", order: 20, title: "Losing My Religion", artist: "R.E.M.", bpm: 84, prereq: ["lesson_mandolin_am_song_01"], cues: 64 },
+  { id: "lesson_mandolin_copperhead_01", order: 21, title: "Copperhead Road", artist: "Steve Earle", bpm: 88, prereq: ["lesson_mandolin_losing_religion_01"], cues: 64 },
+  { id: "lesson_mandolin_maggie_may_01", order: 13, title: "Maggie May", artist: "Rod Stewart", bpm: 80, prereq: ["lesson_mandolin_melody_01"], cues: 32 },
   { id: "lesson_mandolin_evermore_01", order: 22, title: "The Battle of Evermore", artist: "Led Zeppelin", bpm: 72, prereq: ["lesson_mandolin_maggie_may_01"], cues: 64 },
 ] as const;
 
 describe("mandolin famous-song lessons", () => {
-  it("extend the mandolin sequence at orders 19–22", () => {
+  it("Maggie May sits at order 13, gated on the melody lesson; the other songs extend the sequence at orders 20–22", () => {
     const mandolin = lessonsFor("mandolin");
     assert.equal(mandolin.length, 22);
     for (const song of SONGS) {
