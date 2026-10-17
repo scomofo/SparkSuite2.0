@@ -32,11 +32,11 @@ const SONGS = [
   { id: "lesson_guitar_come_as_you_are_01", order: 7, title: "Come As You Are", artist: "Nirvana", bpm: 84, prereq: ["lesson_guitar_smoke_water_01"], cues: 64 },
   { id: "lesson_guitar_horse_no_name_01", order: 13, title: "Horse with No Name", artist: "America", bpm: 84, prereq: ["lesson_guitar_song_first_two_chord_01"], cues: 32 },
   { id: "lesson_guitar_sunshine_love_01", order: 8, title: "Sunshine of Your Love", artist: "Cream", bpm: 72, prereq: ["lesson_guitar_come_as_you_are_01"], cues: 36 },
-  { id: "lesson_guitar_knockin_heaven_01", order: 24, title: "Knockin' on Heaven's Door", artist: "Bob Dylan", bpm: 66, prereq: ["lesson_guitar_four_chord_loop_01"], cues: 64 },
+  { id: "lesson_guitar_knockin_heaven_01", order: 21, title: "Knockin' on Heaven's Door", artist: "Bob Dylan", bpm: 66, prereq: ["lesson_guitar_am_c_switch_01"], cues: 64 },
 ] as const;
 
 describe("guitar famous-riff and famous-song lessons", () => {
-  it("the famous songs scatter to their own gates (orders 6, 7, 8, 13, 24)", () => {
+  it("the famous songs scatter to their own gates (orders 6, 7, 8, 13, 21)", () => {
     const guitar = lessonsFor("guitar");
     assert.equal(guitar.length, 36);
     for (const song of SONGS) {
