@@ -27,14 +27,14 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_piano_heart_soul_01", order: 18, title: "Heart and Soul", artist: "Hoagy Carmichael", bpm: 72, prereq: ["lesson_piano_four_01"], cues: 16 },
+  { id: "lesson_piano_heart_soul_01", order: 10, title: "Heart and Soul", artist: "Hoagy Carmichael", bpm: 72, prereq: ["lesson_piano_four_01"], cues: 16 },
   { id: "lesson_piano_hallelujah_01", order: 19, title: "Hallelujah", artist: "Leonard Cohen", bpm: 60, prereq: ["lesson_piano_song_ode_01"], cues: 31 },
   { id: "lesson_piano_imagine_01", order: 20, title: "Imagine", artist: "John Lennon", bpm: 76, prereq: ["lesson_piano_arpeggio_01"], cues: 32 },
   { id: "lesson_piano_let_it_be_01", order: 21, title: "Let It Be", artist: "The Beatles", bpm: 72, prereq: ["lesson_piano_imagine_01"], cues: 32 },
 ] as const;
 
 describe("piano famous-song lessons", () => {
-  it("extend the piano sequence at orders 18–21", () => {
+  it("Heart and Soul sits at order 10, right after its loop lesson; the other songs extend the sequence at orders 19–21", () => {
     const piano = lessonsFor("piano");
     assert.equal(piano.length, 21);
     for (const song of SONGS) {
