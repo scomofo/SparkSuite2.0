@@ -28,15 +28,15 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_guitar_smoke_water_01", order: 32, title: "Smoke on the Water", artist: "Deep Purple", bpm: 76, prereq: ["lesson_guitar_pick_downstrokes_01"], cues: 24 },
-  { id: "lesson_guitar_come_as_you_are_01", order: 33, title: "Come As You Are", artist: "Nirvana", bpm: 84, prereq: ["lesson_guitar_smoke_water_01"], cues: 64 },
-  { id: "lesson_guitar_horse_no_name_01", order: 34, title: "Horse with No Name", artist: "America", bpm: 84, prereq: ["lesson_guitar_song_first_two_chord_01"], cues: 32 },
-  { id: "lesson_guitar_sunshine_love_01", order: 35, title: "Sunshine of Your Love", artist: "Cream", bpm: 72, prereq: ["lesson_guitar_come_as_you_are_01"], cues: 36 },
-  { id: "lesson_guitar_knockin_heaven_01", order: 36, title: "Knockin' on Heaven's Door", artist: "Bob Dylan", bpm: 66, prereq: ["lesson_guitar_four_chord_loop_01"], cues: 64 },
+  { id: "lesson_guitar_smoke_water_01", order: 6, title: "Smoke on the Water", artist: "Deep Purple", bpm: 76, prereq: ["lesson_guitar_pick_downstrokes_01"], cues: 24 },
+  { id: "lesson_guitar_come_as_you_are_01", order: 7, title: "Come As You Are", artist: "Nirvana", bpm: 84, prereq: ["lesson_guitar_smoke_water_01"], cues: 64 },
+  { id: "lesson_guitar_horse_no_name_01", order: 13, title: "Horse with No Name", artist: "America", bpm: 84, prereq: ["lesson_guitar_song_first_two_chord_01"], cues: 32 },
+  { id: "lesson_guitar_sunshine_love_01", order: 8, title: "Sunshine of Your Love", artist: "Cream", bpm: 72, prereq: ["lesson_guitar_come_as_you_are_01"], cues: 36 },
+  { id: "lesson_guitar_knockin_heaven_01", order: 24, title: "Knockin' on Heaven's Door", artist: "Bob Dylan", bpm: 66, prereq: ["lesson_guitar_four_chord_loop_01"], cues: 64 },
 ] as const;
 
 describe("guitar famous-riff and famous-song lessons", () => {
-  it("close the guitar sequence at orders 32–36 with honest early gates", () => {
+  it("the famous songs scatter to their own gates (orders 6, 7, 8, 13, 24)", () => {
     const guitar = lessonsFor("guitar");
     assert.equal(guitar.length, 36);
     for (const song of SONGS) {
