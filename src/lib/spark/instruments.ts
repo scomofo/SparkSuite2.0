@@ -2128,7 +2128,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     prerequisites: [],
     masteryRequired: 0.7,
   },
-  {
+{
     id: "lesson_mandolin_g_01",
     title: "Two-finger G",
     skill: "mandolin_g",
@@ -2143,7 +2143,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     prerequisites: ["lesson_mandolin_open_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_mandolin_c_01",
     title: "C shape",
     skill: "mandolin_c",
@@ -2158,7 +2158,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     prerequisites: ["lesson_mandolin_g_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_mandolin_gc_01",
     title: "Porch Light",
     skill: "mandolin_gc",
@@ -2178,7 +2178,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "Two shapes, one steady down-pick. That is a tune.",
     interpret: "Let each downstroke ring into the next.",
   },
-  {
+{
     id: "lesson_mandolin_respond_gc_01",
     title: "Same chord or different",
     skill: "mandolin_listen",
@@ -2198,7 +2198,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     criteria: ["You listened first", "You named one thing"],
     why: "Porch Light uses both. Name the difference.",
   },
-  {
+{
     id: "lesson_mandolin_d_01",
     title: "D shape",
     skill: "mandolin_d",
@@ -2214,7 +2214,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The V that pulls back to G.",
   },
-  {
+{
     id: "lesson_mandolin_chop_01",
     title: "The chop",
     skill: "mandolin_chop",
@@ -2234,7 +2234,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "Porch Light with a backbeat.",
     interpret: "Make the chop short, like a snare.",
   },
-  {
+{
     id: "lesson_mandolin_create_hang_01",
     title: "Your hang",
     skill: "mandolin_create",
@@ -2255,7 +2255,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "You pick the idea. That's the piece.",
     interpret: "Play the one you picked like you meant it.",
   },
-  {
+{
     id: "lesson_mandolin_pulse_01",
     title: "Count the pulse",
     skill: "mandolin_pulse",
@@ -2271,7 +2271,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.7,
     why: "The silent beats belong to the pulse too.",
   },
-  {
+{
     id: "lesson_mandolin_downup_01",
     title: "Alternate picking",
     skill: "mandolin_down_up",
@@ -2286,7 +2286,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     prerequisites: ["lesson_mandolin_pulse_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_mandolin_tremolo_01",
     title: "Tremolo",
     skill: "mandolin_tremolo",
@@ -2301,7 +2301,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     prerequisites: ["lesson_mandolin_downup_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_mandolin_melody_01",
     title: "Melody line",
     skill: "mandolin_melody",
@@ -2317,12 +2317,32 @@ const MANDOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The line from Melody, then backing, practised on its own.",
   },
-  {
+{
+    id: "lesson_mandolin_maggie_may_01",
+    title: "Maggie May",
+    skill: "maggie_may",
+    trackId: "track_mandolin_songs",
+    order: 13,
+    type: "song",
+    objectives: ["A picked melody in D, on the A and E courses", "The last note of the phrase is held — let it ring"],
+    chords: ["D", "G"],
+    pattern: "D",
+    bars: 8,
+    bpm: 80,
+    prerequisites: ["lesson_mandolin_melody_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Maggie May",
+    criteria: ["The phrase finishes, twice round", "Quarter notes, even — no rushing the top course"],
+    why: "Rod Stewart, 1971 — Ray Jackson's mandolin break is the part everybody waits for. This lesson plays a melody in its spirit, in D, out of notes your fingers already own. 80 beats a minute.",
+    interpret: "Sing it through the pick. Unhurried.",
+  },
+{
     id: "lesson_mandolin_closed_chop_01",
     title: "The closed chop",
     skill: "mandolin_closed_chop",
     trackId: "track_mandolin_songs",
-    order: 13,
+    order: 14,
     type: "skill",
     objectives: ["Closed G: frets 7–5–2–3, every course fretted", "The chop on 2 and 4 carries the chord"],
     chords: ["G"],
@@ -2337,12 +2357,12 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "The unpitched click grows a chord: fret every course and the chop itself is pitched.",
     interpret: "Release pressure right after the strike; keep the shape in your hand.",
   },
-  {
+{
     id: "lesson_mandolin_am_01",
     title: "Am shape",
     skill: "mandolin_am",
     trackId: "track_mandolin_chords",
-    order: 14,
+    order: 15,
     type: "chord",
     objectives: ["G course fret 2, D course fret 2, A course fret 3", "E course stays open"],
     chords: ["Am"],
@@ -2353,12 +2373,12 @@ const MANDOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The first minor shape: A E C E.",
   },
-  {
+{
     id: "lesson_mandolin_am_song_01",
     title: "The minor loop",
     skill: "mandolin_am_song",
     trackId: "track_mandolin_songs",
-    order: 15,
+    order: 16,
     type: "song",
     objectives: ["One bar each: G, C, D, Am", "Every change lands on one"],
     chords: ["G", "C", "D", "Am"],
@@ -2373,12 +2393,12 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "Three major shapes you know, and the minor one turns the loop around.",
     interpret: "Let Am ring a little longer; it is the point of the loop.",
   },
-  {
+{
     id: "lesson_mandolin_cabbage_01",
     title: "Boil Them Cabbage Down",
     skill: "mandolin_cabbage",
     trackId: "track_mandolin_songs",
-    order: 16,
+    order: 17,
     type: "song",
     objectives: ["The chorus melody on the A and D courses", "G, C, G, then D under it"],
     chords: ["G", "C", "D"],
@@ -2393,12 +2413,12 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "A traditional tune, and the first one many mandolin players ever learn.",
     interpret: "Play it the way you would sing it.",
   },
-  {
+{
     id: "lesson_mandolin_scale_01",
     title: "G major scale",
     skill: "mandolin_scale",
     trackId: "track_mandolin_foundations",
-    order: 17,
+    order: 18,
     type: "skill",
     objectives: ["G A B C on the G course, D E F♯ G on the D course", "Up and back down, one octave"],
     chords: ["G"],
@@ -2409,12 +2429,12 @@ const MANDOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "Every melody in this path lives inside this scale. Now it has a name.",
   },
-  {
+{
     id: "lesson_mandolin_double_stops_01",
     title: "Double stops",
     skill: "mandolin_double_stops",
     trackId: "track_mandolin_foundations",
-    order: 18,
+    order: 19,
     type: "skill",
     objectives: ["Two courses at the same fret", "A fifth rings under the top course"],
     chords: ["G"],
@@ -2425,12 +2445,12 @@ const MANDOLIN_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The fifths tuning makes the shape free: whatever fret the top course plays, the course below agrees.",
   },
-  {
+{
     id: "lesson_mandolin_losing_religion_01",
     title: "Losing My Religion",
     skill: "losing_my_religion",
     trackId: "track_mandolin_songs",
-    order: 19,
+    order: 20,
     type: "song",
     objectives: ["The riff pattern over Am and Em — one new shape, Em, two fingers (frets 2 and 2, D and A courses)", "Eighth notes, alternate picking, no gaps at the change"],
     chords: ["Am", "Em"],
@@ -2445,12 +2465,12 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "R.E.M., 1991 — a rock hit built on a mandolin. Honest label: the record's figure runs in sixteenth notes; this is the same pattern in eighths, at a practice tempo of 84 beats a minute. The pattern is the lesson — speed is a later problem.",
     interpret: "Steady and circling, like the figure never ends.",
   },
-  {
+{
     id: "lesson_mandolin_copperhead_01",
     title: "Copperhead Road",
     skill: "copperhead_road",
     trackId: "track_mandolin_songs",
-    order: 20,
+    order: 21,
     type: "song",
     objectives: ["The driving D figure: the open D course drones under A-course answers", "Eighth notes, all down-up, for eight bars straight"],
     chords: ["D"],
@@ -2465,27 +2485,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     why: "Steve Earle, 1988. The mandolin riff is the song's engine — one chord, an open-string drone, and a pick that doesn't let up. 88 beats a minute here; the record drives harder.",
     interpret: "Lean on it. This one is all momentum.",
   },
-  {
-    id: "lesson_mandolin_maggie_may_01",
-    title: "Maggie May",
-    skill: "maggie_may",
-    trackId: "track_mandolin_songs",
-    order: 21,
-    type: "song",
-    objectives: ["A picked melody in D, on the A and E courses", "The last note of the phrase is held — let it ring"],
-    chords: ["D", "G"],
-    pattern: "D",
-    bars: 8,
-    bpm: 80,
-    prerequisites: ["lesson_mandolin_copperhead_01"],
-    masteryRequired: 0.75,
-    process: "perform",
-    repertoire: "Maggie May",
-    criteria: ["The phrase finishes, twice round", "Quarter notes, even — no rushing the top course"],
-    why: "Rod Stewart, 1971 — Ray Jackson's mandolin break is the part everybody waits for. This lesson plays a melody in its spirit, in D, out of notes your fingers already own. 80 beats a minute.",
-    interpret: "Sing it through the pick. Unhurried.",
-  },
-  {
+{
     id: "lesson_mandolin_evermore_01",
     title: "The Battle of Evermore",
     skill: "battle_of_evermore",
@@ -2504,8 +2504,7 @@ const MANDOLIN_LESSONS: Lesson[] = [
     criteria: ["The figure finishes, four times round", "The top note (G, E course fret 3) lands in tune"],
     why: "Led Zeppelin, 1971 — the one Zeppelin song carried by a mandolin, John Paul Jones picking the figure under Robert Plant and Sandy Denny. In Am, at 72 beats a minute: the mood is the tempo.",
     interpret: "Hypnotic and even. Let the pattern circle.",
-  },
-];
+  }];
 
 const BANJO_LESSONS: Lesson[] = [
   {
