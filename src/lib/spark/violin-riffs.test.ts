@@ -27,14 +27,14 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_violin_ashokan_01", order: 17, title: "Ashokan Farewell", artist: "Jay Ungar", bpm: 60, prereq: ["lesson_violin_twinkle_01"], cues: 20 },
+  { id: "lesson_violin_ashokan_01", order: 12, title: "Ashokan Farewell", artist: "Jay Ungar", bpm: 60, prereq: ["lesson_violin_a_tetrachord_01"], cues: 20 },
   { id: "lesson_violin_bittersweet_01", order: 18, title: "Bittersweet Symphony", artist: "The Verve", bpm: 76, prereq: ["lesson_violin_ashokan_01"], cues: 32 },
   { id: "lesson_violin_viva_01", order: 19, title: "Viva la Vida", artist: "Coldplay", bpm: 92, prereq: ["lesson_violin_bittersweet_01"], cues: 64 },
   { id: "lesson_violin_hallelujah_01", order: 20, title: "Hallelujah", artist: "Leonard Cohen", bpm: 60, prereq: ["lesson_violin_viva_01"], cues: 31 },
 ] as const;
 
 describe("violin famous-song lessons", () => {
-  it("extend the violin sequence at orders 17–20, chained from Twinkle", () => {
+  it("Ashokan Farewell sits at order 12, gated on the A-string tetrachord; the other songs extend the sequence at orders 18–20", () => {
     const violin = lessonsFor("violin");
     assert.equal(violin.length, 20);
     for (const song of SONGS) {

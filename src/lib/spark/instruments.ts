@@ -2915,7 +2915,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     prerequisites: [],
     masteryRequired: 0.7,
   },
-  {
+{
     id: "lesson_violin_bow_pulse_01",
     title: "Down on one, up on three",
     skill: "violin_bow",
@@ -2930,7 +2930,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     prerequisites: ["lesson_violin_open_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_violin_first_finger_01",
     title: "First finger",
     skill: "violin_first_finger",
@@ -2949,7 +2949,7 @@ const VIOLIN_LESSONS: Lesson[] = [
       "No mic? Play along anyway — it just isn't scored",
     ],
   },
-  {
+{
     id: "lesson_violin_tetrachord_01",
     title: "Four notes on the D string",
     skill: "violin_tetrachord",
@@ -2969,7 +2969,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     ],
     why: "Four notes in a row on one string: the left hand's home pattern. The walk and the slurs both live here.",
   },
-  {
+{
     id: "lesson_violin_walk_01",
     title: "Evening Walk",
     skill: "violin_walk",
@@ -2994,7 +2994,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "Three notes and a rest. That is a tune.",
     interpret: "Let each note fade into the rest.",
   },
-  {
+{
     id: "lesson_violin_respond_bow_01",
     title: "Same string or different",
     skill: "violin_listen",
@@ -3014,7 +3014,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     criteria: ["You listened first", "You named one thing"],
     why: "Evening Walk lives on D. A is the neighbour.",
   },
-  {
+{
     id: "lesson_violin_slur_01",
     title: "Two notes, one bow",
     skill: "violin_slur",
@@ -3034,7 +3034,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     ],
     why: "The bow keeps moving while the finger changes.",
   },
-  {
+{
     id: "lesson_violin_create_hang_01",
     title: "Your hang",
     skill: "violin_create",
@@ -3055,7 +3055,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "You pick the idea. That's the piece.",
     interpret: "Bow the one you picked like you meant it.",
   },
-  {
+{
     id: "lesson_violin_crossing_01",
     title: "Crossing on the pulse",
     skill: "violin_crossing",
@@ -3072,7 +3072,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "String crossing, practised on its own: roll the whole arm to the new string's level.",
     interpret: "Elbow, not wrist. The bow meets one string at a time.",
   },
-  {
+{
     id: "lesson_violin_phrase_01",
     title: "Shape the phrase",
     skill: "violin_phrase",
@@ -3093,7 +3093,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "The Learn phrase, as daily practice: play it evenly first, then add the shape.",
     interpret: "One high point per phrase. The rest of the notes lead there or away.",
   },
-  {
+{
     id: "lesson_violin_a_tetrachord_01",
     title: "Four notes on the A string",
     skill: "violin_a_tetrachord",
@@ -3113,12 +3113,37 @@ const VIOLIN_LESSONS: Lesson[] = [
     ],
     why: "The tetrachord pattern does not belong to the D string. Here it is on the A string, where the scale is completed.",
   },
-  {
+{
+    id: "lesson_violin_ashokan_01",
+    title: "Ashokan Farewell",
+    skill: "ashokan_farewell",
+    trackId: "track_violin_songs",
+    order: 12,
+    type: "song",
+    objectives: ["The theme in D, first position — D and A strings only", "Phrase endings are held: keep the bow moving slowly"],
+    chords: [],
+    pattern: "D",
+    bars: 8,
+    bpm: 60,
+    prerequisites: ["lesson_violin_a_tetrachord_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Ashokan Farewell",
+    criteria: [
+      "Both halves of the theme finish",
+      "The held notes keep their full length",
+      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
+      "No mic? Play along anyway — it just isn't scored",
+    ],
+    why: "Jay Ungar, 1982 — written as a goodbye at a music camp, then made famous as the sound of Ken Burns' Civil War series. In D, in first position: every note is one your tetrachords already placed. 60 beats a minute.",
+    interpret: "Play it like a farewell you're in no hurry to finish.",
+  },
+{
     id: "lesson_violin_scale_01",
     title: "D major: one octave",
     skill: "violin_d_scale",
     trackId: "track_violin_position",
-    order: 12,
+    order: 13,
     type: "skill",
     objectives: ["D up to D: the D-string tetrachord, then the A-string one", "Cross to the A string after the G; cross back on the way down"],
     chords: [],
@@ -3133,12 +3158,12 @@ const VIOLIN_LESSONS: Lesson[] = [
     ],
     why: "The first completed scale in this path, and it has a name: D major, the key every melody here lives in.",
   },
-  {
+{
     id: "lesson_violin_low2_01",
     title: "Second finger, low",
     skill: "violin_low_second",
     trackId: "track_violin_position",
-    order: 13,
+    order: 14,
     type: "skill",
     objectives: ["F natural on the D string: second finger low, close behind the first", "C natural on the A string, the same low placement"],
     chords: [],
@@ -3153,12 +3178,12 @@ const VIOLIN_LESSONS: Lesson[] = [
     ],
     why: "Until now the second finger has only sat high. Low 2 is the other placement — and the one the G-major pattern needs.",
   },
-  {
+{
     id: "lesson_violin_twinkle_01",
     title: "Twinkle, twinkle",
     skill: "violin_twinkle",
     trackId: "track_violin_songs",
-    order: 14,
+    order: 15,
     type: "song",
     objectives: ["The whole tune in D, six phrases, D4 to B4", "Each phrase ends on a note held for two beats"],
     chords: [],
@@ -3178,12 +3203,12 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "A traditional tune — often the first one a violinist learns whole. Every note in it is one you already have.",
     interpret: "Plain and steady first. Sing it in your head as you bow.",
   },
-  {
+{
     id: "lesson_violin_doublestop_01",
     title: "Two strings at once",
     skill: "violin_double_stop",
     trackId: "track_violin_position",
-    order: 15,
+    order: 16,
     type: "skill",
     objectives: ["Bow a fingered D-string note and the open A together", "One bow, two strings: roll the arm to the level both strings share"],
     chords: [],
@@ -3196,12 +3221,12 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "The drone-check idea, made into music: a fingered note measured against the open string ringing under it.",
     interpret: "Listen for the two notes blending, not battling.",
   },
-  {
+{
     id: "lesson_violin_g_tetrachord_01",
     title: "Four notes on the G string",
     skill: "violin_g_tetrachord",
     trackId: "track_violin_position",
-    order: 16,
+    order: 17,
     type: "skill",
     objectives: ["G–A–B–C on one string, fingers 0, 1, 2, 3", "The same whole, whole, half pattern on the lowest string"],
     chords: [],
@@ -3216,32 +3241,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     ],
     why: "The G string has been open-only until now. With its tetrachord placed, all four strings carry fingers.",
   },
-  {
-    id: "lesson_violin_ashokan_01",
-    title: "Ashokan Farewell",
-    skill: "ashokan_farewell",
-    trackId: "track_violin_songs",
-    order: 17,
-    type: "song",
-    objectives: ["The theme in D, first position — D and A strings only", "Phrase endings are held: keep the bow moving slowly"],
-    chords: [],
-    pattern: "D",
-    bars: 8,
-    bpm: 60,
-    prerequisites: ["lesson_violin_twinkle_01"],
-    masteryRequired: 0.75,
-    process: "perform",
-    repertoire: "Ashokan Farewell",
-    criteria: [
-      "Both halves of the theme finish",
-      "The held notes keep their full length",
-      "With the mic on: fingered notes are judged against their target — inside 20 cents counts",
-      "No mic? Play along anyway — it just isn't scored",
-    ],
-    why: "Jay Ungar, 1982 — written as a goodbye at a music camp, then made famous as the sound of Ken Burns' Civil War series. In D, in first position: every note is one your tetrachords already placed. 60 beats a minute.",
-    interpret: "Play it like a farewell you're in no hurry to finish.",
-  },
-  {
+{
     id: "lesson_violin_bittersweet_01",
     title: "Bittersweet Symphony",
     skill: "bittersweet_symphony",
@@ -3265,7 +3265,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "The Verve, 1997 — a rock record carried by a string loop, itself borrowed from an orchestral Rolling Stones arrangement. Taught here in D, first position: four notes on one string, down and back up. 76 beats a minute.",
     interpret: "Even and relentless, like the loop is a machine you feed.",
   },
-  {
+{
     id: "lesson_violin_viva_01",
     title: "Viva la Vida",
     skill: "viva_la_vida",
@@ -3289,7 +3289,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     why: "Coldplay, 2008. The record plays this in C sharp minor; it's taught here in A minor — the same string figure moved to a key where it sits in first position. 92 beats a minute here; the record runs at 138.",
     interpret: "Bright and pulsing. Short bows, steady as a heartbeat.",
   },
-  {
+{
     id: "lesson_violin_hallelujah_01",
     title: "Hallelujah",
     skill: "violin_hallelujah",
@@ -3313,8 +3313,7 @@ const VIOLIN_LESSONS: Lesson[] = [
     ],
     why: "Leonard Cohen, 1984 — in G here, where the whole verse sits inside first position. If you've sung it in the vocals track, your ear already knows where every note goes. 60 beats a minute.",
     interpret: "Plain and slow. Long bows, no decoration.",
-  },
-];
+  }];
 
 const LAPSTEEL_LESSONS: Lesson[] = [
   {
