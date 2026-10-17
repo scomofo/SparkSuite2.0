@@ -582,7 +582,7 @@ const UKE_LESSONS: Lesson[] = [
     prerequisites: [],
     masteryRequired: 0.7,
   },
-  {
+{
     id: "lesson_uke_c_01",
     title: "C on four strings",
     skill: "uke_c",
@@ -597,7 +597,7 @@ const UKE_LESSONS: Lesson[] = [
     prerequisites: ["lesson_uke_open_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_uke_am_01",
     title: "Am on four",
     skill: "uke_am",
@@ -612,7 +612,7 @@ const UKE_LESSONS: Lesson[] = [
     prerequisites: ["lesson_uke_c_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_uke_f_01",
     title: "F shape",
     skill: "uke_f",
@@ -627,7 +627,7 @@ const UKE_LESSONS: Lesson[] = [
     prerequisites: ["lesson_uke_am_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_uke_respond_colour_01",
     title: "Bright or dark",
     skill: "uke_colour",
@@ -647,7 +647,7 @@ const UKE_LESSONS: Lesson[] = [
     criteria: ["You listened first", "You named one thing"],
     why: "C is bright. Am is the same neighbourhood, darker.",
   },
-  {
+{
     id: "lesson_uke_g7_01",
     title: "G7 shape",
     skill: "uke_g7",
@@ -662,7 +662,7 @@ const UKE_LESSONS: Lesson[] = [
     prerequisites: ["lesson_uke_f_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_uke_g_01",
     title: "G shape",
     skill: "uke_g",
@@ -677,7 +677,7 @@ const UKE_LESSONS: Lesson[] = [
     prerequisites: ["lesson_uke_g7_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_uke_cg_01",
     title: "Dock Loop",
     skill: "uke_cg",
@@ -697,12 +697,32 @@ const UKE_LESSONS: Lesson[] = [
     why: "The porch loop you can sing over.",
     interpret: "Play it like you're outside.",
   },
-  {
+{
+    id: "lesson_uke_lava_01",
+    title: "Lava",
+    skill: "lava_song",
+    trackId: "track_uke_songs",
+    order: 9,
+    type: "song",
+    objectives: ["Three chords you already know — C, G7, F — in a new order", "One strum a beat; this one is all calm"],
+    chords: ["C", "G7", "F", "G7"],
+    pattern: "D",
+    bars: 8,
+    bpm: 76,
+    prerequisites: ["lesson_uke_cg_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Lava",
+    criteria: ["The loop finishes, twice round", "Changes land on beat 1"],
+    why: "From Pixar's Lava, 2014 — the little volcano's song, and the friendliest chord loop on the instrument: every shape in it is one you already own. 76 beats a minute.",
+    interpret: "Gentle, like the tide coming in.",
+  },
+{
     id: "lesson_uke_respond_dock_01",
     title: "Same chord or different",
     skill: "uke_listen",
     trackId: "track_uke_songs",
-    order: 9,
+    order: 10,
     type: "skill",
     objectives: ["Hear C, then G", "Name same chord or different"],
     chords: ["C", "G"],
@@ -717,12 +737,12 @@ const UKE_LESSONS: Lesson[] = [
     criteria: ["You listened first", "You named one thing"],
     why: "Dock Loop uses both. Name the difference.",
   },
-  {
+{
     id: "lesson_uke_island_01",
     title: "Island strum",
     skill: "uke_island",
     trackId: "track_uke_songs",
-    order: 10,
+    order: 11,
     type: "rhythm",
     objectives: ["Play D DU UDU", "Keep the hand moving"],
     chords: ["C", "G"],
@@ -737,12 +757,12 @@ const UKE_LESSONS: Lesson[] = [
     why: "Dock Loop with a moving hand.",
     interpret: "Keep the hand like a wave.",
   },
-  {
+{
     id: "lesson_uke_melody_01",
     title: "Ode to Joy",
     skill: "uke_melody",
     trackId: "track_uke_songs",
-    order: 11,
+    order: 12,
     type: "song",
     objectives: [
       "Play it one note at a time: E E F G · G F E D · C C D E · E D D, last D held",
@@ -760,12 +780,12 @@ const UKE_LESSONS: Lesson[] = [
     why: "Beethoven's theme — you already know how it goes.",
     interpret: "Play it like a hymn, not a race.",
   },
-  {
+{
     id: "lesson_uke_create_hang_01",
     title: "Your hang",
     skill: "uke_create",
     trackId: "track_uke_songs",
-    order: 12,
+    order: 13,
     type: "song",
     objectives: ["Stay on C, or switch to G", "Play the one you picked"],
     chords: ["C", "G"],
@@ -781,27 +801,7 @@ const UKE_LESSONS: Lesson[] = [
     why: "You pick the idea. That's the piece.",
     interpret: "Play the one you picked like you meant it.",
   },
-  {
-    id: "lesson_uke_lava_01",
-    title: "Lava",
-    skill: "lava_song",
-    trackId: "track_uke_songs",
-    order: 13,
-    type: "song",
-    objectives: ["Three chords you already know — C, G7, F — in a new order", "One strum a beat; this one is all calm"],
-    chords: ["C", "G7", "F", "G7"],
-    pattern: "D",
-    bars: 8,
-    bpm: 76,
-    prerequisites: ["lesson_uke_cg_01"],
-    masteryRequired: 0.75,
-    process: "perform",
-    repertoire: "Lava",
-    criteria: ["The loop finishes, twice round", "Changes land on beat 1"],
-    why: "From Pixar's Lava, 2014 — the little volcano's song, and the friendliest chord loop on the instrument: every shape in it is one you already own. 76 beats a minute.",
-    interpret: "Gentle, like the tide coming in.",
-  },
-  {
+{
     id: "lesson_uke_riptide_01",
     title: "Riptide",
     skill: "riptide",
@@ -821,7 +821,7 @@ const UKE_LESSONS: Lesson[] = [
     why: "Vance Joy, 2013. The island strum over Am–G–C — the song the pattern sounds invented for. 88 beats a minute here; the record runs at 102.",
     interpret: "Keep the hand like a wave — it doesn't stop for the changes.",
   },
-  {
+{
     id: "lesson_uke_im_yours_01",
     title: "I'm Yours",
     skill: "im_yours",
@@ -841,7 +841,7 @@ const UKE_LESSONS: Lesson[] = [
     why: "Jason Mraz, 2008. Four chords at the speed of a porch swing. 76 beats a minute — the record's own pace.",
     interpret: "Unhurried. Let it swing.",
   },
-  {
+{
     id: "lesson_uke_rainbow_01",
     title: "Over the Rainbow",
     skill: "rainbow",
@@ -861,7 +861,7 @@ const UKE_LESSONS: Lesson[] = [
     why: "Israel Kamakawiwoʻole, 1990 — his ukulele-and-voice take is the version the world knows. The Em it teaches you here is the shape the next song leans on. 72 beats a minute.",
     interpret: "Soft strums. Let the chords ring into each other.",
   },
-  {
+{
     id: "lesson_uke_count_on_me_01",
     title: "Count on Me",
     skill: "count_on_me",
@@ -880,8 +880,7 @@ const UKE_LESSONS: Lesson[] = [
     criteria: ["The loop finishes, twice round", "The island strum never stops for a change"],
     why: "Bruno Mars, 2010. Five chords — and the only shape that could have slowed you down, Em, is the one the last song just taught you. The work here is the order, not the fingers. 84 beats a minute.",
     interpret: "Warm and steady, like the promise in the title.",
-  },
-];
+  }];
 
 const BASS_LESSONS: Lesson[] = [
   {

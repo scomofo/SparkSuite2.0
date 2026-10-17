@@ -27,7 +27,7 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_uke_lava_01", order: 13, title: "Lava", artist: "Lava", year: 2014, bpm: 76, prereq: ["lesson_uke_cg_01"], cues: 32 },
+  { id: "lesson_uke_lava_01", order: 9, title: "Lava", artist: "Lava", year: 2014, bpm: 76, prereq: ["lesson_uke_cg_01"], cues: 32 },
   { id: "lesson_uke_riptide_01", order: 14, title: "Riptide", artist: "Vance Joy", year: 2013, bpm: 88, prereq: ["lesson_uke_island_01"], cues: 48 },
   { id: "lesson_uke_im_yours_01", order: 15, title: "I'm Yours", artist: "Jason Mraz", year: 2008, bpm: 76, prereq: ["lesson_uke_riptide_01"], cues: 48 },
   { id: "lesson_uke_rainbow_01", order: 16, title: "Over the Rainbow", artist: "Kamakawiwo", year: 1990, bpm: 72, prereq: ["lesson_uke_im_yours_01"], cues: 32 },
@@ -35,7 +35,7 @@ const SONGS = [
 ] as const;
 
 describe("ukulele famous-song lessons", () => {
-  it("extend the ukulele sequence at orders 13–17", () => {
+  it("Lava sits at order 9, right after Dock Loop; the other songs extend the sequence at orders 14–17", () => {
     const uke = lessonsFor("ukulele");
     assert.equal(uke.length, 17);
     for (const song of SONGS) {
