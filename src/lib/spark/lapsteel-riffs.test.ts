@@ -26,14 +26,14 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_lapsteel_sleep_walk_01", order: 17, title: "Sleep Walk", artist: "Santo & Johnny", bpm: 66, prereq: ["lesson_lapsteel_hsh_01"], cues: 24 },
-  { id: "lesson_lapsteel_rag_01", order: 18, title: "Steel Guitar Rag", artist: "McAuliffe", bpm: 80, prereq: ["lesson_lapsteel_sleep_walk_01"], cues: 60 },
-  { id: "lesson_lapsteel_blue_hawaii_01", order: 19, title: "Blue Hawaii", artist: "Elvis Presley", bpm: 60, prereq: ["lesson_lapsteel_rag_01"], cues: 24 },
-  { id: "lesson_lapsteel_cheatin_heart_01", order: 20, title: "Your Cheatin' Heart", artist: "Hank Williams", bpm: 66, prereq: ["lesson_lapsteel_blue_hawaii_01"], cues: 30 },
+  { id: "lesson_lapsteel_sleep_walk_01", order: 14, title: "Sleep Walk", artist: "Santo & Johnny", bpm: 66, prereq: ["lesson_lapsteel_melody_01"], cues: 24 },
+  { id: "lesson_lapsteel_rag_01", order: 15, title: "Steel Guitar Rag", artist: "McAuliffe", bpm: 80, prereq: ["lesson_lapsteel_sleep_walk_01"], cues: 60 },
+  { id: "lesson_lapsteel_blue_hawaii_01", order: 16, title: "Blue Hawaii", artist: "Elvis Presley", bpm: 60, prereq: ["lesson_lapsteel_rag_01"], cues: 24 },
+  { id: "lesson_lapsteel_cheatin_heart_01", order: 17, title: "Your Cheatin' Heart", artist: "Hank Williams", bpm: 66, prereq: ["lesson_lapsteel_blue_hawaii_01"], cues: 30 },
 ] as const;
 
 describe("lap steel famous-song lessons", () => {
-  it("extend the lap steel sequence at orders 17–20", () => {
+  it("the famous songs sit at orders 14–17, gated on the melody lesson", () => {
     const steel = lessonsFor("lapsteel");
     assert.equal(steel.length, 20);
     for (const song of SONGS) {
