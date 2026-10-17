@@ -189,7 +189,7 @@ const PIANO_LESSONS: Lesson[] = [
     prerequisites: [],
     masteryRequired: 0.7,
   },
-  {
+{
     id: "lesson_piano_c_triad_01",
     title: "C major triad",
     skill: "c_triad",
@@ -204,7 +204,7 @@ const PIANO_LESSONS: Lesson[] = [
     prerequisites: ["lesson_piano_middle_c_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_piano_g_triad_01",
     title: "G major triad",
     skill: "g_triad",
@@ -219,7 +219,7 @@ const PIANO_LESSONS: Lesson[] = [
     prerequisites: ["lesson_piano_c_triad_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_piano_cg_cadence_01",
     title: "Home and gravity",
     skill: "cg_cadence",
@@ -239,7 +239,7 @@ const PIANO_LESSONS: Lesson[] = [
     why: "I to V. Home, then gravity.",
     interpret: "Let G pull you back.",
   },
-  {
+{
     id: "lesson_piano_am_01",
     title: "A minor colour",
     skill: "am_triad",
@@ -255,7 +255,7 @@ const PIANO_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The dark colour next to C — same flattened third as C minor, on white keys.",
   },
-  {
+{
     id: "lesson_piano_f_01",
     title: "F major triad",
     skill: "f_triad",
@@ -271,7 +271,7 @@ const PIANO_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The IV before Kitchen Radio.",
   },
-  {
+{
     id: "lesson_piano_respond_cadence_01",
     title: "Home or gravity",
     skill: "piano_listen",
@@ -291,7 +291,7 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["You listened first", "You named one thing"],
     why: "Home and gravity. Name which one moved.",
   },
-  {
+{
     id: "lesson_piano_respond_colour_01",
     title: "Bright or dark",
     skill: "piano_colour",
@@ -311,7 +311,7 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["You listened first", "You named one thing"],
     why: "C is bright. Am is the same neighbourhood, darker.",
   },
-  {
+{
     id: "lesson_piano_four_01",
     title: "Kitchen Radio",
     skill: "piano_four",
@@ -331,12 +331,32 @@ const PIANO_LESSONS: Lesson[] = [
     why: "The four chords the radio already uses.",
     interpret: "Play it like it's on in the other room.",
   },
-  {
+{
+    id: "lesson_piano_heart_soul_01",
+    title: "Heart and Soul",
+    skill: "heart_and_soul",
+    trackId: "track_piano_cadences",
+    order: 10,
+    type: "song",
+    objectives: ["Left hand walks the roots: C–Am–F–G", "Right hand lands the chord on beats 1 and 3"],
+    chords: ["C", "Am", "F", "G"],
+    pattern: "D",
+    bars: 8,
+    bpm: 72,
+    prerequisites: ["lesson_piano_four_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "Heart and Soul",
+    criteria: ["Two rounds without losing the order", "Both hands land on beat 1 together"],
+    why: "Hoagy Carmichael, 1938. The duet everybody ends up playing two-to-a-piano — and its chords are Kitchen Radio's four, C–Am–F–G. This is the song that made that loop famous. 72 beats a minute.",
+    interpret: "Play it like the other half of the duet is beside you.",
+  },
+{
     id: "lesson_piano_create_hang_01",
     title: "Your hang",
     skill: "piano_create",
     trackId: "track_piano_cadences",
-    order: 10,
+    order: 11,
     type: "song",
     objectives: ["Stay on C, or walk to G", "Play the one you picked"],
     chords: ["C", "G"],
@@ -352,12 +372,12 @@ const PIANO_LESSONS: Lesson[] = [
     why: "You pick the idea. That's the piece.",
     interpret: "Play the one you picked like you meant it.",
   },
-  {
+{
     id: "lesson_piano_hands_together_01",
     title: "Two hands together",
     skill: "hands_together",
     trackId: "track_piano_cadences",
-    order: 11,
+    order: 12,
     type: "skill",
     objectives: ["Left hand holds the root", "Right hand plays the triad above it"],
     chords: ["C", "F", "G"],
@@ -369,12 +389,12 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["The left hand never leaves the root early", "Both hands land on beat 1 together"],
     why: "The two-hand pattern from the Learn path, now in the daily loop.",
   },
-  {
+{
     id: "lesson_piano_inversions_01",
     title: "Inversions: keep the anchor",
     skill: "inversions",
     trackId: "track_piano_triads",
-    order: 12,
+    order: 13,
     type: "skill",
     objectives: ["Play F with C at the bottom — F/C", "Keep the shared C under both chords"],
     chords: ["C", "F"],
@@ -386,12 +406,12 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["The bottom C never moves", "Only two notes change between the chords"],
     why: "From the Learn voice-leading lesson: one note stays home, two move.",
   },
-  {
+{
     id: "lesson_piano_sevenths_song_01",
     title: "ii–V–I at the keys",
     skill: "sevenths_progression",
     trackId: "track_piano_cadences",
-    order: 13,
+    order: 14,
     type: "song",
     objectives: ["Play Dm7–G7–Cmaj7, one chord per bar", "Use the voicings from the Learn lesson"],
     chords: [
@@ -411,12 +431,12 @@ const PIANO_LESSONS: Lesson[] = [
     why: "The Learn path's flagship progression, under your hands at last.",
     interpret: "Play it like a standard you have always known.",
   },
-  {
+{
     id: "lesson_piano_song_ode_01",
     title: "Ode to Joy",
     skill: "first_melody",
     trackId: "track_piano_cadences",
-    order: 14,
+    order: 15,
     type: "song",
     objectives: ["Play both phrases of the tune", "Left hand plays the root on beat 1 of each bar"],
     chords: ["C", "G"],
@@ -431,12 +451,12 @@ const PIANO_LESSONS: Lesson[] = [
     why: "A real tune — the one everybody knows.",
     interpret: "Play it like a hymn, not an exercise.",
   },
-  {
+{
     id: "lesson_piano_scale_c_01",
     title: "C major scale: the thumb goes under",
     skill: "c_major_scale",
     trackId: "track_piano_foundations",
-    order: 15,
+    order: 16,
     type: "warmup",
     objectives: ["Right hand: 1-2-3, thumb under, 1-2-3-4-5", "Left hand: 5-4-3-2-1, thumb over, 3-2-1"],
     chords: [],
@@ -448,12 +468,12 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["The thumb tucks under without a bump", "Even notes up and down"],
     why: "The scale the whole key is built from — and the fingering that makes it smooth.",
   },
-  {
+{
     id: "lesson_piano_arpeggio_01",
     title: "Arpeggios: chords one note at a time",
     skill: "arpeggios",
     trackId: "track_piano_triads",
-    order: 16,
+    order: 17,
     type: "skill",
     objectives: ["Break each triad into single notes, up and back", "Keep the pattern even across the change"],
     chords: ["C", "F", "G"],
@@ -465,12 +485,12 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["No pause at the top of the pattern", "Each note rings into the next"],
     why: "The hands-together pattern had a name all along.",
   },
-  {
+{
     id: "lesson_piano_pedal_01",
     title: "The sustain pedal",
     skill: "pedalling",
     trackId: "track_piano_cadences",
-    order: 17,
+    order: 18,
     type: "skill",
     objectives: [
       "Press the pedal just after each chord lands",
@@ -485,27 +505,7 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["Chords connect without a gap", "No smear across a change"],
     why: "Four exercises told you to keep the pedal up. Now it comes down.",
   },
-  {
-    id: "lesson_piano_heart_soul_01",
-    title: "Heart and Soul",
-    skill: "heart_and_soul",
-    trackId: "track_piano_cadences",
-    order: 18,
-    type: "song",
-    objectives: ["Left hand walks the roots: C–Am–F–G", "Right hand lands the chord on beats 1 and 3"],
-    chords: ["C", "Am", "F", "G"],
-    pattern: "D",
-    bars: 8,
-    bpm: 72,
-    prerequisites: ["lesson_piano_four_01"],
-    masteryRequired: 0.75,
-    process: "perform",
-    repertoire: "Heart and Soul",
-    criteria: ["Two rounds without losing the order", "Both hands land on beat 1 together"],
-    why: "Hoagy Carmichael, 1938. The duet everybody ends up playing two-to-a-piano — and its chords are Kitchen Radio's four, C–Am–F–G. This is the song that made that loop famous. 72 beats a minute.",
-    interpret: "Play it like the other half of the duet is beside you.",
-  },
-  {
+{
     id: "lesson_piano_hallelujah_01",
     title: "Hallelujah",
     skill: "hallelujah_melody",
@@ -525,7 +525,7 @@ const PIANO_LESSONS: Lesson[] = [
     why: "Leonard Cohen, 1984. The right hand sings the verse — the same line the vocals track learns — while the left hand marks the chords underneath: C, Am, F, G. 60 beats a minute.",
     interpret: "Slow and plain, like a hymn in an empty room.",
   },
-  {
+{
     id: "lesson_piano_imagine_01",
     title: "Imagine",
     skill: "imagine_pattern",
@@ -545,7 +545,7 @@ const PIANO_LESSONS: Lesson[] = [
     why: "John Lennon, 1971. That rolling piano figure is three chords broken one note at a time — the arpeggio pattern with a record attached. 76 beats a minute, the record's own pace.",
     interpret: "Even and unhurried. The roll is the song.",
   },
-  {
+{
     id: "lesson_piano_let_it_be_01",
     title: "Let It Be",
     skill: "let_it_be",
@@ -564,8 +564,7 @@ const PIANO_LESSONS: Lesson[] = [
     criteria: ["The loop finishes, twice round", "The roll never breaks for a change"],
     why: "The Beatles, 1970. Kitchen Radio's four chords — C–G–Am–F — as the rolling piano part itself this time, not a loop exercise. 72 beats a minute, the record's pace.",
     interpret: "Play it like a hymn you grew up with.",
-  },
-];
+  }];
 
 const UKE_LESSONS: Lesson[] = [
   {
