@@ -27,14 +27,14 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_banjo_foggy_01", order: 18, title: "Foggy Mountain Breakdown", artist: "Flatt & Scruggs", bpm: 96, prereq: ["lesson_banjo_roll_01", "lesson_banjo_minors_01"], cues: 64 },
-  { id: "lesson_banjo_dueling_01", order: 19, title: "Dueling Banjos", artist: "Arthur Smith", bpm: 84, prereq: ["lesson_banjo_foggy_01"], cues: 48 },
-  { id: "lesson_banjo_jed_01", order: 20, title: "The Ballad of Jed Clampett", artist: "Flatt & Scruggs", bpm: 92, prereq: ["lesson_banjo_dueling_01"], cues: 64 },
+  { id: "lesson_banjo_foggy_01", order: 19, title: "Foggy Mountain Breakdown", artist: "Flatt & Scruggs", bpm: 96, prereq: ["lesson_banjo_roll_01", "lesson_banjo_minors_01"], cues: 64 },
+  { id: "lesson_banjo_dueling_01", order: 20, title: "Dueling Banjos", artist: "Arthur Smith", bpm: 84, prereq: ["lesson_banjo_foggy_01"], cues: 48 },
+  { id: "lesson_banjo_jed_01", order: 10, title: "The Ballad of Jed Clampett", artist: "Flatt & Scruggs", bpm: 92, prereq: ["lesson_banjo_loop_01"], cues: 64 },
   { id: "lesson_banjo_wagon_wheel_01", order: 21, title: "Wagon Wheel", artist: "Old Crow Medicine Show", bpm: 80, prereq: ["lesson_banjo_jed_01"], cues: 32 },
 ] as const;
 
 describe("banjo famous-song lessons", () => {
-  it("extend the banjo sequence at orders 18–21", () => {
+  it("Jed Clampett sits at order 10, gated on the three-chord loop; the other songs extend the sequence at orders 19–21", () => {
     const banjo = lessonsFor("banjo");
     assert.equal(banjo.length, 21);
     for (const song of SONGS) {
