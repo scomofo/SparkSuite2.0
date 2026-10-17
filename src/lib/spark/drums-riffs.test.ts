@@ -27,15 +27,15 @@ function itemFor(lessonId: string): PlanItem {
 }
 
 const SONGS = [
-  { id: "lesson_drums_rock_you_01", order: 17, title: "We Will Rock You", artist: "Queen", bpm: 80, events: 24 },
-  { id: "lesson_drums_back_in_black_01", order: 18, title: "Back in Black", artist: "AC/DC", bpm: 88, events: 72 },
-  { id: "lesson_drums_billie_jean_01", order: 19, title: "Billie Jean", artist: "Michael Jackson", bpm: 96, events: 72 },
-  { id: "lesson_drums_another_one_01", order: 20, title: "Another One Bites the Dust", artist: "Queen", bpm: 92, events: 80 },
-  { id: "lesson_drums_come_together_01", order: 21, title: "Come Together", artist: "The Beatles", bpm: 80, events: 36 },
+  { id: "lesson_drums_rock_you_01", order: 3, title: "We Will Rock You", artist: "Queen", bpm: 80, events: 24 },
+  { id: "lesson_drums_back_in_black_01", order: 4, title: "Back in Black", artist: "AC/DC", bpm: 88, events: 72 },
+  { id: "lesson_drums_billie_jean_01", order: 5, title: "Billie Jean", artist: "Michael Jackson", bpm: 96, events: 72 },
+  { id: "lesson_drums_another_one_01", order: 6, title: "Another One Bites the Dust", artist: "Queen", bpm: 92, events: 80 },
+  { id: "lesson_drums_come_together_01", order: 7, title: "Come Together", artist: "The Beatles", bpm: 80, events: 36 },
 ] as const;
 
 describe("drums famous-groove lessons", () => {
-  it("close the drums sequence at orders 17–21, easiest first", () => {
+  it("the famous grooves sit at orders 3–7, easiest first", () => {
     const drums = lessonsFor("drums");
     assert.equal(drums.length, 21);
     SONGS.forEach((song, i) => {

@@ -180,7 +180,7 @@ describe("the waltz family in the drums curriculum", () => {
       "lesson_drums_waltz_eighths_01",
       "lesson_drums_waltz_fill_01",
     ]);
-    assert.deepEqual(waltz.map((l) => l.order), [13, 14, 15, 16]);
+    assert.deepEqual(waltz.map((l) => l.order), [18, 19, 20, 21]);
     assert.equal(waltz[0].prerequisites[0], "lesson_drums_hat_foot_01");
     for (let i = 1; i < waltz.length; i++) {
       assert.equal(waltz[i].prerequisites[0], waltz[i - 1].id);
