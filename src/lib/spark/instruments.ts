@@ -2523,7 +2523,7 @@ const BANJO_LESSONS: Lesson[] = [
     prerequisites: [],
     masteryRequired: 0.7,
   },
-  {
+{
     id: "lesson_banjo_g_01",
     title: "G is already there",
     skill: "banjo_g",
@@ -2538,7 +2538,7 @@ const BANJO_LESSONS: Lesson[] = [
     prerequisites: ["lesson_banjo_open_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_banjo_d7_01",
     title: "D7 shape",
     skill: "banjo_d7",
@@ -2553,7 +2553,7 @@ const BANJO_LESSONS: Lesson[] = [
     prerequisites: ["lesson_banjo_g_01"],
     masteryRequired: 0.75,
   },
-  {
+{
     id: "lesson_banjo_gd7_01",
     title: "Creek Road",
     skill: "banjo_gd7",
@@ -2573,7 +2573,7 @@ const BANJO_LESSONS: Lesson[] = [
     why: "Open G and one shape. That is a tune.",
     interpret: "Let the open strings ring between changes.",
   },
-  {
+{
     id: "lesson_banjo_respond_gd7_01",
     title: "Same chord or different",
     skill: "banjo_listen",
@@ -2593,7 +2593,7 @@ const BANJO_LESSONS: Lesson[] = [
     criteria: ["You listened first", "You named one thing"],
     why: "Creek Road uses both. Name the difference.",
   },
-  {
+{
     id: "lesson_banjo_c_01",
     title: "C shape",
     skill: "banjo_c",
@@ -2609,7 +2609,7 @@ const BANJO_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The IV that opens the loop up.",
   },
-  {
+{
     id: "lesson_banjo_roll_01",
     title: "Forward roll",
     skill: "banjo_roll",
@@ -2629,7 +2629,7 @@ const BANJO_LESSONS: Lesson[] = [
     why: "Creek Road with the right hand moving.",
     interpret: "Keep the roll rolling through the change.",
   },
-  {
+{
     id: "lesson_banjo_create_hang_01",
     title: "Your hang",
     skill: "banjo_create",
@@ -2650,7 +2650,7 @@ const BANJO_LESSONS: Lesson[] = [
     why: "You pick the idea. That's the piece.",
     interpret: "Play the one you picked like you meant it.",
   },
-  {
+{
     id: "lesson_banjo_loop_01",
     title: "Three-chord loop",
     skill: "banjo_loop",
@@ -2670,12 +2670,32 @@ const BANJO_LESSONS: Lesson[] = [
     why: "Three shapes, one roll. That is most of a song's harmony.",
     interpret: "Keep the right hand moving; the left hand catches up.",
   },
-  {
+{
+    id: "lesson_banjo_jed_01",
+    title: "The Ballad of Jed Clampett",
+    skill: "jed_clampett",
+    trackId: "track_banjo_songs",
+    order: 10,
+    type: "song",
+    objectives: ["Roll the theme's chord bed: G–C–G–D7, twice round", "The C shape lands without breaking the roll"],
+    chords: ["G", "C", "D7"],
+    pattern: "DDDDDDDD",
+    bars: 8,
+    bpm: 92,
+    prerequisites: ["lesson_banjo_loop_01"],
+    masteryRequired: 0.75,
+    process: "perform",
+    repertoire: "The Ballad of Jed Clampett",
+    criteria: ["The loop finishes, twice round", "Every change lands on one"],
+    why: "Flatt & Scruggs, 1962 — the Beverly Hillbillies theme. Under the singing it's this: the forward roll walking G–C–G–D7, over and over. 92 beats a minute.",
+    interpret: "Bright and neighbourly. Keep it rolling.",
+  },
+{
     id: "lesson_banjo_hammer_01",
     title: "Hammer and slide",
     skill: "banjo_hammer_slide",
     trackId: "track_banjo_rolls",
-    order: 10,
+    order: 11,
     type: "skill",
     objectives: ["Pick the open third string, hammer to fret 2, pick, slide to fret 4", "Lift the finger off a ringing string and the note falls — that reverse move is a pull-off"],
     chords: ["G"],
@@ -2690,12 +2710,12 @@ const BANJO_LESSONS: Lesson[] = [
     why: "Ornaments that start on the string, not at it.",
     interpret: "Firm landing, steady pressure; force is not the point.",
   },
-  {
+{
     id: "lesson_banjo_vamp_01",
     title: "Open vamp",
     skill: "banjo_vamp",
     trackId: "track_banjo_songs",
-    order: 11,
+    order: 12,
     type: "skill",
     objectives: ["Brush on 1 and 3 with a muted click on 2 and 4", "Alternate G and D7, one bar each"],
     chords: ["G", "D7"],
@@ -2710,12 +2730,12 @@ const BANJO_LESSONS: Lesson[] = [
     why: "The backup job, practised on its own.",
     interpret: "Quiet hands. The singer is the point.",
   },
-  {
+{
     id: "lesson_banjo_altroll_01",
     title: "Alternating-thumb roll",
     skill: "banjo_alt_roll",
     trackId: "track_banjo_rolls",
-    order: 12,
+    order: 13,
     type: "rhythm",
     objectives: ["Strings 3–2–5–1 with T–I–T–M, twice per bar", "The thumb alternates between the third string and the short g"],
     chords: ["G", "D7"],
@@ -2730,12 +2750,12 @@ const BANJO_LESSONS: Lesson[] = [
     why: "The forward roll's companion: same fingers, a different thumb path.",
     interpret: "Let the thumb bounce between the long string and the drone.",
   },
-  {
+{
     id: "lesson_banjo_d_01",
     title: "Full D shape",
     skill: "banjo_d",
     trackId: "track_banjo_shapes",
-    order: 13,
+    order: 14,
     type: "chord",
     objectives: ["Fourth string open, third at fret 2, second at fret 3, first at fret 4", "Hear the F sharp that D7 leaves out"],
     chords: ["D"],
@@ -2746,12 +2766,12 @@ const BANJO_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "The full V chord, third included.",
   },
-  {
+{
     id: "lesson_banjo_minors_01",
     title: "Minor shapes: Em and Am",
     skill: "banjo_minors",
     trackId: "track_banjo_shapes",
-    order: 14,
+    order: 15,
     type: "chord",
     objectives: ["Em: fourth and first strings at fret 2, the rest open", "Am: fourth, third, and first at fret 2, second at fret 1"],
     chords: ["Em", "Am"],
@@ -2762,12 +2782,12 @@ const BANJO_LESSONS: Lesson[] = [
     masteryRequired: 0.75,
     why: "Two minor colours from shapes close to home.",
   },
-  {
+{
     id: "lesson_banjo_cripple_01",
     title: "Cripple Creek",
     skill: "banjo_cripple",
     trackId: "track_banjo_songs",
-    order: 15,
+    order: 16,
     type: "song",
     objectives: ["Play the A part, then the B part, in G", "Let the full D chord carry the dominant bars"],
     chords: ["G", "C", "D"],
@@ -2782,12 +2802,12 @@ const BANJO_LESSONS: Lesson[] = [
     why: "A traditional tune, and often the first one a banjo player learns whole.",
     interpret: "Steady and plain first; the tune is older than any ornament.",
   },
-  {
+{
     id: "lesson_banjo_claw_01",
     title: "Clawhammer: the bum-ditty",
     skill: "banjo_clawhammer",
     trackId: "track_banjo_songs",
-    order: 16,
+    order: 17,
     type: "skill",
     objectives: ["Strike down with the back of the fingernail, brush, then lift the short g with the thumb", "Keep the bum-ditty rhythm: strike, brush-thumb"],
     chords: ["G"],
@@ -2799,12 +2819,12 @@ const BANJO_LESSONS: Lesson[] = [
     why: "Everything so far picks upward — that is Scruggs style. Clawhammer is the older down-picking style, and this lesson is its introduction.",
     interpret: "Loose wrist. The hand bounces; it does not pluck.",
   },
-  {
+{
     id: "lesson_banjo_closedvamp_01",
     title: "Closed-shape vamp",
     skill: "banjo_closed_vamp",
     trackId: "track_banjo_songs",
-    order: 17,
+    order: 18,
     type: "skill",
     objectives: ["The F-shape moved up two frets: strings 4–1 at frets 5–4–3–5, fifth string skipped", "Brush on 1 and 3; keep the shape pressed so the chop on 2 and 4 is pitched"],
     chords: ["G"],
@@ -2819,12 +2839,12 @@ const BANJO_LESSONS: Lesson[] = [
     why: "The pitched vamp the backup lesson pointed at.",
     interpret: "Same job as the open vamp, one shape that can move anywhere.",
   },
-  {
+{
     id: "lesson_banjo_foggy_01",
     title: "Foggy Mountain Breakdown",
     skill: "foggy_mountain",
     trackId: "track_banjo_songs",
-    order: 18,
+    order: 19,
     type: "song",
     objectives: ["The opening break: forward roll over G, Em, G, D7", "Half tempo on purpose — even first, fast later"],
     chords: ["G", "Em", "D7"],
@@ -2839,12 +2859,12 @@ const BANJO_LESSONS: Lesson[] = [
     why: "Flatt & Scruggs, 1949 — Earl Scruggs' signature break, the sound of bluegrass itself. This is the opening break only, at half tempo: the record runs past 200 beats a minute, and this sits at 96. Same roll, same chords.",
     interpret: "Steady as a train at half speed. The roll is the engine.",
   },
-  {
+{
     id: "lesson_banjo_dueling_01",
     title: "Dueling Banjos",
     skill: "dueling_banjos",
     trackId: "track_banjo_songs",
-    order: 19,
+    order: 20,
     type: "song",
     objectives: ["The answering phrase: picked notes across strings 1 to 3 and the short g", "Then the roll-out: two bars of forward roll on G"],
     chords: ["G"],
@@ -2859,27 +2879,7 @@ const BANJO_LESSONS: Lesson[] = [
     why: "From Deliverance, 1972 — Arthur Smith wrote the tune (as Feudin' Banjos) long before the film made it famous. The scene is a conversation: a phrase gets thrown and the banjo throws it back. This lesson is your side of it. 84 beats a minute.",
     interpret: "Play the answer like you're not impressed. Then roll.",
   },
-  {
-    id: "lesson_banjo_jed_01",
-    title: "The Ballad of Jed Clampett",
-    skill: "jed_clampett",
-    trackId: "track_banjo_songs",
-    order: 20,
-    type: "song",
-    objectives: ["Roll the theme's chord bed: G–C–G–D7, twice round", "The C shape lands without breaking the roll"],
-    chords: ["G", "C", "D7"],
-    pattern: "DDDDDDDD",
-    bars: 8,
-    bpm: 92,
-    prerequisites: ["lesson_banjo_dueling_01"],
-    masteryRequired: 0.75,
-    process: "perform",
-    repertoire: "The Ballad of Jed Clampett",
-    criteria: ["The loop finishes, twice round", "Every change lands on one"],
-    why: "Flatt & Scruggs, 1962 — the Beverly Hillbillies theme. Under the singing it's this: the forward roll walking G–C–G–D7, over and over. 92 beats a minute.",
-    interpret: "Bright and neighbourly. Keep it rolling.",
-  },
-  {
+{
     id: "lesson_banjo_wagon_wheel_01",
     title: "Wagon Wheel",
     skill: "wagon_wheel",
@@ -2898,8 +2898,7 @@ const BANJO_LESSONS: Lesson[] = [
     criteria: ["The brushes land on 1 and 3", "The chops stay short and muted", "The loop finishes, twice round"],
     why: "Old Crow Medicine Show, 2004 — finished from a Bob Dylan sketch of the seventies, thirty years on. The banjo's job here is the vamp under the singing, walking G–D–Em–C. Every shape is one you own. 80 beats a minute.",
     interpret: "Quiet hands. The singer is the point — you're the wheels.",
-  },
-];
+  }];
 
 const VIOLIN_LESSONS: Lesson[] = [
   {
