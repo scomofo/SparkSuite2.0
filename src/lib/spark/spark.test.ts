@@ -406,10 +406,15 @@ describe("acoustic strum detection", () => {
     const spectrum = chordSpectrum();
     assert.equal(isTonalStrumSpectrum(spectrum, sampleRate, fftSize), true);
     assert.equal(isHarmonicStrumSpectrum(spectrum, sampleRate, fftSize), true);
-    assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, 100), null);
-    const event = detector.process(frame, spectrum, sampleRate, fftSize, 132);
+    const silence = new Float32Array(fftSize);
+    const attackFrame = new Float32Array(fftSize);
+    const chunkSize = Math.floor(fftSize / 16);
+    attackFrame.set(frame.subarray(fftSize - chunkSize), fftSize - chunkSize);
+    assert.equal(detector.process(silence, spectrum, sampleRate, fftSize, 100), null);
+    assert.equal(detector.process(attackFrame, spectrum, sampleRate, fftSize, 116), null);
+    const event = detector.process(frame, spectrum, sampleRate, fftSize, 148);
     assert.ok(event);
-    assert.equal(event.onsetMs, 100);
+    assert.ok(event.onsetMs >= 110 && event.onsetMs <= 120);
     assert.ok(event.level > 0.008);
   });
 
