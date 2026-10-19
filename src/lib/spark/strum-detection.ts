@@ -128,7 +128,6 @@ export function isHarmonicStrumSpectrum(
 export class StrumOnsetDetector {
   private readonly options: Required<StrumDetectorOptions>;
   private noiseFloor = 0.001;
-  private previousRms = 0;
   private previousTailRms = 0;
   private lastDetectedMs = Number.NEGATIVE_INFINITY;
   private pending: { onsetMs: number; peakRms: number } | null = null;
@@ -203,14 +202,12 @@ export class StrumOnsetDetector {
       }
     }
 
-    this.previousRms = level;
     this.previousTailRms = tailLevel;
     return detected;
   }
 
   reset() {
     this.noiseFloor = 0.001;
-    this.previousRms = 0;
     this.previousTailRms = 0;
     this.lastDetectedMs = Number.NEGATIVE_INFINITY;
     this.pending = null;
