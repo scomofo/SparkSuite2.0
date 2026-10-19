@@ -4,7 +4,6 @@ let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
 let sfx: GainNode | null = null;
 let music: GainNode | null = null;
-let muted = false;
 let visibilityBound = false;
 /** Where new voices connect. Normally the sfx bus; a `scheduleRun` gain while one is open. */
 let dest: GainNode | null = null;
@@ -72,7 +71,7 @@ export function unlockAudio() {
       music = ctx.createGain();
       sfx.gain.value = 0.9;
       music.gain.value = 0.7;
-      master.gain.value = muted ? 0 : 0.85;
+      master.gain.value = 0.85;
       sfx.connect(master);
       music.connect(master);
       master.connect(ctx.destination);
@@ -91,15 +90,6 @@ function safeCtx(): AudioContext | null {
   } catch {
     return null;
   }
-}
-
-export function setMuted(next: boolean) {
-  muted = next;
-  if (master && ctx) master.gain.setTargetAtTime(next ? 0 : 0.85, ctx.currentTime, 0.02);
-}
-
-export function isMuted() {
-  return muted;
 }
 
 const noiseCache = new Map<number, AudioBuffer>();
