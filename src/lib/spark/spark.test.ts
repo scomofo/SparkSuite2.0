@@ -429,7 +429,7 @@ describe("acoustic strum detection", () => {
       for (let offset = -1; offset <= 1; offset++) {
         const index = center + offset;
         if (index >= 0 && index < spectrum.length) {
-          spectrum[index] = Math.max(spectrum[index], offset === 0 ? -31 : -43);
+          spectrum[index] = Math.max(spectrum[index], offset === 0 ? -42 : -54);
         }
       }
     }
@@ -445,7 +445,7 @@ describe("acoustic strum detection", () => {
       for (let i = size - hop; i < size; i++) {
         const sample = chunkStart + i - (size - hop);
         const t = sample / sampleRate;
-        rolling[i] = 0.018 * (
+        rolling[i] = 0.0045 * (
           Math.sin(2 * Math.PI * 196 * t) +
           Math.sin(2 * Math.PI * 261.63 * t) +
           Math.sin(2 * Math.PI * 329.63 * t) +
