@@ -136,22 +136,32 @@ export function acousticInputModeFor(input: {
   surface: "strings" | "keys" | "pads" | "voice";
   pluckDrill: boolean;
   hasPattern: boolean;
+  /** True when the actual timeline contains simultaneous chord tones. */
+  hasChordCues?: boolean;
+  /** True when the actual timeline contains single-note pitch targets. */
+  hasSingleNoteCues?: boolean;
   lessonId?: string;
 }): AcousticInputMode {
   if (input.surface === "pads") return "percussion";
   if (input.surface === "voice") return "pitch";
-  if (input.instrument === "mandolin" && (input.lessonId === "lesson_mandolin_chop_01" || input.lessonId === "lesson_mandolin_closed_chop_01")) return "attack";
-  if (input.surface === "keys") return input.pluckDrill ? "pitch" : "strum";
-  if (input.surface === "strings") {
-    if (
-      input.instrument === "bass" ||
-      input.instrument === "violin" ||
-      input.pluckDrill ||
-      input.hasPattern
-    ) return "pitch";
-    return "strum";
+  if (
+    input.instrument === "mandolin" &&
+    (input.lessonId === "lesson_mandolin_chop_01" ||
+      input.lessonId === "lesson_mandolin_closed_chop_01")
+  ) return "attack";
+
+  // Route by the notes the learner is actually asked to play, not simply by
+  // whether the lesson has a bespoke pattern. Some song patterns are chords;
+  // others are single-note riffs or scales.
+  if (input.surface === "keys") {
+    return input.hasChordCues ? "strum" : "pitch";
   }
-  return "pitch";
+  if (input.instrument === "bass" || input.instrument === "violin" || input.pluckDrill) {
+    return "pitch";
+  }
+  if (input.hasChordCues) return "strum";
+  if (input.hasSingleNoteCues || input.hasPattern) return "pitch";
+  return "strum";
 }
 
 export type PitchOnset = {
@@ -395,6 +405,58 @@ export function classifyDrumSpectrum(
     return { drumClass: "unknown", padIndex: null, confidence: best?.confidence ?? 0 };
   }
   return best;
+}
+
+export type AcousticAttack = {
+  onsetMs: number;
+  level: number;
+};
+
+/**
+ * Detects a fresh acoustic attack without assuming it sounds like a drum.
+ * Used for muted mandolin chops, where harmonic chord recognition is neither
+ * expected nor reliable. It examines the newest short window instead of the
+ * entire rolling analyser buffer, so a brief pick attack is not diluted by
+ * hundreds of milliseconds of surrounding silence.
+ */
+export class AcousticAttackDetector {
+  private readonly minimumLevel: number;
+  private readonly cooldownMs: number;
+  private readonly attackRatio: number;
+  private lastEventMs = Number.NEGATIVE_INFINITY;
+
+  constructor(options: { minimumLevel?: number; cooldownMs?: number; attackRatio?: number } = {}) {
+    this.minimumLevel = options.minimumLevel ?? 0.003;
+    this.cooldownMs = options.cooldownMs ?? 120;
+    this.attackRatio = options.attackRatio ?? 1.35;
+  }
+
+  process(samples: Float32Array, sampleRate: number, nowMs: number): AcousticAttack | null {
+    if (!samples.length || !Number.isFinite(sampleRate) || sampleRate <= 0 || !Number.isFinite(nowMs)) {
+      return null;
+    }
+    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 4)));
+    if (samples.length < chunkSize * 2) return null;
+    const tailStart = samples.length - chunkSize;
+    const previousStart = tailStart - chunkSize;
+    const tailLevel = rmsLevel(samples.subarray(tailStart));
+    const previousLevel = rmsLevel(samples.subarray(previousStart, tailStart));
+    if (
+      tailLevel < this.minimumLevel ||
+      tailLevel < Math.max(this.minimumLevel, previousLevel * this.attackRatio) ||
+      nowMs - this.lastEventMs < this.cooldownMs
+    ) return null;
+
+    this.lastEventMs = nowMs;
+    return {
+      onsetMs: nowMs - (chunkSize / sampleRate) * 500,
+      level: tailLevel,
+    };
+  }
+
+  reset() {
+    this.lastEventMs = Number.NEGATIVE_INFINITY;
+  }
 }
 
 /**
