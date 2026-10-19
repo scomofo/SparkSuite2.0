@@ -413,6 +413,48 @@ describe("acoustic strum detection", () => {
     assert.ok(event.level > 0.008);
   });
 
+  it("detects a quiet strum entering a rolling 8192-sample window", () => {
+    const size = 8192;
+    const hop = 512;
+    const detector = new StrumOnsetDetector();
+    const rolling = new Float32Array(size);
+    const spectrum = new Float32Array(size / 2).fill(-100);
+    for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25, 784, 880, 1046.5]) {
+      const center = Math.round((hz * size) / sampleRate);
+      for (let offset = -1; offset <= 1; offset++) {
+        const index = center + offset;
+        if (index >= 0 && index < spectrum.length) {
+          spectrum[index] = Math.max(spectrum[index], offset === 0 ? -31 : -43);
+        }
+      }
+    }
+    assert.equal(isHarmonicStrumSpectrum(spectrum, sampleRate, size), true);
+    assert.equal(detector.process(rolling, spectrum, sampleRate, size, 100), null);
+
+    let detected = null;
+    // Simulate Web Audio's overlapping analyser windows: each frame advances
+    // by only 512 samples while the 8192-sample window keeps most old samples.
+    for (let frame = 1; frame <= 5; frame++) {
+      rolling.copyWithin(0, hop);
+      const chunkStart = (frame - 1) * hop;
+      for (let i = size - hop; i < size; i++) {
+        const sample = chunkStart + i - (size - hop);
+        const t = sample / sampleRate;
+        rolling[i] = 0.018 * (
+          Math.sin(2 * Math.PI * 196 * t) +
+          Math.sin(2 * Math.PI * 261.63 * t) +
+          Math.sin(2 * Math.PI * 329.63 * t) +
+          Math.sin(2 * Math.PI * 440 * t)
+        );
+      }
+      detected = detector.process(rolling, spectrum, sampleRate, size, 100 + frame * 16);
+      if (detected) break;
+    }
+    assert.ok(detected, "a normal attack must not be lost because adjacent FFT windows overlap");
+    assert.ok(detected.level >= 0.004);
+    assert.ok(detected.onsetMs >= 100 && detected.onsetMs <= 120);
+  });
+
   it("rejects a short broadband click without sustained harmonic energy", () => {
     const detector = new StrumOnsetDetector();
     const flatSpectrum = new Float32Array(fftSize / 2).fill(-30);
