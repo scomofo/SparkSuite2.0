@@ -27,7 +27,7 @@ import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
-import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
+import { AcousticAttackDetector, acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -444,7 +444,17 @@ describe("instrument microphone routing", () => {
     pluckDrill = false,
     hasPattern = false,
     lessonId?: string,
-  ) => acousticInputModeFor({ instrument, surface, pluckDrill, hasPattern, lessonId });
+    hasChordCues = false,
+    hasSingleNoteCues = false,
+  ) => acousticInputModeFor({
+    instrument,
+    surface,
+    pluckDrill,
+    hasPattern,
+    lessonId,
+    hasChordCues,
+    hasSingleNoteCues,
+  });
 
   it("routes each instrument family to a suitable acoustic detector", () => {
     assert.equal(mode("guitar", "strings"), "strum");
@@ -457,9 +467,31 @@ describe("instrument microphone routing", () => {
     assert.equal(mode("violin", "strings"), "pitch");
     assert.equal(mode("lapsteel", "strings", false, true), "pitch");
     assert.equal(mode("piano", "keys", true), "pitch");
-    assert.equal(mode("piano", "keys"), "strum");
+    assert.equal(mode("piano", "keys", false, true, undefined, true), "strum");
+    assert.equal(mode("piano", "keys", false, true, undefined, false, true), "pitch");
+    assert.equal(mode("ukulele", "strings", false, true, undefined, true), "strum");
+    assert.equal(mode("guitar", "strings", false, true, undefined, false, true), "pitch");
+    assert.equal(mode("banjo", "strings", false, true, undefined, true), "strum");
     assert.equal(mode("drums", "pads"), "percussion");
     assert.equal(mode("vocals", "voice"), "pitch");
+  });
+});
+
+describe("generic acoustic attack detection", () => {
+  it("detects a fresh short attack without requiring a drum-like spectrum", () => {
+    const detector = new AcousticAttackDetector();
+    const sampleRate = 48000;
+    const samples = new Float32Array(8192);
+    for (let i = samples.length - 512; i < samples.length; i++) {
+      samples[i] = 0.08 * Math.sin((2 * Math.PI * 740 * i) / sampleRate);
+    }
+    const onset = detector.process(samples, sampleRate, 100);
+    assert.ok(onset);
+    assert.equal(onset.onsetMs, 100 - (512 / sampleRate) * 500);
+    assert.ok(onset.level > 0.003);
+    assert.equal(detector.process(samples, sampleRate, 150), null, "cooldown suppresses the same transient");
+    detector.reset();
+    assert.equal(detector.process(new Float32Array(8192), sampleRate, 300), null);
   });
 });
 
