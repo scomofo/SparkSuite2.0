@@ -268,7 +268,7 @@ export class PitchOnsetDetector {
     ) return null;
     this.lastAnalysisMs = nowMs;
 
-    const chunkSize = Math.max(64, Math.min(1024, Math.floor(samples.length / 4)));
+    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 4)));
     const tailStart = samples.length - chunkSize;
     const previousStart = tailStart - chunkSize;
     const tailRms = rmsLevel(samples.subarray(tailStart));
@@ -435,7 +435,7 @@ export class AcousticAttackDetector {
     if (!samples.length || !Number.isFinite(sampleRate) || sampleRate <= 0 || !Number.isFinite(nowMs)) {
       return null;
     }
-    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 4)));
+    const chunkSize = Math.max(64, Math.min(1024, Math.floor(samples.length / 4)));
     if (samples.length < chunkSize * 2) return null;
     const tailStart = samples.length - chunkSize;
     const previousStart = tailStart - chunkSize;
