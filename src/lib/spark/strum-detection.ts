@@ -129,6 +129,7 @@ export function isHarmonicStrumSpectrum(
 export class StrumOnsetDetector {
   private readonly options: Required<StrumDetectorOptions>;
   private noiseFloor = 0.0007;
+  private previousTailRms = 0;
   private lastDetectedMs = Number.NEGATIVE_INFINITY;
   private pending: { onsetMs: number; peakRms: number } | null = null;
 
@@ -164,11 +165,7 @@ export class StrumOnsetDetector {
     // short chunk to the immediately preceding chunk instead.
     const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 16)));
     const tailStart = samples.length - chunkSize;
-    const previousStart = tailStart - chunkSize;
     const tailRms = rmsLevel(samples.subarray(tailStart));
-    const previousChunkRms = previousStart >= 0
-      ? rmsLevel(samples.subarray(previousStart, tailStart))
-      : 0;
     let detected: StrumOnset | null = null;
 
     if (this.pending) {
@@ -197,7 +194,7 @@ export class StrumOnsetDetector {
       const threshold = Math.max(
         this.options.minimumLevel,
         this.noiseFloor * 2.6,
-        previousChunkRms * this.options.attackRatio,
+        this.previousTailRms * this.options.attackRatio,
       );
       if (
         tailRms >= threshold &&
@@ -214,11 +211,17 @@ export class StrumOnsetDetector {
       }
     }
 
+    // Cache the previous callback's newest chunk, not the adjacent chunk in
+    // this FFT window. If a frame is delayed, both adjacent chunks can already
+    // contain the strum and look equally loud; the prior callback still gives
+    // us the pre-attack baseline.
+    this.previousTailRms = tailRms;
     return detected;
   }
 
   reset() {
     this.noiseFloor = 0.0007;
+    this.previousTailRms = 0;
     this.lastDetectedMs = Number.NEGATIVE_INFINITY;
     this.pending = null;
   }
