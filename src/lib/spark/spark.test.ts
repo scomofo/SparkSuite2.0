@@ -386,10 +386,10 @@ describe("acoustic strum detection", () => {
     });
   }
 
-  function chordSpectrum() {
-    const spectrum = new Float32Array(fftSize / 2).fill(-100);
+  function chordSpectrum(size = fftSize) {
+    const spectrum = new Float32Array(size / 2).fill(-100);
     for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25, 784, 880, 1046.5]) {
-      const center = Math.round((hz * fftSize) / sampleRate);
+      const center = Math.round((hz * size) / sampleRate);
       for (let offset = -1; offset <= 1; offset++) {
         const index = center + offset;
         if (index >= 0 && index < spectrum.length) {
@@ -423,16 +423,7 @@ describe("acoustic strum detection", () => {
     const hop = 512;
     const detector = new StrumOnsetDetector();
     const rolling = new Float32Array(size);
-    const spectrum = new Float32Array(size / 2).fill(-100);
-    for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25, 784, 880, 1046.5]) {
-      const center = Math.round((hz * size) / sampleRate);
-      for (let offset = -1; offset <= 1; offset++) {
-        const index = center + offset;
-        if (index >= 0 && index < spectrum.length) {
-          spectrum[index] = Math.max(spectrum[index], offset === 0 ? -42 : -54);
-        }
-      }
-    }
+    const spectrum = chordSpectrum(size);
     assert.equal(isHarmonicStrumSpectrum(spectrum, sampleRate, size), true);
     assert.equal(detector.process(rolling, spectrum, sampleRate, size, 100), null);
 
@@ -458,6 +449,43 @@ describe("acoustic strum detection", () => {
     assert.ok(detected, "a normal attack must not be lost because adjacent FFT windows overlap");
     assert.ok(detected.level >= 0.004);
     assert.ok(detected.onsetMs >= 100 && detected.onsetMs <= 120);
+  });
+
+  it("detects a strum when a delayed frame already contains two loud adjacent chunks", () => {
+    const size = 8192;
+    const hop = 512;
+    const detector = new StrumOnsetDetector();
+    const spectrum = chordSpectrum(size);
+    const silence = new Float32Array(size);
+    assert.equal(detector.process(silence, spectrum, sampleRate, size, 100), null);
+
+    const delayedFrame = new Float32Array(size);
+    for (let i = size - 2 * hop; i < size; i++) {
+      const t = i / sampleRate;
+      delayedFrame[i] = 0.0045 * (
+        Math.sin(2 * Math.PI * 196 * t) +
+        Math.sin(2 * Math.PI * 261.63 * t) +
+        Math.sin(2 * Math.PI * 329.63 * t) +
+        Math.sin(2 * Math.PI * 440 * t)
+      );
+    }
+    // Simulate a busy tab: the callback arrives after the sound has occupied
+    // both adjacent chunks, so comparing only those chunks would miss the rise.
+    assert.equal(detector.process(delayedFrame, spectrum, sampleRate, size, 140), null);
+
+    const sustainedFrame = new Float32Array(size);
+    for (let i = 0; i < size; i++) {
+      const t = i / sampleRate;
+      sustainedFrame[i] = 0.0045 * (
+        Math.sin(2 * Math.PI * 196 * t) +
+        Math.sin(2 * Math.PI * 261.63 * t) +
+        Math.sin(2 * Math.PI * 329.63 * t) +
+        Math.sin(2 * Math.PI * 440 * t)
+      );
+    }
+    const event = detector.process(sustainedFrame, spectrum, sampleRate, size, 172);
+    assert.ok(event, "the cached pre-attack baseline must survive a delayed callback");
+    assert.ok(event.onsetMs >= 130 && event.onsetMs <= 140);
   });
 
   it("rejects a short broadband click without sustained harmonic energy", () => {
