@@ -20,6 +20,7 @@ import { coachCue, howYouPlay, patternInWords, successLine } from "@/lib/spark/u
 import { chordsFromCreatePick, refineLine, whyThisPiece } from "@/lib/spark/nafme";
 import { comboCue, isComboGate } from "@/lib/spark/game";
 import { currentItem, isSessionDone } from "@/lib/spark/session";
+import { createItemAdvanceGuard } from "@/lib/spark/item-advance-guard";
 import { useSpark } from "@/store/spark";
 import { Button } from "@/components/ui/button";
 import { ChordDiagram } from "@/components/chord-diagram";
@@ -234,7 +235,7 @@ export function SessionPlayer() {
   const micRequestRef = useRef(0);
   const attemptRef = useRef<AttemptFn | null>(null);
   // A rapid double click must not advance two exercises using a stale render.
-  const advancedItemIdRef = useRef<string | null>(null);
+  const advanceGuardRef = useRef(createItemAdvanceGuard());
   phaseRef.current = phase;
   requiresMicInputRef.current = requiresMicInput;
   micModeRef.current = micMode;
@@ -809,8 +810,7 @@ export function SessionPlayer() {
   }, [pauseSession, attempt, beginPlay, inst.stringNames.length, inst.surface, item?.surface, modeling, navigate, phase]);
 
   const goNext = useCallback(() => {
-    if (!item || advancedItemIdRef.current === item.id) return;
-    advancedItemIdRef.current = item.id;
+    if (!item || !advanceGuardRef.current.claim(item.id)) return;
     if (visualOnlyRef.current) skipCurrent();
     else finishItem();
     const s = useSpark.getState().session;
@@ -828,8 +828,7 @@ export function SessionPlayer() {
   }, [finishDay, finishItem, inst.surface, item, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
 
   const skipThis = useCallback(() => {
-    if (!item || advancedItemIdRef.current === item.id) return;
-    advancedItemIdRef.current = item.id;
+    if (!item || !advanceGuardRef.current.claim(item.id)) return;
     setCombo(0);
     skipCurrent();
     const s = useSpark.getState().session;
