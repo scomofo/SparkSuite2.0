@@ -1,6 +1,5 @@
 import type { LessonExercise, PracticeCue, PracticeSubdivision } from "./lesson-practice.ts";
-import { sideQuestsFor, SIDE_QUESTS } from "./side-quests.ts";
-import type { InstrumentId } from "./instruments.ts";
+import { SIDE_QUESTS } from "./side-quests.ts";
 
 type QuestPattern = {
   bpm: number;
@@ -322,12 +321,6 @@ export function sideQuestExercise(id: string | undefined): LessonExercise | unde
 
 export function sideQuestById(id: string | undefined) {
   return SIDE_QUESTS.find((quest) => quest.id === id);
-}
-
-export function sideQuestExercisesFor(instrument: InstrumentId) {
-  return sideQuestsFor(instrument)
-    .map((quest) => sideQuestExercise(quest.id))
-    .filter((exercise): exercise is LessonExercise => !!exercise);
 }
 
 export const SIDE_QUEST_PATTERNS = PATTERNS;
