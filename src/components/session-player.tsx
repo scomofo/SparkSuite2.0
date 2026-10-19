@@ -233,6 +233,8 @@ export function SessionPlayer() {
   const micFrameRef = useRef(0);
   const micRequestRef = useRef(0);
   const attemptRef = useRef<AttemptFn | null>(null);
+  // A rapid double click must not advance two exercises using a stale render.
+  const advancedItemIdRef = useRef<string | null>(null);
   phaseRef.current = phase;
   requiresMicInputRef.current = requiresMicInput;
   micModeRef.current = micMode;
@@ -807,6 +809,8 @@ export function SessionPlayer() {
   }, [pauseSession, attempt, beginPlay, inst.stringNames.length, inst.surface, item?.surface, modeling, navigate, phase]);
 
   const goNext = useCallback(() => {
+    if (!item || advancedItemIdRef.current === item.id) return;
+    advancedItemIdRef.current = item.id;
     if (visualOnlyRef.current) skipCurrent();
     else finishItem();
     const s = useSpark.getState().session;
@@ -821,9 +825,11 @@ export function SessionPlayer() {
     } else {
       resetItem();
     }
-  }, [finishDay, finishItem, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
+  }, [finishDay, finishItem, inst.surface, item, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
 
   const skipThis = useCallback(() => {
+    if (!item || advancedItemIdRef.current === item.id) return;
+    advancedItemIdRef.current = item.id;
     setCombo(0);
     skipCurrent();
     const s = useSpark.getState().session;
@@ -838,7 +844,7 @@ export function SessionPlayer() {
     } else {
       resetItem();
     }
-  }, [finishDay, inst.surface, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
+  }, [finishDay, inst.surface, item, micStatus, navigate, resetItem, skipCurrent, stopAcousticMic]);
 
   const leave = useCallback(() => {
     pauseSession();
