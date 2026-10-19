@@ -484,7 +484,7 @@ export class PercussionOnsetDetector {
     nowMs: number,
   ): PercussionOnset | null {
     if (!samples.length || !spectrumDb.length || !Number.isFinite(nowMs)) return null;
-    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 4)));
+    const chunkSize = Math.max(64, Math.min(1024, Math.floor(samples.length / 4)));
     const tailStart = samples.length - chunkSize;
     const previousStart = tailStart - chunkSize;
     const tailRms = rmsLevel(samples.subarray(tailStart));
