@@ -1335,6 +1335,27 @@ export function SessionPlayer() {
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
                   {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
                 </p>
+                {!visualOnly && micStatus === "listening" ? (
+                  <div className="mt-3 space-y-1">
+                    <div className="flex justify-between gap-2 text-xs text-muted">
+                      <span>Live mic signal</span>
+                      <span>{micLevel}% · {micDetectedEvents} attacks recognized</span>
+                    </div>
+                    <div
+                      role="progressbar"
+                      aria-label="Live microphone signal level"
+                      aria-valuemin={0}
+                      aria-valuemax={100}
+                      aria-valuenow={micLevel}
+                      className="h-2 overflow-hidden rounded-full bg-raised"
+                    >
+                      <div className="h-full rounded-full bg-ember transition-[width] duration-100" style={{ width: `${micLevel}%` }} />
+                    </div>
+                    {micDetectedEvents === 0 && micLevel > 0 ? (
+                      <p className="text-xs text-muted">The microphone hears audio, but no playable attack has been recognized yet.</p>
+                    ) : null}
+                  </div>
+                ) : null}
                 {micFeedback ? (
                   <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
                     {micFeedback}
