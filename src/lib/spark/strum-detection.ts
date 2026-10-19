@@ -11,6 +11,7 @@ export type StrumDetectorOptions = {
   confirmationMs?: number;
   maxConfirmationMs?: number;
   maxFlatness?: number;
+  attackRatio?: number;
 };
 
 /** Root-mean-square signal level for one microphone frame. */
@@ -127,18 +128,21 @@ export function isHarmonicStrumSpectrum(
  */
 export class StrumOnsetDetector {
   private readonly options: Required<StrumDetectorOptions>;
-  private noiseFloor = 0.001;
-  private previousRms = 0;
+  private noiseFloor = 0.0007;
   private lastDetectedMs = Number.NEGATIVE_INFINITY;
   private pending: { onsetMs: number; peakRms: number } | null = null;
 
   constructor(options: StrumDetectorOptions = {}) {
     this.options = {
-      minimumLevel: options.minimumLevel ?? 0.008,
+      // Laptop microphones often deliver acoustic instruments well below
+      // -42 dBFS. Let the harmonic-spectrum confirmation reject clicks/noise
+      // rather than making the attack gate itself excessively loud.
+      minimumLevel: options.minimumLevel ?? 0.004,
       cooldownMs: options.cooldownMs ?? 140,
       confirmationMs: options.confirmationMs ?? 28,
       maxConfirmationMs: options.maxConfirmationMs ?? 112,
       maxFlatness: options.maxFlatness ?? 0.7,
+      attackRatio: options.attackRatio ?? 1.3,
     };
   }
 
@@ -149,17 +153,30 @@ export class StrumOnsetDetector {
     fftSize: number,
     nowMs: number,
   ): StrumOnset | null {
-    if (!Number.isFinite(nowMs) || !samples.length) return null;
+    if (!Number.isFinite(nowMs) || !samples.length || !Number.isFinite(sampleRate) || sampleRate <= 0) {
+      return null;
+    }
 
     const level = rmsLevel(samples);
+    // AnalyserNode returns a rolling, highly overlapping window. Comparing
+    // whole-window RMS values misses ordinary attacks because each new frame
+    // replaces only a small fraction of the previous frame. Compare the newest
+    // short chunk to the immediately preceding chunk instead.
+    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 16)));
+    const tailStart = samples.length - chunkSize;
+    const previousStart = tailStart - chunkSize;
+    const tailRms = rmsLevel(samples.subarray(tailStart));
+    const previousChunkRms = previousStart >= 0
+      ? rmsLevel(samples.subarray(previousStart, tailStart))
+      : 0;
     let detected: StrumOnset | null = null;
 
     if (this.pending) {
-      this.pending.peakRms = Math.max(this.pending.peakRms, level);
+      this.pending.peakRms = Math.max(this.pending.peakRms, tailRms);
       const age = nowMs - this.pending.onsetMs;
       if (age >= this.options.confirmationMs) {
         const sustained = level >= Math.max(
-          this.options.minimumLevel * 0.35,
+          this.options.minimumLevel * 0.25,
           this.pending.peakRms * 0.12,
         );
         if (
@@ -180,27 +197,28 @@ export class StrumOnsetDetector {
       const threshold = Math.max(
         this.options.minimumLevel,
         this.noiseFloor * 2.6,
-        this.previousRms * 1.3,
+        previousChunkRms * this.options.attackRatio,
       );
       if (
-        level >= threshold &&
+        tailRms >= threshold &&
         nowMs - this.lastDetectedMs >= this.options.cooldownMs
       ) {
-        this.pending = { onsetMs: nowMs, peakRms: level };
+        // The newest chunk contains the attack; its midpoint is a better
+        // timestamp than the much longer FFT window's midpoint.
+        const onsetMs = nowMs - (chunkSize / sampleRate) * 500;
+        this.pending = { onsetMs, peakRms: tailRms };
       } else if (
-        level < Math.max(this.options.minimumLevel * 0.75, this.noiseFloor * 3)
+        tailRms < Math.max(this.options.minimumLevel * 0.75, this.noiseFloor * 3)
       ) {
-        this.noiseFloor = Math.max(0.0004, this.noiseFloor * 0.96 + level * 0.04);
+        this.noiseFloor = Math.max(0.0002, this.noiseFloor * 0.96 + tailRms * 0.04);
       }
     }
 
-    this.previousRms = level;
     return detected;
   }
 
   reset() {
-    this.noiseFloor = 0.001;
-    this.previousRms = 0;
+    this.noiseFloor = 0.0007;
     this.lastDetectedMs = Number.NEGATIVE_INFINITY;
     this.pending = null;
   }
