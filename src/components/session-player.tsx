@@ -29,8 +29,22 @@ import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
-import { rmsLevel, StrumDirectionDetector, StrumOnsetDetector, type StrumDirectionEstimate } from "@/lib/spark/strum-detection";
-import { AcousticAttackDetector, acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
+import {
+  rmsLevel,
+  StrumDirectionDetector,
+  StrumOnsetDetector,
+  type StrumDirectionEstimate,
+} from "@/lib/spark/strum-detection";
+import {
+  AcousticAttackDetector,
+  acousticInputModeFor,
+  analyzeChordSpectrum,
+  assessChordPitches,
+  PercussionOnsetDetector,
+  PitchOnsetDetector,
+  PitchTracker,
+  type AcousticInputMode,
+} from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
@@ -102,7 +116,7 @@ function MicSignalMeter({ level, mode }: { level: number; mode: AcousticInputMod
     <div className="mt-3 space-y-2">
       <div className="flex items-center justify-between gap-3 text-xs text-muted">
         <span>Live microphone level</span>
-        <span className="tabular">{Math.round(level * 1000) / 1000} RMS</span>
+        <span className="tabular">{percent}%</span>
       </div>
       <div
         role="meter"
@@ -110,7 +124,7 @@ function MicSignalMeter({ level, mode }: { level: number; mode: AcousticInputMod
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={percent}
-        aria-valuetext={`${Math.round(level * 1000) / 1000} RMS`}
+        aria-valuetext={`${percent}% input level`}
         className="h-2 overflow-hidden rounded-full bg-raised"
       >
         <div
