@@ -118,5 +118,12 @@ export function RhythmHighway({ notesRef, consumedRef, nowRef, lookAhead, flash 
     };
   }, [consumedRef, lookAhead, notesRef, nowRef]);
 
-  return <canvas ref={canvasRef} className="h-full w-full touch-none rounded-lg" />;
+  return (
+    <canvas
+      ref={canvasRef}
+      role="img"
+      aria-label="Note highway: notes scroll toward the line — play each note as it crosses."
+      className="h-full w-full touch-none rounded-lg"
+    />
+  );
 }

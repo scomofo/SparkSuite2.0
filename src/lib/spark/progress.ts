@@ -74,9 +74,3 @@ export function finalizeSession(
   return next;
 }
 
-export function trackMastery(state: ProgressState, _trackId: string, lessonIds: string[]) {
-  const ids = lessonIds.filter(Boolean);
-  if (!ids.length) return 0;
-  const sum = ids.reduce((s, id) => s + (state.mastery[id] ?? 0), 0);
-  return sum / ids.length;
-}

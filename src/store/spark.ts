@@ -7,7 +7,6 @@ import { type InstrumentId } from "@/lib/spark/instruments";
 import {
   closeSession,
   completeItem,
-  currentItem,
   isSessionDone,
   recordHit,
   recordMiss,
@@ -192,12 +191,3 @@ export const useSpark = create<SparkStore>((set, get) => ({
   },
 }));
 
-export function sessionItem() {
-  const s = useSpark.getState().session;
-  return s ? currentItem(s) : null;
-}
-
-export function sessionDone() {
-  const s = useSpark.getState().session;
-  return s ? isSessionDone(s) : false;
-}

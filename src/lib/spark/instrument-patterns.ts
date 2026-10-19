@@ -2383,6 +2383,3 @@ export function drumDailyPattern(lessonId?: string): DrumDailyPattern | undefine
   return lessonId ? DRUM_DAILY_PATTERNS[lessonId] : undefined;
 }
 
-export function hasDrumPattern(item: { lessonId?: string }) {
-  return !!drumDailyPattern(item.lessonId);
-}

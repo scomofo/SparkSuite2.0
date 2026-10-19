@@ -170,11 +170,6 @@ export function progressFor(suite: SuiteState, id: InstrumentId): ProgressState 
 }
 
 
-export function loadProgress(): ProgressState {
-  const suite = loadSuite();
-  return progressFor(suite, suite.active);
-}
-
 export function saveProgress(state: ProgressState, instrument?: InstrumentId): SuiteState {
   const suite = loadSuite();
   const slot = instrument ?? suite.active;

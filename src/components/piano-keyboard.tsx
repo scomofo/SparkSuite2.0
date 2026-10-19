@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { noteName } from "@/lib/spark/theory";
 
 const WHITE = [0, 2, 4, 5, 7, 9, 11];
 const START = 48; // C3
@@ -58,7 +59,7 @@ export function PianoKeyboard({
                 "relative h-28 flex-1 border-r border-border last:border-r-0 first:rounded-l-md last:rounded-r-md",
                 on ? "bg-accent text-accent-fg" : exp ? "bg-ember/40 text-fg" : inChord ? "bg-raised text-ember" : "bg-fg text-bg",
               )}
-              aria-label={`Key ${midi}`}
+              aria-label={`${noteName(pc)}${Math.floor(midi / 12) - 1}`}
             >
               {pc === 0 ? (
                 <span className="pointer-events-none absolute inset-x-0 bottom-1 text-center text-[9px] font-medium opacity-70">
@@ -93,7 +94,7 @@ export function PianoKeyboard({
                   "left-full",
                   on ? "bg-accent" : exp ? "bg-ember" : inChord ? "bg-raised" : "bg-bg",
                 )}
-                aria-label={`Black key ${black.midi}`}
+                aria-label={`${noteName(black.midi % 12)}${Math.floor(black.midi / 12) - 1}`}
               />
             </div>
           );
