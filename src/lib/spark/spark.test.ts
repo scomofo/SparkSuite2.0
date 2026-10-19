@@ -26,8 +26,9 @@ import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
-import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
-import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
+import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, rmsLevel, StrumOnsetDetector } from "./strum-detection.ts";
+import { AcousticAttackDetector, acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
+import { hasInstrumentPattern } from "./instrument-patterns.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -386,10 +387,10 @@ describe("acoustic strum detection", () => {
     });
   }
 
-  function chordSpectrum() {
-    const spectrum = new Float32Array(fftSize / 2).fill(-100);
+  function chordSpectrum(size = fftSize) {
+    const spectrum = new Float32Array(size / 2).fill(-100);
     for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25, 784, 880, 1046.5]) {
-      const center = Math.round((hz * fftSize) / sampleRate);
+      const center = Math.round((hz * size) / sampleRate);
       for (let offset = -1; offset <= 1; offset++) {
         const index = center + offset;
         if (index >= 0 && index < spectrum.length) {
@@ -409,8 +410,28 @@ describe("acoustic strum detection", () => {
     assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, 100), null);
     const event = detector.process(frame, spectrum, sampleRate, fftSize, 132);
     assert.ok(event);
-    assert.equal(event.onsetMs, 100);
+    assert.equal(event.onsetMs, 100 - (512 / sampleRate) * 500);
     assert.ok(event.level > 0.008);
+  });
+
+  it("finds a real attack in the newest chunk even when the long-window RMS is quiet", () => {
+    const detector = new StrumOnsetDetector();
+    const longSize = 8192;
+    const samples = new Float32Array(longSize);
+    for (let i = longSize - 512; i < longSize; i++) {
+      const t = (2 * Math.PI * i) / sampleRate;
+      samples[i] =
+        0.02 * Math.sin(196 * t) +
+        0.02 * Math.sin(261.63 * t) +
+        0.02 * Math.sin(329.63 * t) +
+        0.02 * Math.sin(440 * t);
+    }
+    assert.ok(rmsLevel(samples) < 0.008, "the rolling-window RMS is below the old attack threshold");
+    const spectrum = chordSpectrum(longSize);
+    assert.equal(detector.process(samples, spectrum, sampleRate, longSize, 100), null);
+    const event = detector.process(samples, spectrum, sampleRate, longSize, 132);
+    assert.ok(event, "the short, fresh chord attack should be recognized");
+    assert.equal(event.onsetMs, 100 - (1024 / sampleRate) * 500);
   });
 
   it("rejects a short broadband click without sustained harmonic energy", () => {
@@ -444,7 +465,37 @@ describe("instrument microphone routing", () => {
     pluckDrill = false,
     hasPattern = false,
     lessonId?: string,
-  ) => acousticInputModeFor({ instrument, surface, pluckDrill, hasPattern, lessonId });
+    hasChordCues = false,
+    hasSingleNoteCues = false,
+  ) => acousticInputModeFor({
+    instrument,
+    surface,
+    pluckDrill,
+    hasPattern,
+    lessonId,
+    hasChordCues,
+    hasSingleNoteCues,
+  });
+
+  function modeForPlan(instrument: string, item: PlanItem) {
+    const timeline = buildTimeline(item);
+    const hasChordCues = timeline.some((note) =>
+      (note.notes?.length ?? 0) > 1 ||
+      (!note.notes?.length && Boolean(note.chord && item.chords.includes(note.chord))),
+    );
+    const hasSingleNoteCues = timeline.some((note) =>
+      note.notes?.length === 1 || note.expectedMidi !== undefined,
+    );
+    return acousticInputModeFor({
+      instrument,
+      surface: item.surface ?? "strings",
+      pluckDrill: isPluckDrill(item),
+      hasPattern: hasInstrumentPattern(item),
+      hasChordCues,
+      hasSingleNoteCues,
+      lessonId: item.lessonId,
+    });
+  }
 
   it("routes each instrument family to a suitable acoustic detector", () => {
     assert.equal(mode("guitar", "strings"), "strum");
@@ -457,9 +508,62 @@ describe("instrument microphone routing", () => {
     assert.equal(mode("violin", "strings"), "pitch");
     assert.equal(mode("lapsteel", "strings", false, true), "pitch");
     assert.equal(mode("piano", "keys", true), "pitch");
-    assert.equal(mode("piano", "keys"), "strum");
+    assert.equal(mode("piano", "keys", false, true, undefined, true), "strum");
+    assert.equal(mode("piano", "keys", false, true, undefined, false, true), "pitch");
+    assert.equal(mode("ukulele", "strings", false, true, undefined, true), "strum");
+    assert.equal(mode("guitar", "strings", false, true, undefined, false, true), "pitch");
+    assert.equal(mode("banjo", "strings", false, true, undefined, true), "strum");
     assert.equal(mode("drums", "pads"), "percussion");
     assert.equal(mode("vocals", "voice"), "pitch");
+  });
+
+  it("routes real authored chord-song cues to chord detection and single-note riffs to pitch detection", () => {
+    const item = (overrides: Partial<PlanItem>): PlanItem => ({
+      id: "mic-route-test",
+      type: "song",
+      title: "Input routing test",
+      subtitle: "",
+      durationSec: 60,
+      lessonId: "lesson_uke_lava_01",
+      chords: ["C", "G7", "F"],
+      pattern: "D",
+      bars: 4,
+      bpm: 80,
+      surface: "strings",
+      stringCount: 4,
+      process: "perform",
+      ...overrides,
+    });
+
+    assert.equal(modeForPlan("ukulele", item({ lessonId: "lesson_uke_lava_01" })), "strum");
+    assert.equal(modeForPlan("guitar", item({
+      lessonId: "lesson_guitar_horse_no_name_01",
+      chords: ["Em", "D6"],
+      stringCount: 6,
+    })), "strum");
+    assert.equal(modeForPlan("guitar", item({
+      lessonId: "lesson_guitar_come_as_you_are_01",
+      chords: [],
+      stringCount: 6,
+    })), "pitch");
+  });
+});
+
+describe("generic acoustic attack detection", () => {
+  it("detects a fresh short attack without requiring a drum-like spectrum", () => {
+    const detector = new AcousticAttackDetector();
+    const sampleRate = 48000;
+    const samples = new Float32Array(8192);
+    for (let i = samples.length - 512; i < samples.length; i++) {
+      samples[i] = 0.08 * Math.sin((2 * Math.PI * 740 * i) / sampleRate);
+    }
+    const onset = detector.process(samples, sampleRate, 100);
+    assert.ok(onset);
+    assert.equal(onset.onsetMs, 100 - (1024 / sampleRate) * 500);
+    assert.ok(onset.level > 0.003);
+    assert.equal(detector.process(samples, sampleRate, 150), null, "cooldown suppresses the same transient");
+    detector.reset();
+    assert.equal(detector.process(new Float32Array(8192), sampleRate, 300), null);
   });
 });
 
