@@ -29,8 +29,8 @@ import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
-import { StrumDirectionDetector, StrumOnsetDetector, type StrumDirectionEstimate } from "@/lib/spark/strum-detection";
-import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
+import { rmsLevel, StrumDirectionDetector, StrumOnsetDetector, type StrumDirectionEstimate } from "@/lib/spark/strum-detection";
+import { AcousticAttackDetector, acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
@@ -80,6 +80,49 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; muted-chop quality and exact voicing are not graded yet.";
   }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
+}
+
+function micSignalThreshold(mode: AcousticInputMode) {
+  if (mode === "strum") return 0.008;
+  if (mode === "percussion") return 0.006;
+  return 0.003;
+}
+
+/** Shows whether live audio is reaching the analyser, separately from scoring. */
+function MicSignalMeter({ level, mode }: { level: number; mode: AcousticInputMode }) {
+  const percent = Math.max(0, Math.min(100, Math.round((level / 0.04) * 100)));
+  const threshold = micSignalThreshold(mode);
+  const message = level < 0.0015
+    ? "No audio level detected yet. Play a note, chord, or drum hit to test the microphone."
+    : level < threshold
+      ? "Audio is reaching the app, but the level is quiet for this detector. Move the mic closer or raise the input level."
+      : "Audio is reaching the app. Play in time with the cue; this meter confirms signal, not note accuracy.";
+
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex items-center justify-between gap-3 text-xs text-muted">
+        <span>Live microphone level</span>
+        <span className="tabular">{Math.round(level * 1000) / 1000} RMS</span>
+      </div>
+      <div
+        role="meter"
+        aria-label="Microphone input level"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-valuetext={`${Math.round(level * 1000) / 1000} RMS`}
+        className="h-2 overflow-hidden rounded-full bg-raised"
+      >
+        <div
+          className="h-full rounded-full bg-good transition-[width] duration-75"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <p role="status" aria-live="polite" className="text-xs leading-relaxed text-muted">
+        {message}
+      </p>
+    </div>
+  );
 }
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
@@ -181,6 +224,14 @@ export function SessionPlayer() {
   const inst = instrumentById(instrument);
 
   const item = session ? currentItem(session) : null;
+  const micTimeline = useMemo(() => item ? buildTimeline(item) : [], [item]);
+  const hasChordCues = Boolean(item && micTimeline.some((note) =>
+    (note.notes?.length ?? 0) > 1 ||
+    Boolean(note.chord && item.chords.includes(note.chord)),
+  ));
+  const hasSingleNoteCues = micTimeline.some((note) =>
+    note.notes?.length === 1 || note.expectedMidi !== undefined,
+  );
   const [phase, setPhase] = useState<Phase>("intro");
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<HitJudge | null>(null);
@@ -196,6 +247,7 @@ export function SessionPlayer() {
   const [micStatus, setMicStatus] = useState<"off" | "starting" | "listening" | "blocked">("off");
   const [micError, setMicError] = useState<string | null>(null);
   const [micFeedback, setMicFeedback] = useState<string | null>(null);
+  const [micLevel, setMicLevel] = useState(0);
   const [visualOnly, setVisualOnly] = useState(false);
   const micSurface = item?.surface ?? inst.surface;
   const requiresMicInput = supportsMicrophoneInput(micSurface);
@@ -204,6 +256,8 @@ export function SessionPlayer() {
     surface: micSurface,
     pluckDrill: item !== null && isPluckDrill(item),
     hasPattern: item !== null && hasInstrumentPattern(item),
+    hasChordCues,
+    hasSingleNoteCues,
     lessonId: item?.lessonId,
   });
   const notesRef = useRef<NoteEvent[]>([]);
@@ -536,18 +590,30 @@ export function SessionPlayer() {
     const pitchDetector = new PitchOnsetDetector();
     const voicePitchTracker = new PitchTracker();
     const percussionDetector = new PercussionOnsetDetector();
+    const attackDetector = new AcousticAttackDetector();
     const timeData = new Float32Array(mic.analyser.fftSize);
     const spectrumData = new Float32Array(mic.analyser.frequencyBinCount);
     let activeMode = micModeRef.current;
     let activeItemId = micItemIdRef.current;
+    let lastMeterUpdate = Number.NEGATIVE_INFINITY;
     micStopRef.current = () => {
       cancelAnimationFrame(micFrameRef.current);
       mic.stop();
     };
+    setMicLevel(0);
     setMicStatus("listening");
 
     const loop = (ts: number) => {
       if (request !== micRequestRef.current) return;
+      // Read the input continuously, including during the intro/count-in. This
+      // makes permission and a live analyser signal distinguishable from actual
+      // scored note detection, which is enabled only during the play phase.
+      mic.analyser.getFloatTimeDomainData(timeData);
+      const inputLevel = rmsLevel(timeData);
+      if (ts - lastMeterUpdate >= 80) {
+        setMicLevel(inputLevel);
+        lastMeterUpdate = ts;
+      }
       if (phaseRef.current === "play" && requiresMicInputRef.current && !visualOnlyRef.current) {
         const mode = micModeRef.current;
         const itemId = micItemIdRef.current;
@@ -557,10 +623,10 @@ export function SessionPlayer() {
           pitchDetector.reset();
           voicePitchTracker.reset();
           percussionDetector.reset();
+          attackDetector.reset();
           activeMode = mode;
           activeItemId = itemId;
         }
-        mic.analyser.getFloatTimeDomainData(timeData);
         mic.analyser.getFloatFrequencyData(spectrumData);
 
         if (mode === "strum") {
@@ -685,6 +751,9 @@ export function SessionPlayer() {
               attemptRef.current?.("pluck", inputIndex, onset.onsetMs, onset.midi, { frequencyHz: onset.frequencyHz });
             }
           }
+        } else if (mode === "attack") {
+          const onset = attackDetector.process(timeData, mic.ctx.sampleRate, ts);
+          if (onset) attemptRef.current?.("strum", undefined, onset.onsetMs);
         } else {
           const onset = percussionDetector.process(
             timeData,
@@ -693,10 +762,7 @@ export function SessionPlayer() {
             mic.analyser.fftSize,
             ts,
           );
-          if (onset) {
-            if (mode === "percussion") attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
-            else attemptRef.current?.("strum", undefined, onset.onsetMs);
-          }
+          if (onset) attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
         }
       }
       micFrameRef.current = requestAnimationFrame(loop);
@@ -718,6 +784,7 @@ export function SessionPlayer() {
     micStopRef.current?.();
     micStopRef.current = null;
     setMicStatus("off");
+    setMicLevel(0);
     setMicError(null);
   }, []);
 
@@ -1064,6 +1131,7 @@ export function SessionPlayer() {
                       ? "Requesting microphone access…"
                       : micError ?? `Enable the microphone to score real ${acousticInstrumentLabel(instrument, inst.name)} input. Audio is analyzed locally, never recorded or uploaded.`}
                 </p>
+                {micStatus === "listening" ? <MicSignalMeter level={micLevel} mode={micMode} /> : null}
                 <div className="mt-3 grid gap-2">
                   <Button
                     variant={micStatus === "listening" ? "secondary" : "primary"}
@@ -1240,6 +1308,7 @@ export function SessionPlayer() {
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
                   {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
                 </p>
+                {micStatus === "listening" ? <MicSignalMeter level={micLevel} mode={micMode} /> : null}
                 {micFeedback ? (
                   <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
                     {micFeedback}
