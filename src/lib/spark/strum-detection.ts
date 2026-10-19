@@ -128,7 +128,7 @@ export function isHarmonicStrumSpectrum(
 export class StrumOnsetDetector {
   private readonly options: Required<StrumDetectorOptions>;
   private noiseFloor = 0.001;
-  private previousRms = 0;
+  private previousTailRms = 0;
   private lastDetectedMs = Number.NEGATIVE_INFINITY;
   private pending: { onsetMs: number; peakRms: number } | null = null;
 
@@ -151,12 +151,12 @@ export class StrumOnsetDetector {
   ): StrumOnset | null {
     if (!Number.isFinite(nowMs) || !samples.length) return null;
 
-    // The analyser uses a long 8192-sample FFT for chord pitch resolution.
-    // Measuring the whole rolling buffer smears a short real-world attack over
-    // ~170 ms and can make a clear ukulele/guitar strum fail the onset gate.
-    // Measure just the newest ~21 ms (at 48 kHz) for onset/cooldown decisions.
-    const newestSamples = Math.min(1024, samples.length);
-    const level = rmsLevel(samples.subarray(samples.length - newestSamples));
+    const level = rmsLevel(samples);
+    // The analyser returns a long rolling window for bass/chord resolution.
+    // Measure its newest ~10 ms separately so a real attack is not diluted by
+    // the preceding silence across the entire 8192-sample window.
+    const chunkSize = Math.max(64, Math.min(1024, Math.floor(samples.length / 4)));
+    const tailLevel = rmsLevel(samples.subarray(samples.length - chunkSize));
     let detected: StrumOnset | null = null;
 
     if (this.pending) {
@@ -185,13 +185,16 @@ export class StrumOnsetDetector {
       const threshold = Math.max(
         this.options.minimumLevel,
         this.noiseFloor * 2.6,
-        this.previousRms * 1.3,
+        this.previousTailRms * 1.3,
       );
       if (
-        level >= threshold &&
+        tailLevel >= threshold &&
         nowMs - this.lastDetectedMs >= this.options.cooldownMs
       ) {
-        this.pending = { onsetMs: nowMs, peakRms: level };
+        this.pending = {
+          onsetMs: nowMs - (chunkSize / sampleRate) * 500,
+          peakRms: level,
+        };
       } else if (
         level < Math.max(this.options.minimumLevel * 0.75, this.noiseFloor * 3)
       ) {
@@ -199,13 +202,13 @@ export class StrumOnsetDetector {
       }
     }
 
-    this.previousRms = level;
+    this.previousTailRms = tailLevel;
     return detected;
   }
 
   reset() {
     this.noiseFloor = 0.001;
-    this.previousRms = 0;
+    this.previousTailRms = 0;
     this.lastDetectedMs = Number.NEGATIVE_INFINITY;
     this.pending = null;
   }

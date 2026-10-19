@@ -29,8 +29,22 @@ import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
-import { StrumDirectionDetector, StrumOnsetDetector, type StrumDirectionEstimate } from "@/lib/spark/strum-detection";
-import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker, type AcousticInputMode } from "@/lib/spark/acoustic-input";
+import {
+  rmsLevel,
+  StrumDirectionDetector,
+  StrumOnsetDetector,
+  type StrumDirectionEstimate,
+} from "@/lib/spark/strum-detection";
+import {
+  AcousticAttackDetector,
+  acousticInputModeFor,
+  analyzeChordSpectrum,
+  assessChordPitches,
+  PercussionOnsetDetector,
+  PitchOnsetDetector,
+  PitchTracker,
+  type AcousticInputMode,
+} from "@/lib/spark/acoustic-input";
 import { RoleTag, RhythmRead, CriteriaList, HarmonyRead } from "@/components/udl-chrome";
 import { cn } from "@/lib/utils";
 import { hasInstrumentPattern } from "@/lib/spark/instrument-patterns";
@@ -80,6 +94,49 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; muted-chop quality and exact voicing are not graded yet.";
   }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
+}
+
+function micSignalThreshold(mode: AcousticInputMode) {
+  if (mode === "strum") return 0.008;
+  if (mode === "percussion") return 0.006;
+  return 0.003;
+}
+
+/** Shows whether live audio is reaching the analyser, separately from scoring. */
+function MicSignalMeter({ level, mode }: { level: number; mode: AcousticInputMode }) {
+  const percent = Math.max(0, Math.min(100, Math.round((level / 0.04) * 100)));
+  const threshold = micSignalThreshold(mode);
+  const message = level < 0.0015
+    ? "No audio level detected yet. Play a note, chord, or drum hit to test the microphone."
+    : level < threshold
+      ? "Audio is reaching the app, but the level is quiet for this detector. Move the mic closer or raise the input level."
+      : "Audio is reaching the app. Play in time with the cue; this meter confirms signal, not note accuracy.";
+
+  return (
+    <div className="mt-3 space-y-2">
+      <div className="flex items-center justify-between gap-3 text-xs text-muted">
+        <span>Live microphone level</span>
+        <span className="tabular">{percent}%</span>
+      </div>
+      <div
+        role="meter"
+        aria-label="Microphone input level"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={percent}
+        aria-valuetext={`${percent}% input level`}
+        className="h-2 overflow-hidden rounded-full bg-raised"
+      >
+        <div
+          className="h-full rounded-full bg-good transition-[width] duration-75"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+      <p role="status" aria-live="polite" className="text-xs leading-relaxed text-muted">
+        {message}
+      </p>
+    </div>
+  );
 }
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
@@ -181,6 +238,14 @@ export function SessionPlayer() {
   const inst = instrumentById(instrument);
 
   const item = session ? currentItem(session) : null;
+  const micTimeline = useMemo(() => item ? buildTimeline(item) : [], [item]);
+  const hasChordCues = Boolean(item && micTimeline.some((note) =>
+    (note.notes?.length ?? 0) > 1 ||
+    (!note.notes?.length && Boolean(note.chord && item.chords.includes(note.chord))),
+  ));
+  const hasSingleNoteCues = micTimeline.some((note) =>
+    note.notes?.length === 1 || note.expectedMidi !== undefined,
+  );
   const [phase, setPhase] = useState<Phase>("intro");
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<HitJudge | null>(null);
@@ -209,6 +274,8 @@ export function SessionPlayer() {
     surface: micSurface,
     pluckDrill: item !== null && isPluckDrill(item),
     hasPattern: item !== null && hasInstrumentPattern(item),
+    hasChordCues,
+    hasSingleNoteCues,
     lessonId: item?.lessonId,
   });
   const notesRef = useRef<NoteEvent[]>([]);
@@ -526,9 +593,19 @@ export function SessionPlayer() {
     setMicDetectedEvents(0);
     unlockAudio();
 
-    // Keep high FFT resolution for chord/pitch estimation. Attack detectors
-    // inspect the newest samples so a quick acoustic stroke is not smoothed away.
-    const mic = await startMicAnalyser(8192, selectedDeviceId);
+    // 8192 samples improves low-note and chord resolution; onset timestamps use the rolling window's newest chunk.
+    let mic: Awaited<ReturnType<typeof startMicAnalyser>>;
+    try {
+      mic = await startMicAnalyser(8192, selectedDeviceId);
+    } catch {
+      // Device/browser initialization may reject rather than return null.
+      // Never leave the UI locked in 'starting' with both retry and fallback disabled.
+      if (request === micRequestRef.current) {
+        setMicStatus("blocked");
+        setMicError("Microphone could not start. Check browser/device permissions, then retry or continue without scoring.");
+      }
+      return;
+    }
     if (request !== micRequestRef.current) {
       mic?.stop();
       return;
@@ -561,32 +638,30 @@ export function SessionPlayer() {
     const pitchDetector = new PitchOnsetDetector();
     const voicePitchTracker = new PitchTracker();
     const percussionDetector = new PercussionOnsetDetector();
+    const attackDetector = new AcousticAttackDetector();
     const timeData = new Float32Array(mic.analyser.fftSize);
     const spectrumData = new Float32Array(mic.analyser.frequencyBinCount);
     let activeMode = micModeRef.current;
     let activeItemId = micItemIdRef.current;
-    let lastMeterUpdateMs = Number.NEGATIVE_INFINITY;
+    let lastMeterUpdate = Number.NEGATIVE_INFINITY;
     let recognizedEvents = 0;
     micStopRef.current = () => {
       cancelAnimationFrame(micFrameRef.current);
       mic.stop();
     };
+    setMicLevel(0);
     setMicStatus("listening");
 
     const loop = (ts: number) => {
       if (request !== micRequestRef.current) return;
-      // Always sample the actual microphone, including before Count me in.
-      // A ready MediaStream is not proof that the selected mic receives sound.
+      // Read the input continuously, including during the intro/count-in. This
+      // makes permission and a live analyser signal distinguishable from actual
+      // scored note detection, which is enabled only during the play phase.
       mic.analyser.getFloatTimeDomainData(timeData);
-      if (ts - lastMeterUpdateMs >= 120) {
-        const newest = timeData.subarray(timeData.length - Math.min(1024, timeData.length));
-        let squared = 0;
-        for (let i = 0; i < newest.length; i++) squared += newest[i] * newest[i];
-        const level = Math.sqrt(squared / newest.length);
-        // Logarithmic display: -60 dBFS = empty, -18 dBFS = full.
-        const db = 20 * Math.log10(Math.max(level, 1e-8));
-        setMicLevel(Math.max(0, Math.min(100, Math.round((db + 60) * 100 / 42))));
-        lastMeterUpdateMs = ts;
+      const inputLevel = rmsLevel(timeData);
+      if (ts - lastMeterUpdate >= 80) {
+        setMicLevel(inputLevel);
+        lastMeterUpdate = ts;
       }
       if (phaseRef.current === "play" && requiresMicInputRef.current && !visualOnlyRef.current) {
         const mode = micModeRef.current;
@@ -599,6 +674,7 @@ export function SessionPlayer() {
           percussionDetector.reset();
           recognizedEvents = 0;
           setMicDetectedEvents(0);
+          attackDetector.reset();
           activeMode = mode;
           activeItemId = itemId;
         }
@@ -730,6 +806,9 @@ export function SessionPlayer() {
               attemptRef.current?.("pluck", inputIndex, onset.onsetMs, onset.midi, { frequencyHz: onset.frequencyHz });
             }
           }
+        } else if (mode === "attack") {
+          const onset = attackDetector.process(timeData, mic.ctx.sampleRate, ts);
+          if (onset) attemptRef.current?.("strum", undefined, onset.onsetMs);
         } else {
           const onset = percussionDetector.process(
             timeData,
@@ -741,8 +820,7 @@ export function SessionPlayer() {
           if (onset) {
             recognizedEvents += 1;
             setMicDetectedEvents(recognizedEvents);
-            if (mode === "percussion") attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
-            else attemptRef.current?.("strum", undefined, onset.onsetMs);
+            attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
           }
         }
       }
@@ -1112,25 +1190,12 @@ export function SessionPlayer() {
                       ? "Requesting microphone access…"
                       : micError ?? `Enable the microphone to score real ${acousticInstrumentLabel(instrument, inst.name)} input. Audio is analyzed locally, never recorded or uploaded.`}
                 </p>
+                {micStatus === "listening" ? <MicSignalMeter level={micLevel} mode={micMode} /> : null}
                 {micStatus === "listening" ? (
                   <div className="mt-3 space-y-2" aria-label="Microphone input diagnostics">
-                    <div className="flex items-center justify-between gap-2 text-xs text-muted">
-                      <span>Live microphone signal</span>
-                      <span className="tabular-nums">{micLevel > 0 ? `${micLevel}%` : "No signal"}</span>
-                    </div>
-                    <div
-                      role="progressbar"
-                      aria-label="Live microphone signal level"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={micLevel}
-                      className="h-2 overflow-hidden rounded-full bg-raised"
-                    >
-                      <div className="h-full rounded-full bg-ember transition-[width] duration-100" style={{ width: `${micLevel}%` }} />
-                    </div>
                     <p className="text-xs leading-relaxed text-muted">
-                      Using: {micInputName}. {micLevel === 0
-                        ? "Play your instrument beside this microphone. If this bar stays empty, select a different input below or check your system microphone permission."
+                      Using: {micInputName}. {micLevel < 0.0015
+                        ? "Play your instrument beside this microphone. If the meter stays empty, select a different input below or check your system microphone permission."
                         : "Audio is arriving. Detection and scoring begin after the count-in."}
                     </p>
                     {phase === "intro" && micDevices.length > 1 ? (
@@ -1333,23 +1398,14 @@ export function SessionPlayer() {
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
                   {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
                 </p>
+                {micStatus === "listening" ? <MicSignalMeter level={micLevel} mode={micMode} /> : null}
                 {!visualOnly && micStatus === "listening" ? (
                   <div className="mt-3 space-y-1">
                     <div className="flex justify-between gap-2 text-xs text-muted">
-                      <span>Live mic signal</span>
-                      <span>{micLevel}% · {micDetectedEvents} attacks recognized</span>
+                      <span>Attacks recognized</span>
+                      <span className="tabular-nums">{micDetectedEvents}</span>
                     </div>
-                    <div
-                      role="progressbar"
-                      aria-label="Live microphone signal level"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={micLevel}
-                      className="h-2 overflow-hidden rounded-full bg-raised"
-                    >
-                      <div className="h-full rounded-full bg-ember transition-[width] duration-100" style={{ width: `${micLevel}%` }} />
-                    </div>
-                    {micDetectedEvents === 0 && micLevel > 0 ? (
+                    {micDetectedEvents === 0 && micLevel >= 0.0015 ? (
                       <p className="text-xs text-muted">The microphone hears audio, but no playable attack has been recognized yet.</p>
                     ) : null}
                   </div>

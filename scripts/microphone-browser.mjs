@@ -27,10 +27,10 @@ try {
   assert.equal(await countIn.isEnabled(), false, "A silent/unconnected mic cannot be counted as scored input");
   await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
   await page.getByRole("button", { name: "Stop microphone", exact: true }).waitFor();
-  const meter = page.getByRole("progressbar", { name: "Live microphone signal level", exact: true });
+  const meter = page.getByRole("meter", { name: "Microphone input level" });
   await meter.waitFor();
   await page.waitForFunction(() => {
-    const meter = document.querySelector('[role="progressbar"][aria-label="Live microphone signal level"]');
+    const meter = document.querySelector('[role="meter"][aria-label="Microphone input level"]');
     return Number(meter?.getAttribute("aria-valuenow") ?? 0) > 0;
   }, { timeout: 10000 });
   const observed = Number(await meter.getAttribute("aria-valuenow"));
