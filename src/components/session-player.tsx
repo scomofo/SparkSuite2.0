@@ -22,6 +22,7 @@ import { comboCue, isComboGate } from "@/lib/spark/game";
 import { currentItem, isSessionDone } from "@/lib/spark/session";
 import { useSpark } from "@/store/spark";
 import { Button } from "@/components/ui/button";
+import { MicrophoneLevelMeter } from "@/components/microphone-level-meter";
 import { ChordDiagram } from "@/components/chord-diagram";
 import { DrumPads } from "@/components/drum-pads";
 import { useMidiDrums } from "@/components/use-midi-drums";
@@ -80,39 +81,6 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; muted-chop quality and exact voicing are not graded yet.";
   }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
-}
-
-function MicrophoneLevelMeter({ level }: { level: number }) {
-  const decibels = 20 * Math.log10(Math.max(level, 0.00001));
-  const percent = Math.max(0, Math.min(100, ((decibels + 60) / 48) * 100));
-  const hasSignal = level >= 0.002;
-
-  return (
-    <div className="mt-3 rounded-md bg-raised p-3">
-      <div className="mb-2 flex items-center justify-between gap-3 text-xs">
-        <span className="font-medium text-muted">Live microphone level</span>
-        <span className={hasSignal ? "text-good" : "text-dim"}>
-          {hasSignal ? "Audio reaching app" : "Very quiet — play a note"}
-        </span>
-      </div>
-      <div
-        role="meter"
-        aria-label="Live microphone input level"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={Math.round(percent)}
-        className="h-2 overflow-hidden rounded-full bg-border"
-      >
-        <div
-          className={hasSignal ? "h-full rounded-full bg-good transition-[width] duration-100" : "h-full rounded-full bg-muted transition-[width] duration-100"}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <p className="mt-2 text-xs leading-relaxed text-dim">
-        Play a few notes now. The meter confirms sound is reaching SparkSuite; it does not by itself mean a note has been recognized.
-      </p>
-    </div>
-  );
 }
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
