@@ -134,7 +134,7 @@ export class StrumOnsetDetector {
 
   constructor(options: StrumDetectorOptions = {}) {
     this.options = {
-      minimumLevel: options.minimumLevel ?? 0.008,
+      minimumLevel: options.minimumLevel ?? 0.004,
       cooldownMs: options.cooldownMs ?? 140,
       confirmationMs: options.confirmationMs ?? 28,
       maxConfirmationMs: options.maxConfirmationMs ?? 112,

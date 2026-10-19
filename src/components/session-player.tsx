@@ -263,6 +263,10 @@ export function SessionPlayer() {
   const [micError, setMicError] = useState<string | null>(null);
   const [micFeedback, setMicFeedback] = useState<string | null>(null);
   const [micLevel, setMicLevel] = useState(0);
+  const [micDetectedEvents, setMicDetectedEvents] = useState(0);
+  const [micInputName, setMicInputName] = useState("");
+  const [micDeviceId, setMicDeviceId] = useState("");
+  const [micDevices, setMicDevices] = useState<MediaDeviceInfo[]>([]);
   const [visualOnly, setVisualOnly] = useState(false);
   const micSurface = item?.surface ?? inst.surface;
   const requiresMicInput = supportsMicrophoneInput(micSurface);
@@ -340,6 +344,7 @@ export function SessionPlayer() {
     setBeatN(1);
     setItemSummary(null);
     setMicFeedback(null);
+    setMicDetectedEvents(0);
     setExpectedString(null);
     setLiveChord(item?.chords[0] ?? "");
     setModeling(false);
@@ -580,19 +585,21 @@ export function SessionPlayer() {
 
   attemptRef.current = attempt;
 
-  const startAcousticMic = useCallback(async () => {
+  const startAcousticMic = useCallback(async (selectedDeviceId?: string) => {
     if (!requiresMicInput) return;
     const request = ++micRequestRef.current;
     micStopRef.current?.();
     micStopRef.current = null;
     setMicStatus("starting");
     setMicError(null);
+    setMicLevel(0);
+    setMicDetectedEvents(0);
     unlockAudio();
 
     // 8192 samples improves low-note and chord resolution; onset timestamps use the rolling window's newest chunk.
     let mic: Awaited<ReturnType<typeof startMicAnalyser>>;
     try {
-      mic = await startMicAnalyser(8192);
+      mic = await startMicAnalyser(8192, selectedDeviceId);
     } catch {
       // Device/browser initialization may reject rather than return null.
       // Never leave the UI locked in 'starting' with both retry and fallback disabled.
@@ -608,8 +615,24 @@ export function SessionPlayer() {
     }
     if (!mic) {
       setMicStatus("blocked");
-      setMicError("Microphone access was blocked or unavailable. Allow access in your browser and try again.");
+      setMicError(window.isSecureContext
+        ? "Microphone access failed. Check browser permissions, make sure a microphone is connected, then try again."
+        : "Microphones require HTTPS or localhost. Open SparkSuite at a secure address, then try again.");
       return;
+    }
+
+    const audioTrack = mic.stream.getAudioTracks()[0];
+    setMicInputName(audioTrack?.label || "Default microphone");
+    setMicDeviceId(audioTrack?.getSettings().deviceId || selectedDeviceId || "");
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      if (request !== micRequestRef.current) {
+        mic.stop();
+        return;
+      }
+      setMicDevices(devices.filter((device) => device.kind === "audioinput"));
+    } catch {
+      setMicDevices([]);
     }
 
     mic.analyser.smoothingTimeConstant = 0.2;
@@ -624,6 +647,7 @@ export function SessionPlayer() {
     let activeMode = micModeRef.current;
     let activeItemId = micItemIdRef.current;
     let lastMeterUpdate = Number.NEGATIVE_INFINITY;
+    let recognizedEvents = 0;
     micStopRef.current = () => {
       cancelAnimationFrame(micFrameRef.current);
       mic.stop();
@@ -651,6 +675,8 @@ export function SessionPlayer() {
           pitchDetector.reset();
           voicePitchTracker.reset();
           percussionDetector.reset();
+          recognizedEvents = 0;
+          setMicDetectedEvents(0);
           attackDetector.reset();
           activeMode = mode;
           activeItemId = itemId;
@@ -667,6 +693,8 @@ export function SessionPlayer() {
             ts,
           );
           if (onset) {
+            recognizedEvents += 1;
+            setMicDetectedEvents(recognizedEvents);
             const direction = directionDetector.classify(onset.onsetMs);
             attemptRef.current?.("strum", undefined, onset.onsetMs, undefined, {
               spectrumDb: spectrumData,
@@ -757,6 +785,8 @@ export function SessionPlayer() {
               maximumHz,
             );
             if (onset) {
+              recognizedEvents += 1;
+              setMicDetectedEvents(recognizedEvents);
               let inputIndex = onset.midi;
               if (micSurfaceRef.current === "strings") {
                 const nearest = nearestString(
@@ -790,7 +820,11 @@ export function SessionPlayer() {
             mic.analyser.fftSize,
             ts,
           );
-          if (onset) attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
+          if (onset) {
+            recognizedEvents += 1;
+            setMicDetectedEvents(recognizedEvents);
+            attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
+          }
         }
       }
       micFrameRef.current = requestAnimationFrame(loop);
@@ -1162,6 +1196,37 @@ export function SessionPlayer() {
                       : micError ?? `Enable the microphone to score real ${acousticInstrumentLabel(instrument, inst.name)} input. Audio is analyzed locally, never recorded or uploaded.`}
                 </p>
                 {micStatus === "listening" ? <MicSignalMeter level={micLevel} mode={micMode} /> : null}
+                {micStatus === "listening" ? (
+                  <div className="mt-3 space-y-2" aria-label="Microphone input diagnostics">
+                    <p className="text-xs leading-relaxed text-muted">
+                      Using: {micInputName}. {micLevel < 0.0015
+                        ? "Play your instrument beside this microphone. If the meter stays empty, select a different input below or check your system microphone permission."
+                        : "Audio is arriving. Detection and scoring begin after the count-in."}
+                    </p>
+                    {phase === "intro" && micDevices.length > 1 ? (
+                      <label className="block text-xs text-muted">
+                        Microphone source
+                        <select
+                          aria-label="Microphone source"
+                          className="mt-1 w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-fg"
+                          value={micDevices.some((device) => device.deviceId === micDeviceId) ? micDeviceId : ""}
+                          onChange={(event) => {
+                            const nextDeviceId = event.currentTarget.value;
+                            stopAcousticMic();
+                            void startAcousticMic(nextDeviceId || undefined);
+                          }}
+                        >
+                          <option value="">System default</option>
+                          {micDevices.filter((device) => device.deviceId && device.deviceId !== "default").map((device, index) => (
+                            <option key={device.deviceId} value={device.deviceId}>
+                              {device.label || `Microphone ${index + 1}`}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    ) : null}
+                  </div>
+                ) : null}
                 <div className="mt-3 grid gap-2">
                   <Button
                     variant={micStatus === "listening" ? "secondary" : "primary"}
@@ -1339,6 +1404,17 @@ export function SessionPlayer() {
                   {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
                 </p>
                 {micStatus === "listening" ? <MicSignalMeter level={micLevel} mode={micMode} /> : null}
+                {!visualOnly && micStatus === "listening" ? (
+                  <div className="mt-3 space-y-1">
+                    <div className="flex justify-between gap-2 text-xs text-muted">
+                      <span>Attacks recognized</span>
+                      <span className="tabular-nums">{micDetectedEvents}</span>
+                    </div>
+                    {micDetectedEvents === 0 && micLevel >= 0.0015 ? (
+                      <p className="text-xs text-muted">The microphone hears audio, but no playable attack has been recognized yet.</p>
+                    ) : null}
+                  </div>
+                ) : null}
                 {micFeedback ? (
                   <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
                     {micFeedback}

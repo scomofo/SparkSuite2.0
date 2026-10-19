@@ -434,6 +434,31 @@ describe("acoustic strum detection", () => {
     assert.equal(event.onsetMs, 100 - (1024 / sampleRate) * 500);
   });
 
+  it("recognizes a short real strum in a long rolling 8192-sample analyser buffer", () => {
+    const largeSize = 8192;
+    const detector = new StrumOnsetDetector();
+    const spectrum = new Float32Array(largeSize / 2).fill(-100);
+    for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25]) {
+      const bin = Math.round(hz * largeSize / sampleRate);
+      spectrum[bin] = -24;
+      spectrum[bin - 1] = -39;
+      spectrum[bin + 1] = -39;
+    }
+    // Only the newest 600 samples contain sound. The full-frame RMS is below
+    // the 0.008 gate, even though the actual strum is audible. Onset uses
+    // main's chunk-backdating, as in the test above.
+    const frame = new Float32Array(largeSize);
+    for (let i = largeSize - 600; i < largeSize; i++) {
+      frame[i] = 0.04 * Math.sin((2 * Math.PI * 220 * i) / sampleRate);
+    }
+    assert.ok(rmsLevel(frame) < 0.008, "long-window RMS hides the real attack");
+    assert.ok(rmsLevel(frame.subarray(largeSize - 1024)) > 0.008);
+    assert.equal(detector.process(frame, spectrum, sampleRate, largeSize, 100), null);
+    const hit = detector.process(frame, spectrum, sampleRate, largeSize, 135);
+    assert.ok(hit, "newest audio must produce a confirmed onset");
+    assert.equal(hit.onsetMs, 100 - (1024 / sampleRate) * 500);
+  });
+
   it("rejects a short broadband click without sustained harmonic energy", () => {
     const detector = new StrumOnsetDetector();
     const flatSpectrum = new Float32Array(fftSize / 2).fill(-30);
