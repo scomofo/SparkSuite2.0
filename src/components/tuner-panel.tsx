@@ -3,7 +3,7 @@ import { pluck, pianoTone, drumHit, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById } from "@/lib/spark/instruments";
 import { analyserSizeFor, nearestString, startMicAnalyser, yinPitchFast } from "@/lib/spark/tuner";
 import { Button } from "@/components/ui/button";
-import { MicrophoneLevelMeter } from "@/components/microphone-level-meter";
+import { MicSignalMeter } from "@/components/mic-signal-meter";
 import { rmsLevel } from "@/lib/spark/strum-detection";
 import { DrumPads } from "@/components/drum-pads";
 import { useSpark } from "@/store/spark";
@@ -140,7 +140,7 @@ export function TunerPanel() {
       <Button variant={live ? "secondary" : "primary"} onClick={() => (live ? stopRef.current?.() : void listen())}>
         {live ? "Stop mic" : "Listen with mic"}
       </Button>
-      {live ? <MicrophoneLevelMeter level={micLevel} /> : null}
+      {live ? <MicSignalMeter level={micLevel} /> : null}
       <div
         className="grid w-full gap-2"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
@@ -264,7 +264,7 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
       >
         {live ? "Stop mic" : "Match with mic"}
       </Button>
-      {live ? <MicrophoneLevelMeter level={micLevel} /> : null}
+      {live ? <MicSignalMeter level={micLevel} /> : null}
       <button
         type="button"
         onClick={() => pianoTone(targetFreq, undefined, 0.35)}

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { isMuted } from "@/lib/spark/audio";
 import { playSharedPhrase, sharedPhrasePattern } from "@/lib/spark/shared-phrase";
 import { notifyProfileChanged } from "@/lib/spark/profile-events";
 
@@ -30,7 +29,6 @@ export function SharedPhrase({ instrument = "theory" }: { instrument?: string })
   const [showGuide, setShowGuide] = useState(true);
   const playback = useRef<{ stop: () => void } | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const muted = isMuted();
   const stop = () => {
     playback.current?.stop();
     playback.current = null;
@@ -64,9 +62,6 @@ export function SharedPhrase({ instrument = "theory" }: { instrument?: string })
       stop();
     };
   }, []);
-  useEffect(() => {
-    if (muted) stop();
-  }, [muted]);
   const save = (next: number) => {
     stop();
     setStage(next);
@@ -80,10 +75,6 @@ export function SharedPhrase({ instrument = "theory" }: { instrument?: string })
   };
   const hear = () => {
     stop();
-    if (muted) {
-      setNotice("Sound is muted. Use the written count or change your sound settings.");
-      return;
-    }
     const phrase = sharedPhrasePattern({ slow, oneBar });
     try {
       playback.current = playSharedPhrase(phrase);
@@ -144,7 +135,7 @@ export function SharedPhrase({ instrument = "theory" }: { instrument?: string })
           on beat 1; there is no count-in. The audio uses one repeated note to demonstrate timing.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Button onClick={playing ? stop : hear} disabled={muted && !playing}>
+          <Button onClick={playing ? stop : hear}>
             {playing ? "Stop phrase" : oneBar ? "Hear bar 2" : "Hear four bars"}
           </Button>
           <Button
@@ -171,7 +162,6 @@ export function SharedPhrase({ instrument = "theory" }: { instrument?: string })
             {showGuide ? "Hide count" : "Show count"}
           </Button>
         </div>
-        {muted ? <p className="text-sm">Sound is muted. The written count is available.</p> : null}
         <label className="block text-sm">
           One observation (optional)
           <textarea

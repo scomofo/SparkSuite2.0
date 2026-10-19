@@ -29,7 +29,15 @@ import { useMidiDrums } from "@/components/use-midi-drums";
 import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
+import { MicSignalMeter } from "@/components/mic-signal-meter";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
+import {
+  activeInputDeviceId,
+  initMicrophone,
+  listAudioInputs,
+  listedInputDevices,
+  selectableDeviceId,
+} from "@/lib/spark/mic-session";
 import {
   rmsLevel,
   StrumDirectionDetector,
@@ -95,49 +103,6 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; muted-chop quality and exact voicing are not graded yet.";
   }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
-}
-
-function micSignalThreshold(mode: AcousticInputMode) {
-  if (mode === "strum") return 0.008;
-  if (mode === "percussion") return 0.006;
-  return 0.003;
-}
-
-/** Shows whether live audio is reaching the analyser, separately from scoring. */
-function MicSignalMeter({ level, mode }: { level: number; mode: AcousticInputMode }) {
-  const percent = Math.max(0, Math.min(100, Math.round((level / 0.04) * 100)));
-  const threshold = micSignalThreshold(mode);
-  const message = level < 0.0015
-    ? "No audio level detected yet. Play a note, chord, or drum hit to test the microphone."
-    : level < threshold
-      ? "Audio is reaching the app, but the level is quiet for this detector. Move the mic closer or raise the input level."
-      : "Audio is reaching the app. Play in time with the cue; this meter confirms signal, not note accuracy.";
-
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="flex items-center justify-between gap-3 text-xs text-muted">
-        <span>Live microphone level</span>
-        <span className="tabular">{percent}%</span>
-      </div>
-      <div
-        role="meter"
-        aria-label="Microphone input level"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent}
-        aria-valuetext={`${percent}% input level`}
-        className="h-2 overflow-hidden rounded-full bg-raised"
-      >
-        <div
-          className="h-full rounded-full bg-good transition-[width] duration-75"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <p role="status" aria-live="polite" className="text-xs leading-relaxed text-muted">
-        {message}
-      </p>
-    </div>
-  );
 }
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
@@ -250,6 +215,8 @@ export function SessionPlayer() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<HitJudge | null>(null);
+  /** Latest judged result, held as text in the header status line; the canvas flash alone is gone in 140 ms. */
+  const [lastVerdict, setLastVerdict] = useState<HitJudge | null>(null);
   const [count, setCount] = useState(4);
   const [beatN, setBeatN] = useState(1);
   const [activeString, setActiveString] = useState<number | null>(null);
@@ -340,6 +307,7 @@ export function SessionPlayer() {
   const resetItem = useCallback(() => {
     setPhase("intro");
     setFlash(null);
+    setLastVerdict(null);
     setCount(4);
     setBeatN(1);
     setItemSummary(null);
@@ -423,6 +391,7 @@ export function SessionPlayer() {
   const onJudge = useCallback(
     (judge: HitJudge, soundFeedback = true) => {
       setFlash(judge);
+      setLastVerdict(judge);
       if (soundFeedback) hitSfx(judge);
       window.setTimeout(() => setFlash(null), 140);
       if (judge === "miss") {
@@ -601,44 +570,30 @@ export function SessionPlayer() {
     setMicDetectedEvents(0);
     unlockAudio();
 
-    // 8192 samples improves low-note and chord resolution; onset timestamps use the rolling window's newest chunk.
-    let mic: Awaited<ReturnType<typeof startMicAnalyser>>;
-    try {
-      mic = await startMicAnalyser(8192, selectedDeviceId);
-    } catch {
-      // Device/browser initialization may reject rather than return null.
-      // Never leave the UI locked in 'starting' with both retry and fallback disabled.
-      if (request === micRequestRef.current) {
-        setMicStatus("blocked");
-        setMicError("Microphone could not start. Check browser/device permissions, then retry or continue without scoring.");
-      }
-      return;
-    }
-    if (request !== micRequestRef.current) {
-      mic?.stop();
-      return;
-    }
-    if (!mic) {
+    const init = await initMicrophone({
+      startAnalyser: startMicAnalyser,
+      deviceId: selectedDeviceId,
+      request,
+      isCurrent: (candidate) => candidate === micRequestRef.current,
+      isSecureContext: window.isSecureContext,
+    });
+    if (init.status === "superseded") return;
+    if (init.status === "blocked") {
       setMicStatus("blocked");
-      setMicError(window.isSecureContext
-        ? "Microphone access failed. Check browser permissions, make sure a microphone is connected, then try again."
-        : "Microphones require HTTPS or localhost. Open SparkSuite at a secure address, then try again.");
+      setMicError(init.error);
       return;
     }
+    const mic = init.mic;
 
     const audioTrack = mic.stream.getAudioTracks()[0];
     setMicInputName(audioTrack?.label || "Default microphone");
-    setMicDeviceId(audioTrack?.getSettings().deviceId || selectedDeviceId || "");
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      if (request !== micRequestRef.current) {
-        mic.stop();
-        return;
-      }
-      setMicDevices(devices.filter((device) => device.kind === "audioinput"));
-    } catch {
-      setMicDevices([]);
+    setMicDeviceId(activeInputDeviceId(audioTrack?.getSettings().deviceId, selectedDeviceId));
+    const devices = await listAudioInputs(() => navigator.mediaDevices.enumerateDevices());
+    if (request !== micRequestRef.current) {
+      mic.stop();
+      return;
     }
+    setMicDevices(devices);
 
     mic.analyser.smoothingTimeConstant = 0.2;
     const strumDetector = new StrumOnsetDetector();
@@ -1117,6 +1072,7 @@ export function SessionPlayer() {
           <div>
             {session.itemHits} hit · {session.itemMisses} miss
           </div>
+          {lastVerdict ? <div>last: {lastVerdict}</div> : null}
         </div>
       </header>
       {!checkpointSaved ? <p role="status" className="mx-auto max-w-lg px-5 pb-3 text-sm text-ember">This browser could not save your place. Keep this tab open to finish your loop.</p> : null}
@@ -1214,7 +1170,7 @@ export function SessionPlayer() {
                         <select
                           aria-label="Microphone source"
                           className="mt-1 w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-fg"
-                          value={micDevices.some((device) => device.deviceId === micDeviceId) ? micDeviceId : ""}
+                          value={selectableDeviceId(micDevices, micDeviceId)}
                           onChange={(event) => {
                             const nextDeviceId = event.currentTarget.value;
                             stopAcousticMic();
@@ -1222,7 +1178,7 @@ export function SessionPlayer() {
                           }}
                         >
                           <option value="">System default</option>
-                          {micDevices.filter((device) => device.deviceId && device.deviceId !== "default").map((device, index) => (
+                          {listedInputDevices(micDevices).map((device, index) => (
                             <option key={device.deviceId} value={device.deviceId}>
                               {device.label || `Microphone ${index + 1}`}
                             </option>
