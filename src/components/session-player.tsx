@@ -32,6 +32,13 @@ import { RhythmHighway } from "@/components/rhythm-highway";
 import { MicSignalMeter } from "@/components/mic-signal-meter";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
 import {
+  activeInputDeviceId,
+  initMicrophone,
+  listAudioInputs,
+  listedInputDevices,
+  selectableDeviceId,
+} from "@/lib/spark/mic-session";
+import {
   rmsLevel,
   StrumDirectionDetector,
   StrumOnsetDetector,
@@ -559,44 +566,30 @@ export function SessionPlayer() {
     setMicDetectedEvents(0);
     unlockAudio();
 
-    // 8192 samples improves low-note and chord resolution; onset timestamps use the rolling window's newest chunk.
-    let mic: Awaited<ReturnType<typeof startMicAnalyser>>;
-    try {
-      mic = await startMicAnalyser(8192, selectedDeviceId);
-    } catch {
-      // Device/browser initialization may reject rather than return null.
-      // Never leave the UI locked in 'starting' with both retry and fallback disabled.
-      if (request === micRequestRef.current) {
-        setMicStatus("blocked");
-        setMicError("Microphone could not start. Check browser/device permissions, then retry or continue without scoring.");
-      }
-      return;
-    }
-    if (request !== micRequestRef.current) {
-      mic?.stop();
-      return;
-    }
-    if (!mic) {
+    const init = await initMicrophone({
+      startAnalyser: startMicAnalyser,
+      deviceId: selectedDeviceId,
+      request,
+      isCurrent: (candidate) => candidate === micRequestRef.current,
+      isSecureContext: window.isSecureContext,
+    });
+    if (init.status === "superseded") return;
+    if (init.status === "blocked") {
       setMicStatus("blocked");
-      setMicError(window.isSecureContext
-        ? "Microphone access failed. Check browser permissions, make sure a microphone is connected, then try again."
-        : "Microphones require HTTPS or localhost. Open SparkSuite at a secure address, then try again.");
+      setMicError(init.error);
       return;
     }
+    const mic = init.mic;
 
     const audioTrack = mic.stream.getAudioTracks()[0];
     setMicInputName(audioTrack?.label || "Default microphone");
-    setMicDeviceId(audioTrack?.getSettings().deviceId || selectedDeviceId || "");
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      if (request !== micRequestRef.current) {
-        mic.stop();
-        return;
-      }
-      setMicDevices(devices.filter((device) => device.kind === "audioinput"));
-    } catch {
-      setMicDevices([]);
+    setMicDeviceId(activeInputDeviceId(audioTrack?.getSettings().deviceId, selectedDeviceId));
+    const devices = await listAudioInputs(() => navigator.mediaDevices.enumerateDevices());
+    if (request !== micRequestRef.current) {
+      mic.stop();
+      return;
     }
+    setMicDevices(devices);
 
     mic.analyser.smoothingTimeConstant = 0.2;
     const strumDetector = new StrumOnsetDetector();
@@ -1172,7 +1165,7 @@ export function SessionPlayer() {
                         <select
                           aria-label="Microphone source"
                           className="mt-1 w-full rounded-md border border-border bg-surface px-2 py-2 text-sm text-fg"
-                          value={micDevices.some((device) => device.deviceId === micDeviceId) ? micDeviceId : ""}
+                          value={selectableDeviceId(micDevices, micDeviceId)}
                           onChange={(event) => {
                             const nextDeviceId = event.currentTarget.value;
                             stopAcousticMic();
@@ -1180,7 +1173,7 @@ export function SessionPlayer() {
                           }}
                         >
                           <option value="">System default</option>
-                          {micDevices.filter((device) => device.deviceId && device.deviceId !== "default").map((device, index) => (
+                          {listedInputDevices(micDevices).map((device, index) => (
                             <option key={device.deviceId} value={device.deviceId}>
                               {device.label || `Microphone ${index + 1}`}
                             </option>
