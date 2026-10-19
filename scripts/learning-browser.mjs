@@ -135,6 +135,9 @@ try {
   await page.getByRole("heading", { name: "That step counts.", exact: true }).waitFor();
   await page.getByRole("link", { name: "Done for now", exact: true }).click();
   await page.getByRole("link", { name: "Learn", exact: true }).click();
+  // Returning from the home page intentionally lands on the learning overview;
+  // resume the saved lesson through its explicit primary action.
+  await page.getByRole("button", { name: "Continue where I left off", exact: true }).click();
   await page.getByRole("button", { name: "Let me try it", exact: true }).waitFor();
   assert.equal(
     await page.evaluate(() => document.activeElement?.tagName),
