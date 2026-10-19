@@ -7,9 +7,8 @@ const url = process.argv[2] ?? "http://127.0.0.1:8083";
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
-  page.on("pageerror", (error) => {
-    throw error;
-  });
+  const pageErrors = [];
+  page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.addInitScript(() => {
     const mediaDevices = navigator.mediaDevices;
     Object.defineProperty(mediaDevices, "getUserMedia", {
@@ -74,6 +73,7 @@ try {
     test?.oscillator.stop();
     await test?.context.close();
   });
+  assert.deepEqual(pageErrors, [], `unexpected browser errors: ${pageErrors.join("; ")}`);
   console.log(JSON.stringify({ ok: true, level, quietLevel, message: "live mic signal reached and left the analyser" }));
 } finally {
   await browser.close();
