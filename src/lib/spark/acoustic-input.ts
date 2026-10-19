@@ -268,7 +268,7 @@ export class PitchOnsetDetector {
     ) return null;
     this.lastAnalysisMs = nowMs;
 
-    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 4)));
+    const chunkSize = Math.max(64, Math.min(1024, Math.floor(samples.length / 4)));
     const tailStart = samples.length - chunkSize;
     const previousStart = tailStart - chunkSize;
     const tailRms = rmsLevel(samples.subarray(tailStart));
