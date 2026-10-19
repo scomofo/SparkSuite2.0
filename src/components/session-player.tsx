@@ -535,7 +535,9 @@ export function SessionPlayer() {
     }
     if (!mic) {
       setMicStatus("blocked");
-      setMicError("Microphone access was blocked or unavailable. Allow access in your browser and try again.");
+      setMicError(window.isSecureContext
+        ? "Microphone access failed. Check browser permissions, make sure a microphone is connected, then try again."
+        : "Microphones require HTTPS or localhost. Open SparkSuite at a secure address, then try again.");
       return;
     }
 
