@@ -215,6 +215,8 @@ export function SessionPlayer() {
   const [phase, setPhase] = useState<Phase>("intro");
   const [combo, setCombo] = useState(0);
   const [flash, setFlash] = useState<HitJudge | null>(null);
+  /** Latest judged result, held as text in the header status line; the canvas flash alone is gone in 140 ms. */
+  const [lastVerdict, setLastVerdict] = useState<HitJudge | null>(null);
   const [count, setCount] = useState(4);
   const [beatN, setBeatN] = useState(1);
   const [activeString, setActiveString] = useState<number | null>(null);
@@ -305,6 +307,7 @@ export function SessionPlayer() {
   const resetItem = useCallback(() => {
     setPhase("intro");
     setFlash(null);
+    setLastVerdict(null);
     setCount(4);
     setBeatN(1);
     setItemSummary(null);
@@ -388,6 +391,7 @@ export function SessionPlayer() {
   const onJudge = useCallback(
     (judge: HitJudge, soundFeedback = true) => {
       setFlash(judge);
+      setLastVerdict(judge);
       if (soundFeedback) hitSfx(judge);
       window.setTimeout(() => setFlash(null), 140);
       if (judge === "miss") {
@@ -1068,6 +1072,7 @@ export function SessionPlayer() {
           <div>
             {session.itemHits} hit · {session.itemMisses} miss
           </div>
+          {lastVerdict ? <div>last: {lastVerdict}</div> : null}
         </div>
       </header>
       {!checkpointSaved ? <p role="status" className="mx-auto max-w-lg px-5 pb-3 text-sm text-ember">This browser could not save your place. Keep this tab open to finish your loop.</p> : null}
