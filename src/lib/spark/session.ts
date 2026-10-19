@@ -29,6 +29,17 @@ export function startSession(progress: ProgressState, plan?: DailyPlan): LiveSes
   };
 }
 
+/** Launching an already-active daily loop must not discard live attempts.
+ * The explicit pause action owns resetting an unfinished exercise.
+ */
+export function resumeOrStartSession(
+  progress: ProgressState,
+  plan: DailyPlan,
+  active: LiveSession | null,
+): LiveSession {
+  return active?.plan.date === plan.date ? active : startSession(progress, plan);
+}
+
 export function currentItem(session: LiveSession): PlanItem | null {
   return session.plan.items[session.index] ?? null;
 }
