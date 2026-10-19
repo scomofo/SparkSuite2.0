@@ -519,7 +519,18 @@ export function SessionPlayer() {
     unlockAudio();
 
     // 8192 samples improves low-note and chord resolution; onset timestamps use the rolling window's newest chunk.
-    const mic = await startMicAnalyser(8192);
+    let mic: Awaited<ReturnType<typeof startMicAnalyser>>;
+    try {
+      mic = await startMicAnalyser(8192);
+    } catch {
+      // Device/browser initialization may reject rather than return null.
+      // Never leave the UI locked in 'starting' with both retry and fallback disabled.
+      if (request === micRequestRef.current) {
+        setMicStatus("blocked");
+        setMicError("Microphone could not start. Check browser/device permissions, then retry or continue without scoring.");
+      }
+      return;
+    }
     if (request !== micRequestRef.current) {
       mic?.stop();
       return;
