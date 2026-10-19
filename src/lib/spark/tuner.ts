@@ -123,6 +123,14 @@ export async function startMicAnalyser(fftSize = 2048, deviceId?: string): Promi
     const analyser = ctx.createAnalyser();
     analyser.fftSize = fftSize;
     src.connect(analyser);
+    // Keep the microphone's WebAudio graph connected to a rendering sink.
+    // Some browsers can suspend processing of an analyser-only dangling graph.
+    // The zero-gain sink ensures live samples without playing the mic into the
+    // speakers (which would create howl/echo and corrupt instrument detection).
+    const silentSink = ctx.createGain();
+    silentSink.gain.value = 0;
+    analyser.connect(silentSink);
+    silentSink.connect(ctx.destination);
     const activeStream = stream;
     const activeContext = ctx;
     return {
@@ -131,6 +139,9 @@ export async function startMicAnalyser(fftSize = 2048, deviceId?: string): Promi
       stream,
       stop() {
         activeStream.getTracks().forEach((t) => t.stop());
+        src.disconnect();
+        analyser.disconnect();
+        silentSink.disconnect();
         void activeContext.close();
       },
     };
