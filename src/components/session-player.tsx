@@ -227,7 +227,7 @@ export function SessionPlayer() {
   const micTimeline = useMemo(() => item ? buildTimeline(item) : [], [item]);
   const hasChordCues = Boolean(item && micTimeline.some((note) =>
     (note.notes?.length ?? 0) > 1 ||
-    Boolean(note.chord && item.chords.includes(note.chord)),
+    (!note.notes?.length && Boolean(note.chord && item.chords.includes(note.chord))),
   ));
   const hasSingleNoteCues = micTimeline.some((note) =>
     note.notes?.length === 1 || note.expectedMidi !== undefined,
