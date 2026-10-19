@@ -26,7 +26,7 @@ import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
-import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
+import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, rmsLevel, StrumOnsetDetector } from "./strum-detection.ts";
 import { AcousticAttackDetector, acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
@@ -386,10 +386,10 @@ describe("acoustic strum detection", () => {
     });
   }
 
-  function chordSpectrum() {
-    const spectrum = new Float32Array(fftSize / 2).fill(-100);
+  function chordSpectrum(size = fftSize) {
+    const spectrum = new Float32Array(size / 2).fill(-100);
     for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25, 784, 880, 1046.5]) {
-      const center = Math.round((hz * fftSize) / sampleRate);
+      const center = Math.round((hz * size) / sampleRate);
       for (let offset = -1; offset <= 1; offset++) {
         const index = center + offset;
         if (index >= 0 && index < spectrum.length) {
@@ -409,8 +409,28 @@ describe("acoustic strum detection", () => {
     assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, 100), null);
     const event = detector.process(frame, spectrum, sampleRate, fftSize, 132);
     assert.ok(event);
-    assert.equal(event.onsetMs, 100);
+    assert.equal(event.onsetMs, 100 - (512 / sampleRate) * 500);
     assert.ok(event.level > 0.008);
+  });
+
+  it("finds a real attack in the newest chunk even when the long-window RMS is quiet", () => {
+    const detector = new StrumOnsetDetector();
+    const longSize = 8192;
+    const samples = new Float32Array(longSize);
+    for (let i = longSize - 512; i < longSize; i++) {
+      const t = (2 * Math.PI * i) / sampleRate;
+      samples[i] =
+        0.02 * Math.sin(196 * t) +
+        0.02 * Math.sin(261.63 * t) +
+        0.02 * Math.sin(329.63 * t) +
+        0.02 * Math.sin(440 * t);
+    }
+    assert.ok(rmsLevel(samples) < 0.008, "the rolling-window RMS is below the old attack threshold");
+    const spectrum = chordSpectrum(longSize);
+    assert.equal(detector.process(samples, spectrum, sampleRate, longSize, 100), null);
+    const event = detector.process(samples, spectrum, sampleRate, longSize, 132);
+    assert.ok(event, "the short, fresh chord attack should be recognized");
+    assert.equal(event.onsetMs, 100 - (512 / sampleRate) * 500);
   });
 
   it("rejects a short broadband click without sustained harmonic energy", () => {
