@@ -29,6 +29,7 @@ import { useMidiDrums } from "@/components/use-midi-drums";
 import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
+import { MicSignalMeter } from "@/components/mic-signal-meter";
 import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
 import {
   rmsLevel,
@@ -95,49 +96,6 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Play each ringing stroke or muted chop on the cue. Attack timing is scored; muted-chop quality and exact voicing are not graded yet.";
   }
   return `Play a real note on your ${label} on the cue. Pitch is checked when the exercise provides a target.`;
-}
-
-function micSignalThreshold(mode: AcousticInputMode) {
-  if (mode === "strum") return 0.008;
-  if (mode === "percussion") return 0.006;
-  return 0.003;
-}
-
-/** Shows whether live audio is reaching the analyser, separately from scoring. */
-function MicSignalMeter({ level, mode }: { level: number; mode: AcousticInputMode }) {
-  const percent = Math.max(0, Math.min(100, Math.round((level / 0.04) * 100)));
-  const threshold = micSignalThreshold(mode);
-  const message = level < 0.0015
-    ? "No audio level detected yet. Play a note, chord, or drum hit to test the microphone."
-    : level < threshold
-      ? "Audio is reaching the app, but the level is quiet for this detector. Move the mic closer or raise the input level."
-      : "Audio is reaching the app. Play in time with the cue; this meter confirms signal, not note accuracy.";
-
-  return (
-    <div className="mt-3 space-y-2">
-      <div className="flex items-center justify-between gap-3 text-xs text-muted">
-        <span>Live microphone level</span>
-        <span className="tabular">{percent}%</span>
-      </div>
-      <div
-        role="meter"
-        aria-label="Microphone input level"
-        aria-valuemin={0}
-        aria-valuemax={100}
-        aria-valuenow={percent}
-        aria-valuetext={`${percent}% input level`}
-        className="h-2 overflow-hidden rounded-full bg-raised"
-      >
-        <div
-          className="h-full rounded-full bg-good transition-[width] duration-75"
-          style={{ width: `${percent}%` }}
-        />
-      </div>
-      <p role="status" aria-live="polite" className="text-xs leading-relaxed text-muted">
-        {message}
-      </p>
-    </div>
-  );
 }
 
 const WHITE_C4 = [60, 62, 64, 65, 67, 69, 71];
