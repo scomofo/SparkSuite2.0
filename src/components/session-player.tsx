@@ -1289,7 +1289,7 @@ export function SessionPlayer() {
                 <p className="mt-2 text-center text-xs leading-relaxed text-dim">
                   {acousticInputDescription(instrument, inst.name, micMode)} Use headphones for the click; audio stays on this device.
                 </p>
-                <MicrophoneLevelMeter level={micLevel} />
+                {!visualOnly && micStatus === "listening" ? <MicrophoneLevelMeter level={micLevel} /> : null}
                 {micFeedback ? (
                   <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
                     {micFeedback}
