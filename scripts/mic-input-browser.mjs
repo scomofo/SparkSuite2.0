@@ -4,9 +4,27 @@ import assert from "node:assert/strict";
 import { chromium } from "playwright";
 
 const url = process.argv[2] ?? "http://127.0.0.1:8083";
+async function waitForHealthy(targetUrl) {
+  const deadline = Date.now() + 30_000;
+  let last = "no response yet";
+  while (Date.now() < deadline) {
+    try {
+      const response = await fetch(targetUrl, { signal: AbortSignal.timeout(2000) });
+      await response.arrayBuffer().catch(() => {});
+      if (response.ok) return;
+      last = `HTTP ${response.status}`;
+    } catch (error) {
+      last = String(error);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500));
+  }
+  throw new Error(`App at ${targetUrl} did not become healthy: ${last}`);
+}
+
 const browser = await chromium.launch({ headless: true });
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
+  page.setDefaultTimeout(10000);
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   await page.addInitScript(() => {
@@ -41,9 +59,14 @@ try {
   await page.route("**/api/auth/get-session**", (route) =>
     route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
   );
-  await page.goto(url, { waitUntil: "domcontentloaded" });
+  console.log("[mic-input] waiting for healthy app");
+  await waitForHealthy(url);
+  const response = await page.goto(url, { waitUntil: "domcontentloaded" });
+  assert.ok(response && response.ok(), `app entry returned ${response?.status() ?? "no response"}`);
+  console.log("[mic-input] opening today's loop");
   await page.getByRole("link", { name: "Today", exact: true }).click();
   await page.getByRole("button", { name: "Start today's loop", exact: true }).click();
+  console.log("[mic-input] enabling synthetic microphone");
   await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
 
   const meter = page.getByRole("meter", { name: "Microphone input level" });
@@ -56,6 +79,7 @@ try {
     await page.waitForTimeout(100);
   }
   assert.ok(level > 5, `Synthetic microphone signal did not reach the analyser; meter was ${level}`);
+  console.log(`[mic-input] signal reached analyser (meter ${level}%)`);
   await page.getByText(
     "Audio is reaching the app. Play in time with the cue; this meter confirms signal, not note accuracy.",
     { exact: true },
@@ -65,6 +89,7 @@ try {
   await page.waitForTimeout(600);
   const quietLevel = Number(await meter.getAttribute("aria-valuenow"));
   assert.ok(quietLevel < level, `Meter did not respond when the input was muted (${level} -> ${quietLevel})`);
+  console.log(`[mic-input] meter responded to mute (${level}% -> ${quietLevel}%)`);
 
   await page.getByRole("button", { name: "Stop microphone", exact: true }).click();
   await page.waitForFunction(() => document.querySelector('[role="meter"][aria-label="Microphone input level"]') === null);
