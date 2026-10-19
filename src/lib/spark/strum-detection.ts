@@ -162,7 +162,7 @@ export class StrumOnsetDetector {
     // AnalyserNode returns a rolling, highly overlapping window. Comparing
     // whole-window RMS values misses ordinary attacks because each new frame
     // replaces only a small fraction of the previous frame. Compare the newest
-    // short chunk to the immediately preceding chunk instead.
+    // short chunk with the prior callback's newest chunk instead.
     const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 16)));
     const tailStart = samples.length - chunkSize;
     const tailRms = rmsLevel(samples.subarray(tailStart));
