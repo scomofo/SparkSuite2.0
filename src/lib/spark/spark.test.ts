@@ -28,6 +28,7 @@ import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, rmsLevel, StrumOnsetDetector } from "./strum-detection.ts";
 import { AcousticAttackDetector, acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
+import { hasInstrumentPattern } from "./instrument-patterns.ts";
 import type { DailyPlan } from "./types.ts";
 
 function withMemoryStorage() {
@@ -476,6 +477,26 @@ describe("instrument microphone routing", () => {
     hasSingleNoteCues,
   });
 
+  function modeForPlan(instrument: string, item: PlanItem) {
+    const timeline = buildTimeline(item);
+    const hasChordCues = timeline.some((note) =>
+      (note.notes?.length ?? 0) > 1 ||
+      (!note.notes?.length && Boolean(note.chord && item.chords.includes(note.chord))),
+    );
+    const hasSingleNoteCues = timeline.some((note) =>
+      note.notes?.length === 1 || note.expectedMidi !== undefined,
+    );
+    return acousticInputModeFor({
+      instrument,
+      surface: item.surface ?? "strings",
+      pluckDrill: isPluckDrill(item),
+      hasPattern: hasInstrumentPattern(item),
+      hasChordCues,
+      hasSingleNoteCues,
+      lessonId: item.lessonId,
+    });
+  }
+
   it("routes each instrument family to a suitable acoustic detector", () => {
     assert.equal(mode("guitar", "strings"), "strum");
     assert.equal(mode("ukulele", "strings"), "strum");
@@ -494,6 +515,37 @@ describe("instrument microphone routing", () => {
     assert.equal(mode("banjo", "strings", false, true, undefined, true), "strum");
     assert.equal(mode("drums", "pads"), "percussion");
     assert.equal(mode("vocals", "voice"), "pitch");
+  });
+
+  it("routes real authored chord-song cues to chord detection and single-note riffs to pitch detection", () => {
+    const item = (overrides: Partial<PlanItem>): PlanItem => ({
+      id: "mic-route-test",
+      type: "song",
+      title: "Input routing test",
+      subtitle: "",
+      durationSec: 60,
+      lessonId: "lesson_uke_lava_01",
+      chords: ["C", "G7", "F"],
+      pattern: "D",
+      bars: 4,
+      bpm: 80,
+      surface: "strings",
+      stringCount: 4,
+      process: "perform",
+      ...overrides,
+    });
+
+    assert.equal(modeForPlan("ukulele", item({ lessonId: "lesson_uke_lava_01" })), "strum");
+    assert.equal(modeForPlan("guitar", item({
+      lessonId: "lesson_guitar_horse_no_name_01",
+      chords: ["Em", "D6"],
+      stringCount: 6,
+    })), "strum");
+    assert.equal(modeForPlan("guitar", item({
+      lessonId: "lesson_guitar_come_as_you_are_01",
+      chords: [],
+      stringCount: 6,
+    })), "pitch");
   });
 });
 
