@@ -595,6 +595,8 @@ export function SessionPlayer() {
           pitchDetector.reset();
           voicePitchTracker.reset();
           percussionDetector.reset();
+          recognizedEvents = 0;
+          setMicDetectedEvents(0);
           activeMode = mode;
           activeItemId = itemId;
         }
