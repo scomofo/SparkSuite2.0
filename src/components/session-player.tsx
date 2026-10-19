@@ -435,6 +435,9 @@ export function SessionPlayer() {
       }
 
       if (!res.hit || !res.note) {
+        if (fromMic) {
+          setMicFeedback("I heard an attack, but it did not land near a cue. Try the next beat.");
+        }
         onJudge("miss", !fromMic);
         return;
       }
@@ -498,6 +501,7 @@ export function SessionPlayer() {
           detectedMidi !== undefined &&
           ((detectedMidi - res.note.string) % 12 + 12) % 12 === 0;
         if (!octaveFlexibleVoiceMatch) {
+          if (fromMic) setMicFeedback("I heard a sound, but it did not match the expected string or pad. Try the highlighted target.");
           onJudge("miss", !fromMic);
           return;
         }
@@ -508,6 +512,7 @@ export function SessionPlayer() {
           (res.note!.notes!.length > 1 && Math.abs(Math.abs(expected - detectedMidi) - 12) <= 1),
         );
         if (!pitchMatches) {
+          setMicFeedback("I heard a note, but its pitch did not match the target. Try the highlighted note.");
           onJudge("miss", false);
           return;
         }
