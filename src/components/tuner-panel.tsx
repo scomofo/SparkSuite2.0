@@ -3,6 +3,8 @@ import { pluck, pianoTone, drumHit, unlockAudio } from "@/lib/spark/audio";
 import { instrumentById } from "@/lib/spark/instruments";
 import { analyserSizeFor, nearestString, startMicAnalyser, yinPitchFast } from "@/lib/spark/tuner";
 import { Button } from "@/components/ui/button";
+import { MicrophoneLevelMeter } from "@/components/microphone-level-meter";
+import { rmsLevel } from "@/lib/spark/strum-detection";
 import { DrumPads } from "@/components/drum-pads";
 import { useSpark } from "@/store/spark";
 import { cn } from "@/lib/utils";
@@ -33,6 +35,7 @@ export function TunerPanel() {
   const [freqHz, setFreqHz] = useState<number | null>(null);
   const [targetHz, setTargetHz] = useState<number | null>(null);
   const [live, setLive] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
   const raf = useRef(0);
@@ -60,6 +63,7 @@ export function TunerPanel() {
       cancelAnimationFrame(raf.current);
       mic.stop();
       setLive(false);
+      setMicLevel(0);
     };
     const buf = new Float32Array(mic.analyser.fftSize);
     let last = 0;
@@ -67,6 +71,7 @@ export function TunerPanel() {
       if (ts - last >= 80) {
         last = ts;
         mic.analyser.getFloatTimeDomainData(buf);
+        setMicLevel(rmsLevel(buf));
         const hz = yinPitchFast(buf, mic.ctx.sampleRate, 0.12, decimate);
         if (hz > lowestRef * 0.7 && hz < 1200) {
           const n = nearestString(hz, refs.freqs, refs.names);
@@ -135,6 +140,7 @@ export function TunerPanel() {
       <Button variant={live ? "secondary" : "primary"} onClick={() => (live ? stopRef.current?.() : void listen())}>
         {live ? "Stop mic" : "Listen with mic"}
       </Button>
+      {live ? <MicrophoneLevelMeter level={micLevel} /> : null}
       <div
         className="grid w-full gap-2"
         style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
@@ -185,6 +191,8 @@ export function TunerPanel() {
 export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; targetName: string }) {
   const [cents, setCents] = useState<number | null>(null);
   const [live, setLive] = useState(false);
+  const [micLevel, setMicLevel] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const stopRef = useRef<(() => void) | null>(null);
   const raf = useRef(0);
 
@@ -198,15 +206,21 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
 
   async function listen() {
     stopRef.current?.();
+    setError(null);
+    setMicLevel(0);
     unlockAudio();
     const mic = await startMicAnalyser();
-    if (!mic) return;
+    if (!mic) {
+      setError("Microphone blocked or unavailable. Check browser permission and input selection.");
+      return;
+    }
     setLive(true);
     stopRef.current = () => {
       cancelAnimationFrame(raf.current);
       mic.stop();
       setLive(false);
       setCents(null);
+      setMicLevel(0);
     };
     const buf = new Float32Array(mic.analyser.fftSize);
     let last = 0;
@@ -214,6 +228,7 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
       if (ts - last >= 80) {
         last = ts;
         mic.analyser.getFloatTimeDomainData(buf);
+        setMicLevel(rmsLevel(buf));
         const hz = yinPitchFast(buf, mic.ctx.sampleRate);
         if (hz > 80 && hz < 900 && Number.isFinite(targetFreq) && targetFreq > 0) {
           setCents(Math.max(-50, Math.min(50, 1200 * Math.log2(hz / targetFreq))));
@@ -241,6 +256,7 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
           />
         ) : null}
       </div>
+      {error ? <p className="text-center text-xs text-warn">{error}</p> : null}
       <Button
         size="sm"
         variant={live ? "secondary" : "ghost"}
@@ -248,6 +264,7 @@ export function PitchMatch({ targetFreq, targetName }: { targetFreq: number; tar
       >
         {live ? "Stop mic" : "Match with mic"}
       </Button>
+      {live ? <MicrophoneLevelMeter level={micLevel} /> : null}
       <button
         type="button"
         onClick={() => pianoTone(targetFreq, undefined, 0.35)}

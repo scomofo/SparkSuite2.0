@@ -224,6 +224,52 @@ try {
     false,
     "A scored ukulele strum exercise requires microphone access",
   );
+  // First exercise the successful input path with a local synthetic stream.
+  // This verifies the app reads actual samples, not just getUserMedia permission.
+  await page.evaluate(() => {
+    const context = new AudioContext();
+    const destination = context.createMediaStreamDestination();
+    const oscillators = [196, 261.63, 329.63, 440].map((frequency) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.frequency.value = frequency;
+      gain.gain.value = 0.003;
+      oscillator.connect(gain);
+      gain.connect(destination);
+      oscillator.start();
+      return oscillator;
+    });
+    Object.defineProperty(window, "__sparkSuiteTestMic", {
+      configurable: true,
+      value: { context, oscillators },
+    });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: {
+        getUserMedia: async () => {
+          await context.resume();
+          return destination.stream;
+        },
+      },
+    });
+  });
+  await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
+  const micMeter = page.getByRole("meter", { name: "Microphone input level" });
+  await micMeter.waitFor();
+  await page.clock.runFor(500);
+  assert.ok(
+    Number(await micMeter.getAttribute("aria-valuenow")) > 0,
+    "the live microphone meter must move when audio samples reach the analyser",
+  );
+  await page.getByRole("button", { name: "Stop microphone", exact: true }).click();
+  await page.evaluate(async () => {
+    const testMic = window.__sparkSuiteTestMic;
+    testMic.oscillators.forEach((oscillator) => oscillator.stop());
+    await testMic.context.close();
+    delete window.__sparkSuiteTestMic;
+  });
+
+  // Also cover permission denial and the explicitly unscored fallback.
   await page.evaluate(() => {
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,

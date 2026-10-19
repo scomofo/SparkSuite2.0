@@ -407,10 +407,15 @@ describe("acoustic strum detection", () => {
     const spectrum = chordSpectrum();
     assert.equal(isTonalStrumSpectrum(spectrum, sampleRate, fftSize), true);
     assert.equal(isHarmonicStrumSpectrum(spectrum, sampleRate, fftSize), true);
-    assert.equal(detector.process(frame, spectrum, sampleRate, fftSize, 100), null);
-    const event = detector.process(frame, spectrum, sampleRate, fftSize, 132);
+    const silence = new Float32Array(fftSize);
+    const attackFrame = new Float32Array(fftSize);
+    const chunkSize = Math.floor(fftSize / 16);
+    attackFrame.set(frame.subarray(fftSize - chunkSize), fftSize - chunkSize);
+    assert.equal(detector.process(silence, spectrum, sampleRate, fftSize, 100), null);
+    assert.equal(detector.process(attackFrame, spectrum, sampleRate, fftSize, 116), null);
+    const event = detector.process(frame, spectrum, sampleRate, fftSize, 148);
     assert.ok(event);
-    assert.equal(event.onsetMs, 100 - (512 / sampleRate) * 500);
+    assert.ok(event.onsetMs >= 110 && event.onsetMs <= 120);
     assert.ok(event.level > 0.008);
   });
 
@@ -431,7 +436,77 @@ describe("acoustic strum detection", () => {
     assert.equal(detector.process(samples, spectrum, sampleRate, longSize, 100), null);
     const event = detector.process(samples, spectrum, sampleRate, longSize, 132);
     assert.ok(event, "the short, fresh chord attack should be recognized");
-    assert.equal(event.onsetMs, 100 - (1024 / sampleRate) * 500);
+    assert.equal(event.onsetMs, 100 - (512 / sampleRate) * 500);
+  });
+
+  it("detects a quiet strum entering a rolling 8192-sample window", () => {
+    const size = 8192;
+    const hop = 512;
+    const detector = new StrumOnsetDetector();
+    const rolling = new Float32Array(size);
+    const spectrum = chordSpectrum(size);
+    assert.equal(isHarmonicStrumSpectrum(spectrum, sampleRate, size), true);
+    assert.equal(detector.process(rolling, spectrum, sampleRate, size, 100), null);
+
+    let detected = null;
+    // Simulate Web Audio's overlapping analyser windows: each frame advances
+    // by only 512 samples while the 8192-sample window keeps most old samples.
+    for (let frame = 1; frame <= 5; frame++) {
+      rolling.copyWithin(0, hop);
+      const chunkStart = (frame - 1) * hop;
+      for (let i = size - hop; i < size; i++) {
+        const sample = chunkStart + i - (size - hop);
+        const t = sample / sampleRate;
+        rolling[i] = 0.0045 * (
+          Math.sin(2 * Math.PI * 196 * t) +
+          Math.sin(2 * Math.PI * 261.63 * t) +
+          Math.sin(2 * Math.PI * 329.63 * t) +
+          Math.sin(2 * Math.PI * 440 * t)
+        );
+      }
+      detected = detector.process(rolling, spectrum, sampleRate, size, 100 + frame * 16);
+      if (detected) break;
+    }
+    assert.ok(detected, "a normal attack must not be lost because adjacent FFT windows overlap");
+    assert.ok(detected.level >= 0.004);
+    assert.ok(detected.onsetMs >= 100 && detected.onsetMs <= 120);
+  });
+
+  it("detects a strum when a delayed frame already contains two loud adjacent chunks", () => {
+    const size = 8192;
+    const hop = 512;
+    const detector = new StrumOnsetDetector();
+    const spectrum = chordSpectrum(size);
+    const silence = new Float32Array(size);
+    assert.equal(detector.process(silence, spectrum, sampleRate, size, 100), null);
+
+    const delayedFrame = new Float32Array(size);
+    for (let i = size - 2 * hop; i < size; i++) {
+      const t = i / sampleRate;
+      delayedFrame[i] = 0.0045 * (
+        Math.sin(2 * Math.PI * 196 * t) +
+        Math.sin(2 * Math.PI * 261.63 * t) +
+        Math.sin(2 * Math.PI * 329.63 * t) +
+        Math.sin(2 * Math.PI * 440 * t)
+      );
+    }
+    // Simulate a busy tab: the callback arrives after the sound has occupied
+    // both adjacent chunks, so comparing only those chunks would miss the rise.
+    assert.equal(detector.process(delayedFrame, spectrum, sampleRate, size, 140), null);
+
+    const sustainedFrame = new Float32Array(size);
+    for (let i = 0; i < size; i++) {
+      const t = i / sampleRate;
+      sustainedFrame[i] = 0.0045 * (
+        Math.sin(2 * Math.PI * 196 * t) +
+        Math.sin(2 * Math.PI * 261.63 * t) +
+        Math.sin(2 * Math.PI * 329.63 * t) +
+        Math.sin(2 * Math.PI * 440 * t)
+      );
+    }
+    const event = detector.process(sustainedFrame, spectrum, sampleRate, size, 172);
+    assert.ok(event, "the cached pre-attack baseline must survive a delayed callback");
+    assert.ok(event.onsetMs >= 130 && event.onsetMs <= 140);
   });
 
   it("recognizes a short real strum in a long rolling 8192-sample analyser buffer", () => {
@@ -445,18 +520,18 @@ describe("acoustic strum detection", () => {
       spectrum[bin + 1] = -39;
     }
     // Only the newest 600 samples contain sound. The full-frame RMS is below
-    // the 0.008 gate, even though the actual strum is audible. Onset uses
-    // main's chunk-backdating, as in the test above.
+    // the 0.008 gate, even though the actual strum is audible. Onset uses the
+    // detector's newest-chunk backdating, as in the test above.
     const frame = new Float32Array(largeSize);
     for (let i = largeSize - 600; i < largeSize; i++) {
       frame[i] = 0.04 * Math.sin((2 * Math.PI * 220 * i) / sampleRate);
     }
     assert.ok(rmsLevel(frame) < 0.008, "long-window RMS hides the real attack");
-    assert.ok(rmsLevel(frame.subarray(largeSize - 1024)) > 0.008);
+    assert.ok(rmsLevel(frame.subarray(largeSize - 512)) > 0.008);
     assert.equal(detector.process(frame, spectrum, sampleRate, largeSize, 100), null);
     const hit = detector.process(frame, spectrum, sampleRate, largeSize, 135);
     assert.ok(hit, "newest audio must produce a confirmed onset");
-    assert.equal(hit.onsetMs, 100 - (1024 / sampleRate) * 500);
+    assert.equal(hit.onsetMs, 100 - (512 / sampleRate) * 500);
   });
 
   it("rejects a short broadband click without sustained harmonic energy", () => {

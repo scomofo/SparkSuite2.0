@@ -260,9 +260,9 @@ export function SessionPlayer() {
   const [createPick, setCreatePick] = useState<string | null>(null);
   const [listenPick, setListenPick] = useState<"same" | "different" | null>(null);
   const [micStatus, setMicStatus] = useState<"off" | "starting" | "listening" | "blocked">("off");
+  const [micLevel, setMicLevel] = useState(0);
   const [micError, setMicError] = useState<string | null>(null);
   const [micFeedback, setMicFeedback] = useState<string | null>(null);
-  const [micLevel, setMicLevel] = useState(0);
   const [micDetectedEvents, setMicDetectedEvents] = useState(0);
   const [micInputName, setMicInputName] = useState("");
   const [micDeviceId, setMicDeviceId] = useState("");
@@ -477,6 +477,9 @@ export function SessionPlayer() {
       }
 
       if (!res.hit || !res.note) {
+        if (fromMic) {
+          setMicFeedback("I heard an attack, but it did not land near a cue. Try the next beat.");
+        }
         onJudge("miss", !fromMic);
         return;
       }
@@ -540,6 +543,7 @@ export function SessionPlayer() {
           detectedMidi !== undefined &&
           ((detectedMidi - res.note.string) % 12 + 12) % 12 === 0;
         if (!octaveFlexibleVoiceMatch) {
+          if (fromMic) setMicFeedback("I heard a sound, but it did not match the expected string or pad. Try the highlighted target.");
           onJudge("miss", !fromMic);
           return;
         }
@@ -550,6 +554,7 @@ export function SessionPlayer() {
           (res.note!.notes!.length > 1 && Math.abs(Math.abs(expected - detectedMidi) - 12) <= 1),
         );
         if (!pitchMatches) {
+          setMicFeedback("I heard a note, but its pitch did not match the target. Try the highlighted note.");
           onJudge("miss", false);
           return;
         }
@@ -591,8 +596,8 @@ export function SessionPlayer() {
     micStopRef.current?.();
     micStopRef.current = null;
     setMicStatus("starting");
-    setMicError(null);
     setMicLevel(0);
+    setMicError(null);
     setMicDetectedEvents(0);
     unlockAudio();
 

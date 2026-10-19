@@ -11,6 +11,7 @@ export type StrumDetectorOptions = {
   confirmationMs?: number;
   maxConfirmationMs?: number;
   maxFlatness?: number;
+  attackRatio?: number;
 };
 
 /** Root-mean-square signal level for one microphone frame. */
@@ -127,18 +128,22 @@ export function isHarmonicStrumSpectrum(
  */
 export class StrumOnsetDetector {
   private readonly options: Required<StrumDetectorOptions>;
-  private noiseFloor = 0.001;
+  private noiseFloor = 0.0007;
   private previousTailRms = 0;
   private lastDetectedMs = Number.NEGATIVE_INFINITY;
   private pending: { onsetMs: number; peakRms: number } | null = null;
 
   constructor(options: StrumDetectorOptions = {}) {
     this.options = {
+      // Laptop microphones often deliver acoustic instruments well below
+      // -42 dBFS. Let the harmonic-spectrum confirmation reject clicks/noise
+      // rather than making the attack gate itself excessively loud.
       minimumLevel: options.minimumLevel ?? 0.004,
       cooldownMs: options.cooldownMs ?? 140,
       confirmationMs: options.confirmationMs ?? 28,
       maxConfirmationMs: options.maxConfirmationMs ?? 112,
       maxFlatness: options.maxFlatness ?? 0.7,
+      attackRatio: options.attackRatio ?? 1.3,
     };
   }
 
@@ -149,22 +154,28 @@ export class StrumOnsetDetector {
     fftSize: number,
     nowMs: number,
   ): StrumOnset | null {
-    if (!Number.isFinite(nowMs) || !samples.length) return null;
+    if (!Number.isFinite(nowMs) || !samples.length || !Number.isFinite(sampleRate) || sampleRate <= 0) {
+      return null;
+    }
 
     const level = rmsLevel(samples);
-    // The analyser returns a long rolling window for bass/chord resolution.
-    // Measure its newest ~10 ms separately so a real attack is not diluted by
-    // the preceding silence across the entire 8192-sample window.
-    const chunkSize = Math.max(64, Math.min(1024, Math.floor(samples.length / 4)));
-    const tailLevel = rmsLevel(samples.subarray(samples.length - chunkSize));
+    // AnalyserNode returns a long rolling window for bass/chord resolution,
+    // and each new frame replaces only a small fraction of it. Comparing
+    // whole-window RMS values therefore misses ordinary attacks: the attack
+    // is diluted by the preceding silence across the entire 8192-sample
+    // window. Measure the newest short chunk separately and compare it with
+    // the prior callback's newest chunk instead.
+    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 16)));
+    const tailStart = samples.length - chunkSize;
+    const tailRms = rmsLevel(samples.subarray(tailStart));
     let detected: StrumOnset | null = null;
 
     if (this.pending) {
-      this.pending.peakRms = Math.max(this.pending.peakRms, level);
+      this.pending.peakRms = Math.max(this.pending.peakRms, tailRms);
       const age = nowMs - this.pending.onsetMs;
       if (age >= this.options.confirmationMs) {
         const sustained = level >= Math.max(
-          this.options.minimumLevel * 0.35,
+          this.options.minimumLevel * 0.25,
           this.pending.peakRms * 0.12,
         );
         if (
@@ -185,29 +196,33 @@ export class StrumOnsetDetector {
       const threshold = Math.max(
         this.options.minimumLevel,
         this.noiseFloor * 2.6,
-        this.previousTailRms * 1.3,
+        this.previousTailRms * this.options.attackRatio,
       );
       if (
-        tailLevel >= threshold &&
+        tailRms >= threshold &&
         nowMs - this.lastDetectedMs >= this.options.cooldownMs
       ) {
-        this.pending = {
-          onsetMs: nowMs - (chunkSize / sampleRate) * 500,
-          peakRms: level,
-        };
+        // The newest chunk contains the attack; its midpoint is a better
+        // timestamp than the much longer FFT window's midpoint.
+        const onsetMs = nowMs - (chunkSize / sampleRate) * 500;
+        this.pending = { onsetMs, peakRms: tailRms };
       } else if (
-        level < Math.max(this.options.minimumLevel * 0.75, this.noiseFloor * 3)
+        tailRms < Math.max(this.options.minimumLevel * 0.75, this.noiseFloor * 3)
       ) {
-        this.noiseFloor = Math.max(0.0004, this.noiseFloor * 0.96 + level * 0.04);
+        this.noiseFloor = Math.max(0.0002, this.noiseFloor * 0.96 + tailRms * 0.04);
       }
     }
 
-    this.previousTailRms = tailLevel;
+    // Cache the previous callback's newest chunk, not the adjacent chunk in
+    // this FFT window. If a frame is delayed, both adjacent chunks can already
+    // contain the strum and look equally loud; the prior callback still gives
+    // us the pre-attack baseline.
+    this.previousTailRms = tailRms;
     return detected;
   }
 
   reset() {
-    this.noiseFloor = 0.001;
+    this.noiseFloor = 0.0007;
     this.previousTailRms = 0;
     this.lastDetectedMs = Number.NEGATIVE_INFINITY;
     this.pending = null;
