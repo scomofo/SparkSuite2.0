@@ -1151,12 +1151,6 @@ export function SessionPlayer() {
                         </select>
                       </label>
                     ) : null}
-                    {phase === "play" ? (
-                      <p role="status" className="text-xs text-muted">
-                        Instrument attacks recognized: {micDetectedEvents}
-                        {micDetectedEvents === 0 ? " — if the level moves but this stays at zero, the acoustic detector is filtering your playing." : ""}
-                      </p>
-                    ) : null}
                   </div>
                 ) : null}
                 <div className="mt-3 grid gap-2">
