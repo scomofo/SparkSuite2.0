@@ -431,7 +431,7 @@ describe("acoustic strum detection", () => {
     assert.equal(detector.process(samples, spectrum, sampleRate, longSize, 100), null);
     const event = detector.process(samples, spectrum, sampleRate, longSize, 132);
     assert.ok(event, "the short, fresh chord attack should be recognized");
-    assert.equal(event.onsetMs, 100 - (512 / sampleRate) * 500);
+    assert.equal(event.onsetMs, 100 - (1024 / sampleRate) * 500);
   });
 
   it("rejects a short broadband click without sustained harmonic energy", () => {
@@ -559,7 +559,7 @@ describe("generic acoustic attack detection", () => {
     }
     const onset = detector.process(samples, sampleRate, 100);
     assert.ok(onset);
-    assert.equal(onset.onsetMs, 100 - (512 / sampleRate) * 500);
+    assert.equal(onset.onsetMs, 100 - (1024 / sampleRate) * 500);
     assert.ok(onset.level > 0.003);
     assert.equal(detector.process(samples, sampleRate, 150), null, "cooldown suppresses the same transient");
     detector.reset();
