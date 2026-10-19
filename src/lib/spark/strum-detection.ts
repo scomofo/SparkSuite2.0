@@ -155,7 +155,7 @@ export class StrumOnsetDetector {
     // The analyser returns a long rolling window for bass/chord resolution.
     // Measure its newest ~10 ms separately so a real attack is not diluted by
     // the preceding silence across the entire 8192-sample window.
-    const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 4)));
+    const chunkSize = Math.max(64, Math.min(1024, Math.floor(samples.length / 4)));
     const tailLevel = rmsLevel(samples.subarray(samples.length - chunkSize));
     let detected: StrumOnset | null = null;
 
