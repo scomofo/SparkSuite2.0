@@ -98,33 +98,45 @@ export function analyserSizeFor(lowestHz: number, sampleRate = 48000) {
   return size;
 }
 
-export async function startMicAnalyser(fftSize = 2048): Promise<{
+export async function startMicAnalyser(fftSize = 2048, deviceId?: string): Promise<{
   analyser: AnalyserNode;
   ctx: AudioContext;
   stream: MediaStream;
   stop: () => void;
 } | null> {
+  let stream: MediaStream | null = null;
+  let ctx: AudioContext | null = null;
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false },
+    if (!navigator.mediaDevices?.getUserMedia) return null;
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: {
+        ...(deviceId ? { deviceId: { exact: deviceId } } : {}),
+        echoCancellation: false,
+        noiseSuppression: false,
+        autoGainControl: false,
+      },
     });
     const AC = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new AC({ latencyHint: "interactive" });
+    ctx = new AC({ latencyHint: "interactive" });
     if (ctx.state === "suspended") await ctx.resume();
     const src = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
     analyser.fftSize = fftSize;
     src.connect(analyser);
+    const activeStream = stream;
+    const activeContext = ctx;
     return {
       analyser,
       ctx,
       stream,
       stop() {
-        stream.getTracks().forEach((t) => t.stop());
-        void ctx.close();
+        activeStream.getTracks().forEach((t) => t.stop());
+        void activeContext.close();
       },
     };
   } catch {
+    stream?.getTracks().forEach((t) => t.stop());
+    if (ctx && ctx.state !== "closed") void ctx.close();
     return null;
   }
 }
