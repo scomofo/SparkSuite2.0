@@ -151,7 +151,12 @@ export class StrumOnsetDetector {
   ): StrumOnset | null {
     if (!Number.isFinite(nowMs) || !samples.length) return null;
 
-    const level = rmsLevel(samples);
+    // The analyser uses a long 8192-sample FFT for chord pitch resolution.
+    // Measuring the whole rolling buffer smears a short real-world attack over
+    // ~170 ms and can make a clear ukulele/guitar strum fail the onset gate.
+    // Measure just the newest ~21 ms (at 48 kHz) for onset/cooldown decisions.
+    const newestSamples = Math.min(1024, samples.length);
+    const level = rmsLevel(samples.subarray(samples.length - newestSamples));
     let detected: StrumOnset | null = null;
 
     if (this.pending) {
