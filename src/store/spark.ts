@@ -11,8 +11,8 @@ import {
   isSessionDone,
   recordHit,
   recordMiss,
+  resumeOrStartSession,
   skipItem,
-  startSession,
   type LiveSession,
 } from "@/lib/spark/session";
 import {
@@ -118,10 +118,7 @@ export const useSpark = create<SparkStore>((set, get) => ({
   beginDay: () => {
     const { progress, instrument, session } = get();
     const plan = generateDailyPlan(progress, undefined, instrument);
-    const next =
-      session?.plan.date === plan.date
-        ? { ...session, itemHits: 0, itemMisses: 0, currentCombo: 0 }
-        : startSession(progress, plan);
+    const next = resumeOrStartSession(progress, plan, session);
     set({
       session: next,
       plan: next.plan,
