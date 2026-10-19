@@ -26,7 +26,7 @@ import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
 import { closeSession, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
-import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, StrumOnsetDetector } from "./strum-detection.ts";
+import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, rmsLevel, StrumOnsetDetector } from "./strum-detection.ts";
 import { acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
 import type { DailyPlan } from "./types.ts";
 
@@ -411,6 +411,30 @@ describe("acoustic strum detection", () => {
     assert.ok(event);
     assert.equal(event.onsetMs, 100);
     assert.ok(event.level > 0.008);
+  });
+
+  it("recognizes a short real strum in a long rolling 8192-sample analyser buffer", () => {
+    const largeSize = 8192;
+    const detector = new StrumOnsetDetector();
+    const spectrum = new Float32Array(largeSize / 2).fill(-100);
+    for (const hz of [196, 261.63, 329.63, 392, 440, 523.25, 659.25]) {
+      const bin = Math.round(hz * largeSize / sampleRate);
+      spectrum[bin] = -24;
+      spectrum[bin - 1] = -39;
+      spectrum[bin + 1] = -39;
+    }
+    // Only the newest 600 samples contain sound. The original full-frame RMS
+    // is below the old 0.008 gate, even though the actual strum is audible.
+    const frame = new Float32Array(largeSize);
+    for (let i = largeSize - 600; i < largeSize; i++) {
+      frame[i] = 0.04 * Math.sin((2 * Math.PI * 220 * i) / sampleRate);
+    }
+    assert.ok(rmsLevel(frame) < 0.008, "long-window RMS hides the real attack");
+    assert.ok(rmsLevel(frame.subarray(largeSize - 1024)) > 0.008);
+    assert.equal(detector.process(frame, spectrum, sampleRate, largeSize, 100), null);
+    const hit = detector.process(frame, spectrum, sampleRate, largeSize, 135);
+    assert.ok(hit, "newest audio must produce a confirmed onset");
+    assert.equal(hit.onsetMs, 100);
   });
 
   it("rejects a short broadband click without sustained harmonic energy", () => {
