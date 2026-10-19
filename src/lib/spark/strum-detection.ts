@@ -159,10 +159,12 @@ export class StrumOnsetDetector {
     }
 
     const level = rmsLevel(samples);
-    // AnalyserNode returns a rolling, highly overlapping window. Comparing
-    // whole-window RMS values misses ordinary attacks because each new frame
-    // replaces only a small fraction of the previous frame. Compare the newest
-    // short chunk with the prior callback's newest chunk instead.
+    // AnalyserNode returns a long rolling window for bass/chord resolution,
+    // and each new frame replaces only a small fraction of it. Comparing
+    // whole-window RMS values therefore misses ordinary attacks: the attack
+    // is diluted by the preceding silence across the entire 8192-sample
+    // window. Measure the newest short chunk separately and compare it with
+    // the prior callback's newest chunk instead.
     const chunkSize = Math.max(64, Math.min(512, Math.floor(samples.length / 16)));
     const tailStart = samples.length - chunkSize;
     const tailRms = rmsLevel(samples.subarray(tailStart));

@@ -254,7 +254,7 @@ try {
     });
   });
   await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
-  const micMeter = page.getByRole("meter", { name: "Live microphone input level" });
+  const micMeter = page.getByRole("meter", { name: "Microphone input level" });
   await micMeter.waitFor();
   await page.clock.runFor(500);
   assert.ok(
@@ -282,7 +282,7 @@ try {
   });
   await page.getByRole("button", { name: "Enable microphone", exact: true }).click();
   await page
-    .getByText("Microphone access was blocked or unavailable. Allow access in your browser and try again.", { exact: true })
+    .getByText("Microphone access failed. Check browser permissions, make sure a microphone is connected, then try again.", { exact: true })
     .waitFor();
   await page.getByRole("button", { name: "Continue without mic (unscored)", exact: true }).click();
   await page.clock.runFor(4000);
