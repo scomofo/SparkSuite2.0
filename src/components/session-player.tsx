@@ -1339,8 +1339,9 @@ export function SessionPlayer() {
                 active={activeString}
                 expected={expectedString}
                 onPluck={(i) => attempt("pluck", i)}
-                disabled={requiresMicInput}
-              />
+                  disabled={requiresMicInput}
+                />
+              </div>
             ) : null}
 
             {useHighway ? (
