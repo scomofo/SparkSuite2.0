@@ -31,6 +31,7 @@ import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { MicSignalMeter } from "@/components/mic-signal-meter";
 import { startMicAnalyser } from "@/lib/spark/tuner";
+import { matchesOpenStringTarget } from "@/lib/spark/open-string-judging";
 import {
   activeInputDeviceId,
   initMicrophone,
@@ -263,7 +264,6 @@ export function SessionPlayer() {
   const micSurfaceRef = useRef(micSurface);
   const micInstrumentRef = useRef(instrument);
   const micOpenFreqRef = useRef(inst.openFreq);
-  const micStringNamesRef = useRef(inst.stringNames);
   const micRequiresOpenStringRef = useRef(Boolean(item && micSurface === "strings" && isPluckDrill(item)));
   const micItemIdRef = useRef(item?.id ?? "");
   const micWindowMsRef = useRef(item?.windowMs ?? 230);
@@ -281,7 +281,6 @@ export function SessionPlayer() {
   micSurfaceRef.current = micSurface;
   micInstrumentRef.current = instrument;
   micOpenFreqRef.current = inst.openFreq;
-  micStringNamesRef.current = inst.stringNames;
   micRequiresOpenStringRef.current = Boolean(item && micSurface === "strings" && isPluckDrill(item));
   micItemIdRef.current = item?.id ?? "";
   micWindowMsRef.current = item?.windowMs ?? 230;
@@ -762,7 +761,7 @@ export function SessionPlayer() {
                   const targetHz = target?.string !== undefined
                     ? micOpenFreqRef.current[target.string]
                     : undefined;
-                  if (!targetHz || Math.abs(1200 * Math.log2(onset.frequencyHz / targetHz)) > 80) {
+                  if (!targetHz || !matchesOpenStringTarget(onset.frequencyHz, targetHz)) {
                     setMicFeedback("A note was detected, but it was not the target open string. Check the highlighted string and tune it if needed.");
                     micFrameRef.current = requestAnimationFrame(loop);
                     return;
