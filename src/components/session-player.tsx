@@ -232,6 +232,7 @@ export function SessionPlayer() {
   const [micError, setMicError] = useState<string | null>(null);
   const [micFeedback, setMicFeedback] = useState<string | null>(null);
   const [micDetectedEvents, setMicDetectedEvents] = useState(0);
+  const [lastDetectedPitch, setLastDetectedPitch] = useState<string | null>(null);
   const [micInputName, setMicInputName] = useState("");
   const [micDeviceId, setMicDeviceId] = useState("");
   const [micDevices, setMicDevices] = useState<MediaDeviceInfo[]>([]);
@@ -313,6 +314,8 @@ export function SessionPlayer() {
     setMicFeedback(null);
     setMicDetectedEvents(0);
     setExpectedString(null);
+    setActiveString(null);
+    setLastDetectedPitch(null);
     setLiveChord(item?.chords[0] ?? "");
     setModeling(false);
     setCreatePick(null);
@@ -441,7 +444,7 @@ export function SessionPlayer() {
           else if (instrument === "bass") bassTone(inst.openFreq[stringIndex] ?? 41.2);
           else pluck(inst.openFreq[stringIndex] ?? OPEN_FREQ[stringIndex] ?? 110);
         }
-        setActiveString(stringIndex);
+        if (!fromMic) setActiveString(stringIndex);
       }
 
       if (!res.hit || !res.note) {
@@ -529,6 +532,7 @@ export function SessionPlayer() {
       }
       const realIndex = notesRef.current.indexOf(res.note);
       consumed.current.add(realIndex);
+      if (fromMic && kind === "pluck" && res.note.string !== undefined) setActiveString(res.note.string);
       if (kind !== "pluck") {
         if (fromMic) {
           // Do not play a synthetic chord or hit sound back into the open mic.
@@ -746,6 +750,9 @@ export function SessionPlayer() {
             if (onset) {
               recognizedEvents += 1;
               setMicDetectedEvents(recognizedEvents);
+              if (micInstrumentRef.current === "ukulele") {
+                setLastDetectedPitch(`${onset.frequencyHz.toFixed(1)} Hz · MIDI ${onset.midi}`);
+              }
               let inputIndex = onset.midi;
               if (micSurfaceRef.current === "strings") {
                 if (micRequiresOpenStringRef.current) {
@@ -837,7 +844,8 @@ export function SessionPlayer() {
         click(beat % meter === 0);
         setBeatN((beat % meter) + 1);
         const upcoming = notesRef.current.find((n, i) => !consumed.current.has(i) && n.t >= elapsed - 0.05);
-        if (upcoming?.string !== undefined) setExpectedString(upcoming.string);
+        setExpectedString(upcoming?.string ?? null);
+        setActiveString(null);
         if (upcoming?.chord) setLiveChord(upcoming.chord);
       }
       if (!visualOnlyRef.current) {
@@ -1325,7 +1333,7 @@ export function SessionPlayer() {
 
             {surface === "strings" && isWarm ? (
               <div className="space-y-2">
-                <p className="text-center text-xs text-muted">Amber outline = play this string now · Solid highlight = detected note</p>
+                <p className="text-center text-xs text-muted">Amber outline = target string · Solid highlight = correctly played</p>
                 <StringRack
                 names={inst.stringNames}
                 active={activeString}
@@ -1385,6 +1393,9 @@ export function SessionPlayer() {
                       <p className="text-xs text-muted">The microphone hears audio, but no playable attack has been recognized yet.</p>
                     ) : null}
                   </div>
+                ) : null}
+                {instrument === "ukulele" && micMode === "pitch" && micStatus === "listening" ? (
+                  <p role="status" className="mt-2 text-center text-xs text-muted">Mic heard: {lastDetectedPitch ?? "waiting for a note"} · Target: {expectedString === null ? "waiting" : inst.stringNames[expectedString]}</p>
                 ) : null}
                 {micFeedback ? (
                   <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
