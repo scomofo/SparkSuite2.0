@@ -658,6 +658,7 @@ export function SessionPlayer() {
           if (onset) {
             recognizedEvents += 1;
             setMicDetectedEvents(recognizedEvents);
+            setLastDetectedPitch("Strum attack detected");
             const direction = directionDetector.classify(onset.onsetMs);
             attemptRef.current?.("strum", undefined, onset.onsetMs, undefined, {
               spectrumDb: spectrumData,
@@ -711,6 +712,7 @@ export function SessionPlayer() {
               }
             });
             if (sample) {
+              setLastDetectedPitch(`${sample.frequencyHz.toFixed(1)} Hz · MIDI ${sample.midi}`);
               const elapsed = (ts - startRef.current) / 1000;
               const windowSec = Math.min(100, micWindowMsRef.current) / 1000;
               const upcoming = notesRef.current.find((note, i) =>
@@ -735,7 +737,10 @@ export function SessionPlayer() {
                   minimumHz,
                   maximumHz,
                 );
-                if (onset) attemptRef.current?.("pluck", onset.midi, onset.onsetMs, onset.midi, { frequencyHz: onset.frequencyHz });
+                if (onset) {
+                  setLastDetectedPitch(`${onset.frequencyHz.toFixed(1)} Hz · MIDI ${onset.midi}`);
+                  attemptRef.current?.("pluck", onset.midi, onset.onsetMs, onset.midi, { frequencyHz: onset.frequencyHz });
+                }
               }
             }
           } else {
@@ -750,9 +755,7 @@ export function SessionPlayer() {
             if (onset) {
               recognizedEvents += 1;
               setMicDetectedEvents(recognizedEvents);
-              if (micInstrumentRef.current === "ukulele") {
-                setLastDetectedPitch(`${onset.frequencyHz.toFixed(1)} Hz · MIDI ${onset.midi}`);
-              }
+              setLastDetectedPitch(`${onset.frequencyHz.toFixed(1)} Hz · MIDI ${onset.midi}`);
               let inputIndex = onset.midi;
               if (micSurfaceRef.current === "strings") {
                 if (micRequiresOpenStringRef.current) {
@@ -785,7 +788,10 @@ export function SessionPlayer() {
           }
         } else if (mode === "attack") {
           const onset = attackDetector.process(timeData, mic.ctx.sampleRate, ts);
-          if (onset) attemptRef.current?.("strum", undefined, onset.onsetMs);
+          if (onset) {
+            setLastDetectedPitch("Attack detected");
+            attemptRef.current?.("strum", undefined, onset.onsetMs);
+          }
         } else {
           const onset = percussionDetector.process(
             timeData,
@@ -797,6 +803,7 @@ export function SessionPlayer() {
           if (onset) {
             recognizedEvents += 1;
             setMicDetectedEvents(recognizedEvents);
+            setLastDetectedPitch(["Kick", "Snare", "Hat", "Tom"][onset.padIndex] ?? "Drum attack");
             attemptRef.current?.("pluck", onset.padIndex, onset.onsetMs);
           }
         }
@@ -1291,17 +1298,23 @@ export function SessionPlayer() {
             ) : null}
 
             {surface === "keys" || surface === "voice" ? (
-              <PianoKeyboard
+              <div className="space-y-2">
+                <p className="text-center text-xs text-muted">Amber = target note · Solid highlight = played note</p>
+                <PianoKeyboard
                 activeMidi={activeString}
                 expectedMidi={expectedString}
                 chordPcs={chordPcs.length ? chordPcs : surface === "voice" ? [0] : []}
                 onPlay={(midi) => attempt("pluck", midi)}
                 disabled={requiresMicInput}
-              />
+                />
+              </div>
             ) : null}
 
             {surface === "pads" ? (
-              <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} disabled={requiresMicInput} />
+              <div className="space-y-2">
+                <p className="text-center text-xs text-muted">Amber outline = target pad · Solid highlight = played pad</p>
+                <DrumPads active={activeString} expected={expectedString} onHit={(i) => attempt("pluck", i)} disabled={requiresMicInput} />
+              </div>
             ) : null}
 
             {surface === "pads" ? (
@@ -1394,8 +1407,8 @@ export function SessionPlayer() {
                     ) : null}
                   </div>
                 ) : null}
-                {instrument === "ukulele" && micMode === "pitch" && micStatus === "listening" ? (
-                  <p role="status" className="mt-2 text-center text-xs text-muted">Mic heard: {lastDetectedPitch ?? "waiting for a note"} · Target: {expectedString === null ? "waiting" : inst.stringNames[expectedString]}</p>
+                {micStatus === "listening" ? (
+                  <p role="status" className="mt-2 text-center text-xs text-muted">Mic heard: {lastDetectedPitch ?? "waiting for an attack"} · Target: {expectedString === null ? "follow the highlighted cue" : surface === "pads" ? (["Kick", "Snare", "Hat", "Tom"][expectedString] ?? "pad") : surface === "strings" ? (inst.stringNames[expectedString] ?? "string") : `MIDI ${expectedString}`}</p>
                 ) : null}
                 {micFeedback ? (
                   <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
