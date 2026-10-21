@@ -30,7 +30,7 @@ import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { MicSignalMeter } from "@/components/mic-signal-meter";
-import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
+import { startMicAnalyser } from "@/lib/spark/tuner";
 import {
   activeInputDeviceId,
   initMicrophone,
@@ -749,18 +749,26 @@ export function SessionPlayer() {
               setMicDetectedEvents(recognizedEvents);
               let inputIndex = onset.midi;
               if (micSurfaceRef.current === "strings") {
-                const nearest = nearestString(
-                  onset.frequencyHz,
-                  micOpenFreqRef.current,
-                  micStringNamesRef.current,
-                );
-                // Open-string drills should not count a random room sound or the
-                // metronome as a played string.
-                if (micRequiresOpenStringRef.current && Math.abs(nearest.cents) > 180) {
-                  micFrameRef.current = requestAnimationFrame(loop);
-                  return;
+                if (micRequiresOpenStringRef.current) {
+                  // Ukulele high-G is re-entrant: nearest pitch cannot reliably
+                  // identify the physical string. Judge the scheduled open-string
+                  // target instead; non-target notes must not be accepted.
+                  const elapsed = (onset.onsetMs - startRef.current) / 1000;
+                  const target = notesRef.current.find((note, i) =>
+                    !consumed.current.has(i) &&
+                    note.string !== undefined &&
+                    Math.abs(note.t - elapsed) * 1000 <= micWindowMsRef.current,
+                  );
+                  const targetHz = target?.string !== undefined
+                    ? micOpenFreqRef.current[target.string]
+                    : undefined;
+                  if (!targetHz || Math.abs(1200 * Math.log2(onset.frequencyHz / targetHz)) > 80) {
+                    setMicFeedback("A note was detected, but it was not the target open string. Check the highlighted string and tune it if needed.");
+                    micFrameRef.current = requestAnimationFrame(loop);
+                    return;
+                  }
+                  inputIndex = target!.string!;
                 }
-                inputIndex = nearest.index;
               }
               // Judged cues (expectedMidi: vocals, violin's fingered notes,
               // lap steel's barred notes) read the onset's UNROUNDED
@@ -1283,6 +1291,7 @@ export function SessionPlayer() {
                 onPlay={(midi) => attempt("pluck", midi)}
                 disabled={requiresMicInput}
               />
+              </div>
             ) : null}
 
             {surface === "pads" ? (
@@ -1316,7 +1325,9 @@ export function SessionPlayer() {
             ) : null}
 
             {surface === "strings" && isWarm ? (
-              <StringRack
+              <div className="space-y-2">
+                <p className="text-center text-xs text-muted">Amber outline = play this string now · Solid highlight = detected note</p>
+                <StringRack
                 names={inst.stringNames}
                 active={activeString}
                 expected={expectedString}
