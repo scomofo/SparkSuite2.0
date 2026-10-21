@@ -30,7 +30,8 @@ import { StringRack } from "@/components/fretboard";
 import { PianoKeyboard } from "@/components/piano-keyboard";
 import { RhythmHighway } from "@/components/rhythm-highway";
 import { MicSignalMeter } from "@/components/mic-signal-meter";
-import { startMicAnalyser, nearestString } from "@/lib/spark/tuner";
+import { startMicAnalyser } from "@/lib/spark/tuner";
+import { matchesOpenStringTarget } from "@/lib/spark/open-string-judging";
 import {
   activeInputDeviceId,
   initMicrophone,
@@ -231,6 +232,7 @@ export function SessionPlayer() {
   const [micError, setMicError] = useState<string | null>(null);
   const [micFeedback, setMicFeedback] = useState<string | null>(null);
   const [micDetectedEvents, setMicDetectedEvents] = useState(0);
+  const [lastDetectedPitch, setLastDetectedPitch] = useState<string | null>(null);
   const [micInputName, setMicInputName] = useState("");
   const [micDeviceId, setMicDeviceId] = useState("");
   const [micDevices, setMicDevices] = useState<MediaDeviceInfo[]>([]);
@@ -263,7 +265,6 @@ export function SessionPlayer() {
   const micSurfaceRef = useRef(micSurface);
   const micInstrumentRef = useRef(instrument);
   const micOpenFreqRef = useRef(inst.openFreq);
-  const micStringNamesRef = useRef(inst.stringNames);
   const micRequiresOpenStringRef = useRef(Boolean(item && micSurface === "strings" && isPluckDrill(item)));
   const micItemIdRef = useRef(item?.id ?? "");
   const micWindowMsRef = useRef(item?.windowMs ?? 230);
@@ -281,7 +282,6 @@ export function SessionPlayer() {
   micSurfaceRef.current = micSurface;
   micInstrumentRef.current = instrument;
   micOpenFreqRef.current = inst.openFreq;
-  micStringNamesRef.current = inst.stringNames;
   micRequiresOpenStringRef.current = Boolean(item && micSurface === "strings" && isPluckDrill(item));
   micItemIdRef.current = item?.id ?? "";
   micWindowMsRef.current = item?.windowMs ?? 230;
@@ -314,6 +314,8 @@ export function SessionPlayer() {
     setMicFeedback(null);
     setMicDetectedEvents(0);
     setExpectedString(null);
+    setActiveString(null);
+    setLastDetectedPitch(null);
     setLiveChord(item?.chords[0] ?? "");
     setModeling(false);
     setCreatePick(null);
@@ -442,7 +444,7 @@ export function SessionPlayer() {
           else if (instrument === "bass") bassTone(inst.openFreq[stringIndex] ?? 41.2);
           else pluck(inst.openFreq[stringIndex] ?? OPEN_FREQ[stringIndex] ?? 110);
         }
-        setActiveString(stringIndex);
+        if (!fromMic) setActiveString(stringIndex);
       }
 
       if (!res.hit || !res.note) {
@@ -530,6 +532,7 @@ export function SessionPlayer() {
       }
       const realIndex = notesRef.current.indexOf(res.note);
       consumed.current.add(realIndex);
+      if (fromMic && kind === "pluck" && res.note.string !== undefined) setActiveString(res.note.string);
       if (kind !== "pluck") {
         if (fromMic) {
           // Do not play a synthetic chord or hit sound back into the open mic.
@@ -747,20 +750,31 @@ export function SessionPlayer() {
             if (onset) {
               recognizedEvents += 1;
               setMicDetectedEvents(recognizedEvents);
+              if (micInstrumentRef.current === "ukulele") {
+                setLastDetectedPitch(`${onset.frequencyHz.toFixed(1)} Hz · MIDI ${onset.midi}`);
+              }
               let inputIndex = onset.midi;
               if (micSurfaceRef.current === "strings") {
-                const nearest = nearestString(
-                  onset.frequencyHz,
-                  micOpenFreqRef.current,
-                  micStringNamesRef.current,
-                );
-                // Open-string drills should not count a random room sound or the
-                // metronome as a played string.
-                if (micRequiresOpenStringRef.current && Math.abs(nearest.cents) > 180) {
-                  micFrameRef.current = requestAnimationFrame(loop);
-                  return;
+                if (micRequiresOpenStringRef.current) {
+                  // Ukulele high-G is re-entrant: nearest pitch cannot reliably
+                  // identify the physical string. Judge the scheduled open-string
+                  // target instead; non-target notes must not be accepted.
+                  const elapsed = (onset.onsetMs - startRef.current) / 1000;
+                  const target = notesRef.current.find((note, i) =>
+                    !consumed.current.has(i) &&
+                    note.string !== undefined &&
+                    Math.abs(note.t - elapsed) * 1000 <= micWindowMsRef.current,
+                  );
+                  const targetHz = target?.string !== undefined
+                    ? micOpenFreqRef.current[target.string]
+                    : undefined;
+                  if (!targetHz || !matchesOpenStringTarget(onset.frequencyHz, targetHz)) {
+                    setMicFeedback("A note was detected, but it was not the target open string. Check the highlighted string and tune it if needed.");
+                    micFrameRef.current = requestAnimationFrame(loop);
+                    return;
+                  }
+                  inputIndex = target!.string!;
                 }
-                inputIndex = nearest.index;
               }
               // Judged cues (expectedMidi: vocals, violin's fingered notes,
               // lap steel's barred notes) read the onset's UNROUNDED
@@ -830,7 +844,8 @@ export function SessionPlayer() {
         click(beat % meter === 0);
         setBeatN((beat % meter) + 1);
         const upcoming = notesRef.current.find((n, i) => !consumed.current.has(i) && n.t >= elapsed - 0.05);
-        if (upcoming?.string !== undefined) setExpectedString(upcoming.string);
+        setExpectedString(upcoming?.string ?? null);
+        setActiveString(null);
         if (upcoming?.chord) setLiveChord(upcoming.chord);
       }
       if (!visualOnlyRef.current) {
@@ -1316,13 +1331,16 @@ export function SessionPlayer() {
             ) : null}
 
             {surface === "strings" && isWarm ? (
-              <StringRack
+              <div className="space-y-2">
+                <p className="text-center text-xs text-muted">Amber outline = target string · Solid highlight = correctly played</p>
+                <StringRack
                 names={inst.stringNames}
                 active={activeString}
                 expected={expectedString}
                 onPluck={(i) => attempt("pluck", i)}
-                disabled={requiresMicInput}
-              />
+                  disabled={requiresMicInput}
+                />
+              </div>
             ) : null}
 
             {useHighway ? (
@@ -1375,6 +1393,9 @@ export function SessionPlayer() {
                       <p className="text-xs text-muted">The microphone hears audio, but no playable attack has been recognized yet.</p>
                     ) : null}
                   </div>
+                ) : null}
+                {instrument === "ukulele" && micMode === "pitch" && micStatus === "listening" ? (
+                  <p role="status" className="mt-2 text-center text-xs text-muted">Mic heard: {lastDetectedPitch ?? "waiting for a note"} · Target: {expectedString === null ? "waiting" : inst.stringNames[expectedString]}</p>
                 ) : null}
                 {micFeedback ? (
                   <p role="status" aria-live="polite" className="mt-2 text-center text-xs leading-relaxed text-muted">
