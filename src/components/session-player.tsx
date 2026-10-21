@@ -1298,7 +1298,6 @@ export function SessionPlayer() {
                 onPlay={(midi) => attempt("pluck", midi)}
                 disabled={requiresMicInput}
               />
-              </div>
             ) : null}
 
             {surface === "pads" ? (
