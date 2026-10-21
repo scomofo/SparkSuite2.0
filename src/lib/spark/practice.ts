@@ -91,7 +91,12 @@ export function buildTimeline(item: PlanItem): NoteEvent[] {
     const n = Math.max(1, item.stringCount ?? 6);
     for (let bar = 0; bar < item.bars; bar++) {
       for (let beat = 0; beat < bpb; beat++) {
-        const string = n - 1 - ((bar * bpb + beat) % n);
+        // The ukulele introductory drill teaches G–C–E–A (index 0 to 3).
+        // Other instruments retain their established low-to-high pattern.
+        const stepIndex = (bar * bpb + beat) % n;
+        const string = item.lessonId === "lesson_uke_open_01"
+          ? stepIndex
+          : n - 1 - stepIndex;
         events.push({
           t: (bar * bpb + beat) * beatSec,
           kind: "pluck",
