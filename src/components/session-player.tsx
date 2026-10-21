@@ -602,6 +602,7 @@ export function SessionPlayer() {
     const strumDetector = new StrumOnsetDetector();
     const directionDetector = new StrumDirectionDetector();
     const pitchDetector = new PitchOnsetDetector();
+    const openStringPitchTracker = new PitchTracker();
     const voicePitchTracker = new PitchTracker();
     const percussionDetector = new PercussionOnsetDetector();
     const attackDetector = new AcousticAttackDetector();
@@ -636,6 +637,7 @@ export function SessionPlayer() {
           strumDetector.reset();
           directionDetector.reset();
           pitchDetector.reset();
+          openStringPitchTracker.reset();
           voicePitchTracker.reset();
           percussionDetector.reset();
           recognizedEvents = 0;
@@ -741,6 +743,35 @@ export function SessionPlayer() {
                   setLastDetectedPitch(`${onset.frequencyHz.toFixed(1)} Hz · MIDI ${onset.midi}`);
                   attemptRef.current?.("pluck", onset.midi, onset.onsetMs, onset.midi, { frequencyHz: onset.frequencyHz });
                 }
+              }
+            }
+          } else if (micRequiresOpenStringRef.current) {
+            // A correct pluck may sustain past its transient. Use a stable pitch
+            // sample at the actual cue time, rather than demanding that the
+            // attack detector emit during the narrow hit window.
+            const sample = openStringPitchTracker.process(
+              timeData,
+              mic.ctx.sampleRate,
+              ts,
+              2,
+              minimumHz,
+              maximumHz,
+            );
+            if (sample) {
+              setLastDetectedPitch(`${sample.frequencyHz.toFixed(1)} Hz · MIDI ${sample.midi}`);
+              const elapsed = (ts - startRef.current) / 1000;
+              const target = notesRef.current.find((note, i) =>
+                !consumed.current.has(i) &&
+                note.string !== undefined &&
+                Math.abs(note.t - elapsed) * 1000 <= micWindowMsRef.current,
+              );
+              const targetHz = target?.string !== undefined
+                ? micOpenFreqRef.current[target.string]
+                : undefined;
+              if (target?.string !== undefined && matchesOpenStringTarget(sample.frequencyHz, targetHz)) {
+                recognizedEvents += 1;
+                setMicDetectedEvents(recognizedEvents);
+                attemptRef.current?.("pluck", target.string, ts, sample.midi, { frequencyHz: sample.frequencyHz });
               }
             }
           } else {
