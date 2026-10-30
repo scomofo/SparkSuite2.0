@@ -32,7 +32,31 @@ const levelOpeners: Record<LearningLesson["level"], (lesson: LearningLesson) => 
     `Play “${lesson.title}” like a short piece, not an exercise. Make one clear choice, listen to what it changes, and keep the version you like.`,
 };
 
+// First lessons need an audible target before broader musicianship language is useful.
+const firstListeningFocus: Record<string, string> = {
+  "guitar-first-sound":
+    "Listen for the first-fret F sounding higher than open E, then for the return to the lower E.",
+  "piano-find-c":
+    "Listen for C–D–E rising one step at a time, then E–D–C returning to the starting pitch.",
+  "ukulele-gcea":
+    "Say G, C, E, A as each string sounds. Listen for four separate attacks rather than one chord.",
+  "bass-one-note":
+    "Listen for open E starting when you pluck and becoming silent when you touch the string to mute it.",
+  "drums-pulse": "Listen for equal space between taps, including where count 4 returns to count 1.",
+  "vocals-easy-tone":
+    "Notice an easy, steady hum for two counts and a silent two-count rest. Use a comfortable pitch; listening alone is also an option.",
+  "mandolin-gdae":
+    "Listen for one clear attack from both strings of each course together, then a higher pitch on the next course.",
+  "banjo-open-g":
+    "Listen for the notes you heard separately blending into the open G chord when you brush all five strings.",
+  "violin-open-strings-and-bow":
+    "Listen for a continuous sound within each bow stroke. Let the next stroke start where the previous one ended.",
+  "lapsteel-c6-and-the-bar":
+    "Listen for each open-string pitch separately, then for those same notes together when you brush the C6 chord.",
+};
+
 function focusFor(lesson: LearningLesson) {
+  if (firstListeningFocus[lesson.id]) return firstListeningFocus[lesson.id];
   const text = `${lesson.id} ${lesson.title} ${lesson.outcome}`.toLowerCase();
 
   if (/pulse|eighth|rhythm|rest|backbeat|syncop|groove|polyrhythm|subdivision/.test(text))

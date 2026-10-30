@@ -50,6 +50,7 @@ jobs:
           node scripts/studio-browser.mjs http://127.0.0.1:8083 dev
           node scripts/microphone-browser.mjs http://127.0.0.1:8083 dev
           node scripts/learning-browser.mjs http://127.0.0.1:8083 dev
+          node scripts/learning-ux-browser.mjs http://127.0.0.1:8083 dev
           node scripts/profile-sync-browser.mjs http://127.0.0.1:8083 dev
           node scripts/lesson-practice-browser.mjs http://127.0.0.1:8083 dev
           node scripts/personalized-browser.mjs http://127.0.0.1:8083 dev
@@ -69,6 +70,7 @@ jobs:
           }
           node scripts/microphone-browser.mjs http://127.0.0.1:8081 built
           node scripts/learning-browser.mjs http://127.0.0.1:8081 built
+          node scripts/learning-ux-browser.mjs http://127.0.0.1:8081 built
           node scripts/profile-sync-browser.mjs http://127.0.0.1:8081 built
           node scripts/lesson-practice-browser.mjs http://127.0.0.1:8081 built
           node scripts/personalized-browser.mjs http://127.0.0.1:8081 built
