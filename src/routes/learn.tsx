@@ -6,6 +6,7 @@ import { AppShell } from "@/components/app-shell";
 import { CoachLink } from "@/components/coach-link";
 import { MilestoneCard } from "@/components/milestone-card";
 import { LessonDemo } from "@/components/lesson-demo";
+import { LessonHelp } from "@/components/lesson-help";
 import { Button } from "@/components/ui/button";
 import { LEARNING_LEVELS, lessonCheck, learningLesson } from "@/lib/spark/curriculum";
 import { lessonVoice } from "@/lib/spark/curriculum-voice";
@@ -102,8 +103,6 @@ function LearnPage() {
           </label>
         </header>
 
-        <CoachLink className="mt-5" />
-        {ready && !lesson ? <SharedPhrase key={instrument} instrument={instrument} /> : null}
         {!ready ? (
           <p role="status" className="mt-8 text-muted">
             Finding your place…
@@ -126,6 +125,7 @@ function LearnPage() {
                   <ArrowLeft className="size-4" aria-hidden="true" /> Learning path
                 </Button>
                 <section
+                  key={lesson.id}
                   aria-label="Current lesson"
                   className="mt-4 rounded-xl border border-border bg-surface p-5 sm:p-8"
                 >
@@ -235,7 +235,9 @@ function LearnPage() {
                       {step === 0 ? (
                         <>
                           <p className="mt-5 text-sm leading-relaxed text-muted">
-                            One idea, one attempt. Your place is saved; stopping here is fine.
+                            {storageOk
+                              ? "One idea, one attempt. Your place is saved; stopping here is fine."
+                              : "One idea, one attempt. Keep this tab open to keep your place."}
                           </p>
                           <p className="mt-4 leading-relaxed text-muted">{lesson.explanation}</p>
                           <details className="mt-4 text-sm text-muted">
@@ -247,6 +249,9 @@ function LearnPage() {
                           <div className="mt-5 rounded-lg bg-raised p-4">
                             <p className="studio-label">Hear it in context</p>
                             <p className="mt-2 text-sm leading-relaxed">{lesson.example}</p>
+                            <p className="mt-3 text-sm leading-relaxed text-ember">
+                              {voice?.listenFor}
+                            </p>
                             {lesson.demo ? (
                               <LessonDemo
                                 key={lesson.id}
@@ -291,6 +296,14 @@ function LearnPage() {
                             Start slower than your ambition. You are looking for one moment that
                             feels or sounds more settled than the last attempt—not a flawless take.
                           </p>
+                          <aside
+                            aria-label="Listening focus"
+                            className="mt-5 rounded-lg bg-raised p-4"
+                          >
+                            <p className="studio-label">Listen for one thing</p>
+                            <p className="mt-2 text-sm leading-relaxed">{voice?.listenFor}</p>
+                          </aside>
+                          <LessonHelp key={`${lesson.id}-practice`} lesson={lesson} />
                           <ol className="mt-5 space-y-4">
                             {lesson.practice.map((instruction, index) => (
                               <li key={instruction} className="flex gap-3 leading-relaxed">
@@ -308,12 +321,6 @@ function LearnPage() {
                             <p className="studio-label">After you play</p>
                             <p className="mt-2 text-sm leading-relaxed">{voice?.reflection}</p>
                           </div>
-                          <details className="mt-5 rounded-lg border border-border p-4">
-                            <summary className="min-h-11 cursor-pointer text-sm text-muted">
-                              Show the example again
-                            </summary>
-                            <p className="mt-2 text-sm leading-relaxed">{lesson.example}</p>
-                          </details>
                           {exercise ? (
                             <div className="mt-5 rounded-lg border border-ember/40 p-4">
                               <p className="font-medium">{exercise.title}</p>
@@ -380,6 +387,11 @@ function LearnPage() {
                         </>
                       ) : (
                         <>
+                          <p className="mt-4 text-sm leading-relaxed text-muted">
+                            {record.completedOn
+                              ? "Try recalling the idea before opening help. A correction still counts, and your earlier completion stays saved."
+                              : "Check the idea you just explored. This checks understanding; your playing develops through practice."}
+                          </p>
                           <fieldset className="mt-6 min-w-0">
                             <legend className="text-lg font-medium">{check?.question}</legend>
                             <div className="mt-4 space-y-3">
@@ -428,28 +440,32 @@ function LearnPage() {
                               <p className="mt-2">{check?.feedback}</p>
                               {record.answer === lesson.answer ? (
                                 <p className="mt-2 text-muted">
-                                  {record.assisted || record.firstAnswer !== lesson.answer
-                                    ? "Useful correction. A short review will help this stick; your completion still counts."
-                                    : "Recalled independently. Carry this idea into the next play-through."}
+                                  {record.firstAnswer !== lesson.answer
+                                    ? "Useful correction. Carry that clue into your next attempt."
+                                    : record.assisted
+                                      ? "You used the example to work it out. That counts as supported practice."
+                                      : record.completedOn
+                                        ? "Recalled independently. Carry this idea into the next play-through."
+                                        : "You identified the idea. Try noticing it in your next play-through."}
                                 </p>
-                              ) : null}
+                              ) : (
+                                <p className="mt-2 text-muted">
+                                  Compare that clue with the choices, then choose again. Open the
+                                  explanation below if you want to hear or read the example.
+                                </p>
+                              )}
                             </div>
                           ) : (
                             <p className="mt-4 text-sm text-muted">
                               Take your time. You can change your answer; there is no penalty.
                             </p>
                           )}
-                          <details
-                            className="mt-4 text-sm text-muted"
-                            onToggle={(event) => {
-                              if (event.currentTarget.open) assist(lesson.id);
-                            }}
-                          >
-                            <summary className="min-h-11 cursor-pointer">
-                              Look back at the explanation
-                            </summary>
-                            <p className="leading-relaxed">{lesson.explanation}</p>
-                          </details>
+                          <LessonHelp
+                            key={`${lesson.id}-check`}
+                            lesson={lesson}
+                            checking
+                            onReveal={() => assist(lesson.id)}
+                          />
                           <Button
                             className="mt-6 w-full"
                             size="lg"
@@ -495,6 +511,16 @@ function LearnPage() {
                     {summary.recommended.title}
                   </h2>
                   <p className="mt-3 text-muted">{summary.recommended.outcome}</p>
+                  {summary.active ? (
+                    <p className="mt-3 text-sm text-ember">
+                      Next: {STEPS[data.records[summary.active.id].step]}
+                    </p>
+                  ) : summary.reason === "review" ? (
+                    <p className="mt-3 text-sm text-ember">
+                      A short recall check. Help is available, and your earlier completion stays
+                      saved.
+                    </p>
+                  ) : null}
                   <fieldset className="mt-6 min-w-0">
                     <legend className="text-sm font-medium">How much room do you have?</legend>
                     <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -563,6 +589,8 @@ function LearnPage() {
                 >
                   Adjust my starting point or time
                 </Link>
+                <SharedPhrase key={instrument} instrument={instrument} />
+                <CoachLink className="mt-4" />
                 <MilestoneCard instrument={instrument} />
                 <section aria-label="Curriculum roadmap" className="mt-8">
                   <div className="flex flex-wrap items-baseline justify-between gap-3">
@@ -601,18 +629,28 @@ function LearnPage() {
                           <ul className="mt-4 divide-y divide-border">
                             {lessons.map((item) => {
                               const saved = data.records[item.id];
-                              const status = saved?.completedOn
-                                ? "Explored"
-                                : saved
-                                  ? "In progress"
-                                  : "Ready to explore";
+                              const inProgress = saved && saved.step < 3;
+                              const due =
+                                saved?.completedOn && saved.reviewOn && saved.reviewOn <= day;
+                              const status = inProgress
+                                ? `${saved.completedOn ? "Review in progress" : "In progress"} · ${STEPS[saved.step]}`
+                                : due
+                                  ? "Ready for a short review"
+                                  : saved?.completedOn
+                                    ? "Explored · Revisit any time"
+                                    : "Ready to explore";
                               return (
                                 <li key={item.id}>
                                   <button
                                     onClick={() => open(item.id)}
                                     className="flex min-h-16 w-full items-center gap-3 py-4 text-left"
                                   >
-                                    {saved?.completedOn ? (
+                                    {due && !inProgress ? (
+                                      <Clock
+                                        className="size-5 shrink-0 text-ember"
+                                        aria-hidden="true"
+                                      />
+                                    ) : saved?.completedOn && !inProgress ? (
                                       <CheckCircle2
                                         className="size-5 shrink-0 text-good"
                                         aria-hidden="true"

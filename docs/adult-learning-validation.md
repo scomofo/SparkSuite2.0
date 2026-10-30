@@ -50,3 +50,21 @@ node scripts/shared-phrase-audio-browser.mjs
 The Node 24 CI job now runs these checks and uploads their JSON verdicts, screenshots, and Playwright traces in `browser-evidence`. Locally, `npm test` passed 195 template/script tests and 204 application tests; typecheck, lint, and production build passed. The shared-phrase scripts report no application console errors or uncaught runtime errors.
 
 Remaining environment boundary: the external Grok branding script returned `net::ERR_EMPTY_RESPONSE`. Its exact URL/error is retained separately in interaction evidence. The unmodified generic render smoke therefore exits 2 on both dev and production; its screenshots have content and no overflow/page errors, and production does not diverge from the dev baseline. This is not claimed as a fully clean global smoke run. This acceptance covers SparkSuite software behavior and native synthesized samples, not human listening, physical instrument performance, or a new Harmony Knight acceptance run.
+
+## Learning UX and listening focus follow-up
+
+Baseline: `main` at `704ec566a5521260e8be4e76e683de3991d91413`.
+
+- The recommended lesson and its start action now precede the optional shared study and coach. Resume cards name the next step; roadmap rows distinguish work in progress, due reviews, and previously explored lessons.
+- The explanation and practice steps display a listening focus. The first lesson on each of the ten instruments has a concrete target aligned with its written example, such as hearing F above open E on guitar or deliberately ending the open E on bass.
+- Inline help provides the written example and optional audio in practice and the understanding check. Opening check help marks the attempt assisted without replacing either the first or current answer. Closing help unmounts its audio player; reopening does not autoplay. Lesson keys keep open help and playback from leaking across instruments.
+- Feedback distinguishes a first correct response, a correction, supported practice, and independent recall on a revisited lesson. The first check does not claim delayed recall. The existing completion and review-spacing rules are retained.
+
+Validation on the final application source:
+
+- `npm test`: 196 script tests and 472 application tests passed. Typecheck, lint, and production build passed.
+- `node scripts/learning-ux-browser.mjs URL LABEL`: 13 focused browser checks passed against both development and production. These cover desktop action hierarchy, keyboard help, real audio disconnection on collapse and instrument change, no autoplay, first-check feedback, saved answers, reload, exact resume step, instrument isolation, due-review status, supported review returning tomorrow, preserved original completion, and independent review retaining its longer interval.
+- The existing `learning-browser.mjs` and `lesson-practice-browser.mjs` completed their functional checks, including all ten instruments and all 80 guided exercise handoffs. Both failed their final clean-console assertions on resource-load failures; the learning suite identifies the unavailable `https://grok.com/grok-app-builder/extensions.js` request. The focused suite records this external failure separately and reports no application console errors or uncaught runtime errors. These legacy suites are not reported as fully passing.
+- Desktop overview, practice, and completion screenshots were visually inspected. The generic render checks also cover 390 px width. This remains a desktop-focused product pass; physical instrument performance was not assessed.
+
+Local browser execution used Playwright because `agent-browser` was absent. A temporary environment preloader supplied Chromium 153, handled the environment's unavailable network-interface enumeration, and waited for hydration before generic render screenshots. These adaptations do not change application or repository runtime dependencies. CI runs the new focused suite on development and production and retains its JSON, screenshots, and trace in `browser-evidence`.
