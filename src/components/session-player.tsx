@@ -43,6 +43,9 @@ import {
   rmsLevel,
   StrumDirectionDetector,
   StrumOnsetDetector,
+  supportsSpectralStrumDirection,
+  UKULELE_STRUM_SETTLE_MS,
+  UKULELE_STRUM_OPTIONS,
   type StrumDirectionEstimate,
 } from "@/lib/spark/strum-detection";
 import {
@@ -87,7 +90,7 @@ function acousticInstrumentLabel(instrument: InstrumentId, name: string) {
 }
 
 function acousticInputDescription(instrument: InstrumentId, name: string, mode: AcousticInputMode) {
-  const label = acousticInstrumentLabel(instrument, name);
+  const label = instrument === "ukulele" ? "high-G (GCEA) ukulele" : acousticInstrumentLabel(instrument, name);
   if (instrument === "vocals") {
     return "Sing or hum the target pitch on the cue. Held notes are checked at each beat.";
   }
@@ -95,6 +98,9 @@ function acousticInputDescription(instrument: InstrumentId, name: string, mode: 
     return "Play the chord on your real piano. Timing and sounding notes are checked when the microphone can separate them clearly.";
   }
   if (mode === "strum") {
+    if (!supportsSpectralStrumDirection(instrumentById(instrument).openFreq)) {
+      return `Strum your real ${label} on the cue. Timing and distinct chord pitches are checked when clear. Strum direction and individual string clarity are not scored.`;
+    }
     return `Strum your real ${label} on the cue. The mic checks timing and chord-note coverage, and grades down/up direction only when the signal is clear. It cannot see finger placement.`;
   }
   if (mode === "percussion") {
@@ -248,6 +254,11 @@ export function SessionPlayer() {
     hasSingleNoteCues,
     lessonId: item?.lessonId,
   });
+  // The chord spectrum arrives after the attack. Leave its cue open until
+  // that evidence can be delivered, while judging timing at the attack itself.
+  const micJudgmentGrace = instrument === "ukulele" && micMode === "strum"
+    ? (UKULELE_STRUM_SETTLE_MS + 50) / 1000
+    : 0;
   const notesRef = useRef<NoteEvent[]>([]);
   const consumed = useRef<Set<number>>(new Set());
   const startRef = useRef(0);
@@ -475,13 +486,16 @@ export function SessionPlayer() {
           const spectrum = analyzeChordSpectrum(evidence.spectrumDb, evidence.sampleRate, evidence.fftSize);
           const assessment = assessChordPitches(spectrum, expectedChord);
           if (assessment.status === "match") {
-            setMicFeedback("Chord tones detected.");
+            setMicFeedback("Expected chord pitches detected.");
           } else if (assessment.status === "mismatch") {
-            setMicFeedback(`Chord check: ${assessment.missingMidi.length} expected note(s) were not clearly detected.`);
+            setMicFeedback("Chord check: I heard pitches outside the target chord. Check the shape and tuning.");
+            // Settle this cue once; otherwise its later expiry records the
+            // same wrong chord as a second miss.
+            consumed.current.add(notesRef.current.indexOf(res.note));
             onJudge("miss", false);
             return;
           } else {
-            setMicFeedback("Timing counted; the microphone could not separate enough chord tones to grade the chord reliably.");
+            setMicFeedback("Timing counted; the microphone could not hear all target chord pitches clearly enough to grade the chord.");
           }
         }
       }
@@ -490,6 +504,7 @@ export function SessionPlayer() {
         kind !== "pluck" &&
         fromMic &&
         (instrument === "guitar" || instrument === "ukulele" || instrument === "mandolin" || instrument === "banjo" || instrument === "lapsteel") &&
+        supportsSpectralStrumDirection(inst.openFreq) &&
         (expectedDirection === "down" || expectedDirection === "up") &&
         evidence?.direction &&
         evidence.direction.confidence >= 0.65 &&
@@ -599,7 +614,9 @@ export function SessionPlayer() {
     setMicDevices(devices);
 
     mic.analyser.smoothingTimeConstant = 0.2;
-    const strumDetector = new StrumOnsetDetector();
+    const strumDetector = new StrumOnsetDetector(
+      micInstrumentRef.current === "ukulele" ? UKULELE_STRUM_OPTIONS : {},
+    );
     const directionDetector = new StrumDirectionDetector();
     const pitchDetector = new PitchOnsetDetector();
     const openStringPitchTracker = new PitchTracker();
@@ -892,9 +909,9 @@ export function SessionPlayer() {
           const note = notesRef.current[i];
           // Hold cues stay open for their full span (plus the usual hit
           // window) — the hold judge settles them, not this clock.
-          const expiry = note.holdBeats
+          const expiry = (note.holdBeats
             ? note.t + note.holdBeats * beatLen + (item.windowMs ?? 230) / 1000
-            : note.t + (item.windowMs ?? 230) / 1000;
+            : note.t + (item.windowMs ?? 230) / 1000) + micJudgmentGrace;
           if (elapsed > expiry) {
             consumed.current.add(i);
             onJudge("miss");
@@ -902,7 +919,10 @@ export function SessionPlayer() {
         }
       }
       const last = notesRef.current[notesRef.current.length - 1];
-      const end = hasInstrumentPattern(item) ? patternEndSec(item) : (last?.t ?? 0) + 0.8;
+      const end = Math.max(
+        hasInstrumentPattern(item) ? patternEndSec(item) : (last?.t ?? 0) + 0.8,
+        (last?.t ?? 0) + (item.windowMs ?? 230) / 1000 + micJudgmentGrace,
+      );
       if (last && elapsed > end) {
         setItemSummary(summarizeItem(item, hitsRef.current, missesRef.current));
         setPhase("itemdone");
@@ -912,7 +932,7 @@ export function SessionPlayer() {
     };
     raf.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(raf.current);
-  }, [item, onJudge, phase]);
+  }, [item, micJudgmentGrace, onJudge, phase]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -1506,6 +1526,11 @@ export function SessionPlayer() {
                 <p className="tabular text-muted">
                   {itemSummary?.stars ?? 0}★ · {Math.round((itemSummary?.accuracy ?? 0) * 100)}% · +{itemSummary?.xp ?? 0} xp
                 </p>
+                {instrument === "ukulele" && micMode === "strum" ? (
+                  <p className="text-pretty text-xs text-muted">
+                    This score includes timing-only hits when chord pitches were unclear. Individual string clarity and strum direction are not assessed.
+                  </p>
+                ) : null}
                 <p className="text-pretty text-sm text-muted">{refineLine(item, itemSummary?.stars ?? 0)}</p>
               </>
             )}

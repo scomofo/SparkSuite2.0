@@ -17,9 +17,9 @@ export function MicSignalMeter({ level, mode }: { level: number; mode?: Acoustic
   const threshold = micSignalThreshold(mode);
   const message =
     level < 0.0015
-      ? "No audio level detected yet. Play a note, chord, or drum hit to test the microphone."
+      ? "The input is quiet right now. Play a note, chord, or drum hit to test the microphone."
       : level < threshold
-        ? "Audio is reaching the app, but the level is quiet for this detector. Move the mic closer or raise the input level."
+        ? "Audio is reaching the app at a low level. If notes are missed, move the mic closer or raise the input level."
         : "Audio is reaching the app. Play in time with the cue; this meter confirms signal, not note accuracy.";
 
   return (
