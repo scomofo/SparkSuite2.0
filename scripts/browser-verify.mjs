@@ -22,7 +22,7 @@ async function waitForApp(url) {
 }
 
 async function suites(url, label) {
-  for (const name of ["studio", "microphone", "learning", "learning-ux", "profile-sync", "lesson-practice", "personalized", "coach"]) {
+  for (const name of ["studio", "microphone", "ukulele-assessment", "learning", "learning-ux", "profile-sync", "lesson-practice", "personalized", "coach"]) {
     await run(`scripts/${name}-browser.mjs`, url, label);
   }
   await run("scripts/adult-curriculum-browser.mjs", "spark", url, label);
@@ -34,6 +34,7 @@ try {
   await run("scripts/dev-server.mjs");
   await waitForApp("http://127.0.0.1:8083/");
   await run("scripts/mic-input-browser.mjs", "http://127.0.0.1:8083");
+  await run("scripts/ukulele-assessment-audio-browser.mjs");
   await suites("http://127.0.0.1:8083", "dev");
   await run("scripts/shared-phrase-audio-browser.mjs");
   await run("scripts/browser-smoke.mjs", "http://127.0.0.1:8083/", evidencePath("dev.png"));

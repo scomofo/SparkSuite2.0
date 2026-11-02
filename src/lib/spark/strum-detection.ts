@@ -12,6 +12,14 @@ export type StrumDetectorOptions = {
   maxConfirmationMs?: number;
   maxFlatness?: number;
   attackRatio?: number;
+  /** Wait for the rolled chord to fill the FFT; preserve the attack timestamp. */
+  settleMs?: number;
+};
+
+export const UKULELE_STRUM_SETTLE_MS = 160;
+export const UKULELE_STRUM_OPTIONS: StrumDetectorOptions = {
+  minimumLevel: 0.0025,
+  settleMs: UKULELE_STRUM_SETTLE_MS,
 };
 
 /** Root-mean-square signal level for one microphone frame. */
@@ -95,8 +103,11 @@ function prominentPeakCount(
     if (
       Number.isFinite(db) &&
       db >= thresholdDb &&
-      db >= spectrumDb[i - 1] + 3 &&
-      db >= spectrumDb[i + 1] + 3 &&
+      // A real windowed FFT peak may sit between bins, making its two
+      // highest bins almost equal. Prominence comes from the noise-floor
+      // threshold above, not an arbitrary drop to the adjacent bin.
+      db >= spectrumDb[i - 1] &&
+      db > spectrumDb[i + 1] &&
       hz - lastPeakHz >= 30
     ) {
       count++;
@@ -132,6 +143,7 @@ export class StrumOnsetDetector {
   private previousTailRms = 0;
   private lastDetectedMs = Number.NEGATIVE_INFINITY;
   private pending: { onsetMs: number; peakRms: number } | null = null;
+  private confirmed: StrumOnset[] = [];
 
   constructor(options: StrumDetectorOptions = {}) {
     this.options = {
@@ -144,6 +156,7 @@ export class StrumOnsetDetector {
       maxConfirmationMs: options.maxConfirmationMs ?? 112,
       maxFlatness: options.maxFlatness ?? 0.7,
       attackRatio: options.attackRatio ?? 1.3,
+      settleMs: options.settleMs ?? 0,
     };
   }
 
@@ -218,7 +231,11 @@ export class StrumOnsetDetector {
     // contain the strum and look equally loud; the prior callback still gives
     // us the pre-attack baseline.
     this.previousTailRms = tailRms;
-    return detected;
+    if (detected) this.confirmed.push(detected);
+    const ready = this.confirmed[0];
+    return ready && nowMs - ready.onsetMs >= this.options.settleMs
+      ? this.confirmed.shift()!
+      : null;
   }
 
   reset() {
@@ -226,11 +243,19 @@ export class StrumOnsetDetector {
     this.previousTailRms = 0;
     this.lastDetectedMs = Number.NEGATIVE_INFINITY;
     this.pending = null;
+    this.confirmed = [];
   }
 }
 
 
 export type StrumDirection = "down" | "up" | "unknown";
+
+/** Low-first/high-first energy cannot identify a stroke on re-entrant tuning. */
+export function supportsSpectralStrumDirection(openFrequencies: readonly number[]): boolean {
+  return openFrequencies.length > 1 && openFrequencies.every((hz, index) =>
+    Number.isFinite(hz) && hz > 0 && (index === 0 || hz > openFrequencies[index - 1]),
+  );
+}
 
 export type StrumDirectionEstimate = {
   direction: StrumDirection;

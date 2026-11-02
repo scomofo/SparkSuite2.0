@@ -53,8 +53,8 @@ export function analyzeChordSpectrum(
     if (
       !Number.isFinite(center) ||
       center < thresholdDb ||
-      center < left + 2 ||
-      center < right + 2
+      center < left ||
+      center <= right
     ) continue;
     const denominator = left - 2 * center + right;
     const offset = denominator === 0 ? 0 : Math.max(-0.5, Math.min(0.5, 0.5 * (left - right) / denominator));
@@ -84,15 +84,15 @@ export function analyzeChordSpectrum(
 }
 
 /**
- * Grades note coverage only when the spectrum contains enough independent
- * pitches. Weak or ambiguous recordings remain timing-only rather than being
- * mislabeled as a wrong chord.
+ * Grades distinct pitches, not physical strings: two strings in unison share
+ * one spectral peak. Missing pitches alone may be masked by a louder string;
+ * only independent pitches outside the target provide a wrong-chord verdict.
  */
 export function assessChordPitches(
   analysis: ChordSpectrumAnalysis,
   expectedMidi: number[],
 ): ChordAssessment {
-  const expected = expectedMidi.filter((midi) => Number.isInteger(midi) && midi >= 0 && midi <= 127);
+  const expected = [...new Set(expectedMidi.filter((midi) => Number.isInteger(midi) && midi >= 0 && midi <= 127))];
   if (expected.length < 2 || analysis.midiNotes.length < 2 || analysis.confidence < 0.35) {
     return {
       status: "uncertain",
@@ -103,11 +103,11 @@ export function assessChordPitches(
       missingMidi: expected,
     };
   }
-  const available = [...analysis.midiNotes];
+  const available = [...new Set(analysis.midiNotes)];
   const missingMidi: number[] = [];
   let matchedNotes = 0;
   for (const target of expected) {
-    const index = available.findIndex((midi) => Math.abs(midi - target) <= 1);
+    const index = available.indexOf(target);
     if (index < 0) missingMidi.push(target);
     else {
       matchedNotes++;
@@ -115,12 +115,21 @@ export function assessChordPitches(
     }
   }
   const coverage = expected.length ? matchedNotes / expected.length : 0;
-  // A chord only passes when every expected sounding note is represented.
-  // A confident partial chord is a mismatch, not a near-perfect match; weak
-  // spectra remain uncertain so room noise or masking is not treated as proof.
+  // A semitone is a different note, not tuning tolerance. A complete target
+  // with an additional independent pitch is also not a verified match.
   let status: ChordAssessment["status"] = "uncertain";
-  if (coverage === 1 && analysis.confidence >= 0.5) status = "match";
-  else if (coverage < 1 && analysis.confidence >= 0.5) status = "mismatch";
+  if (analysis.confidence >= 0.5) {
+    // Upper partials can reinforce one another (especially two unison
+    // strings), so amplitude-based suppression cannot remove all of them.
+    // Such a peak is ambiguous, not evidence of an extra fretted note.
+    const unexpected = available.filter((midi) => !expected.some((target) => {
+      const ratio = 2 ** ((midi - target) / 12);
+      const harmonic = Math.round(ratio);
+      return harmonic >= 2 && harmonic <= 6 && Math.abs(1200 * Math.log2(ratio / harmonic)) <= 45;
+    }));
+    if (unexpected.length > 0) status = "mismatch";
+    else if (coverage === 1) status = "match";
+  }
   return {
     status,
     coverage,
