@@ -9,7 +9,10 @@ import {
   previewOwners,
   stopOutcome,
   terminatePids,
+  projectServerProcess,
+  parseNetstatPids,
 } from "./preview.mjs";
+import { projectRoot } from "./with-app-env.mjs";
 
 test("parsePreviewArgs accepts the two actions", () => {
   for (const action of ["stop", "restart"]) {
@@ -121,11 +124,12 @@ test("looksLikePreviewProcess spares the sibling scripts and re-used pids", () =
   assert.equal(looksLikePreviewProcess(""), false);
 });
 
-test("previewOwners trusts port owners and dedupes the pidfile pid", () => {
+test("previewOwners requires project ownership and dedupes the pidfile pid", () => {
   const owners = previewOwners({
     portPids: [50, 51],
     pidFilePid: 50,
-    cmdlineOf: () => assert.fail("a port owner needs no corroboration"),
+    cmdlineOf: () => `node "${projectRoot()}/node_modules/vite/bin/vite.js" preview`,
+    cwdOf: () => projectRoot(),
   });
   assert.deepEqual(owners, [50, 51]);
 });
@@ -134,9 +138,28 @@ test("previewOwners adds a pidfile pid whose command line is still the preview",
   const owners = previewOwners({
     portPids: [51],
     pidFilePid: 50,
-    cmdlineOf: (pid) => (pid === 50 ? cmdline("node", "npm-cli.js", "run", "preview") : ""),
+    cmdlineOf: () => cmdline("node", `${projectRoot()}/node_modules/vite/bin/vite.js`, "preview"),
+    cwdOf: () => projectRoot(),
   });
   assert.deepEqual(owners, [51, 50]);
+});
+
+test("port ownership alone never authorizes stopping another project", () => {
+  assert.deepEqual(previewOwners({ portPids: [50], pidFilePid: null, cmdlineOf: () => "node /other/node_modules/vite/bin/vite.js preview" }), []);
+  assert.equal(projectServerProcess("node /other/node_modules/vite/bin/vite.js preview", "/other", "/project"), false);
+  assert.equal(projectServerProcess("node /project-old/node_modules/vite/bin/vite.js preview", "", "/project"), false);
+  assert.equal(projectServerProcess('node "/project/node_modules/vite/bin/vite.js" preview "/project"', "", "/project"), true);
+  assert.equal(projectServerProcess('node "/project/node_modules/vite/bin/vite.js" preview "/other"', "", "/project"), false);
+  assert.equal(projectServerProcess("node npm-cli.js --prefix /project run preview", "", "/project"), true);
+  assert.equal(projectServerProcess("node npm-cli.js run preview:stop", "/project", "/project"), false);
+  assert.equal(projectServerProcess("node npm-cli.js run dev", "/project", "/project"), false);
+  assert.equal(projectServerProcess("node npm-cli.js run dev", "/project", "/project", "dev"), true);
+});
+
+test("Windows TCP inventory picks only listeners on the exact port", () => {
+  const output = "  TCP    127.0.0.1:8081  0.0.0.0:0  LISTENING  51\r\n  TCP    [::]:8081 [::]:0 LISTENING 51\r\n  TCP    127.0.0.1:8083 0.0.0.0:0 LISTENING 77\r\n  TCP 127.0.0.1:8081 127.0.0.1:43000 ESTABLISHED 88";
+  assert.deepEqual(parseNetstatPids(output, 8081), [51]);
+  assert.equal(parsePid("51junk"), null);
 });
 
 test("previewOwners drops a stale pidfile pid re-used by another process", () => {

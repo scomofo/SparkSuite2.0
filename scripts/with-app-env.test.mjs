@@ -99,6 +99,12 @@ test("the wrapper propagates the command's exit code", async () => {
   );
 });
 
+test("the wrapper preserves literal spaces, quotes and shell metacharacters in arguments", async () => {
+  const values = ["a b", 'a"b', "x & y", "$(do-not-run)", "a|b", "%PATH%"];
+  const { stdout } = await execFileAsync(process.execPath, [WRAPPER, process.execPath, "-e", "console.log(JSON.stringify(process.argv.slice(1)))", "--", ...values]);
+  assert.deepEqual(JSON.parse(stdout), values);
+});
+
 test("a signal-killed command is never reported as success", async () => {
   // The wrapper's own SIGTERM handler must not swallow the re-raised signal:
   // a cancelled build reporting exit 0 is a silently passing gate.

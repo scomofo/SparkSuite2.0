@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { evidencePath } from "./evidence-paths.mjs";
 export function normalizeBodyText(text) {
   return String(text ?? "")
     .replace(/\s+/g, " ")
@@ -35,7 +36,7 @@ export function parseSmokeArgs(argv, env = {}) {
   }
   return {
     url: positional[0] || "http://127.0.0.1:8083/",
-    outPng: positional[1] || "/workspace/screenshots/app-builder-preview.png",
+    outPng: positional[1] || evidencePath("app-builder-preview.png"),
     baseline,
   };
 }
@@ -56,6 +57,9 @@ export function compareToBaseline(current, baseline) {
     };
   }
   const reasons = [];
+  if (typeof baseline?.authEnabled === "boolean" && current.authEnabled !== baseline.authEnabled) {
+    reasons.push("resolved sign-in flag changed from the development baseline");
+  }
   const baseViewports = baseline?.viewports ?? {};
   for (const [name, cur] of entries) {
     const base = baseViewports[name];
@@ -117,12 +121,15 @@ export function baselineComparison(current, rawText) {
   }
   return compareToBaseline(current, baseline);
 }
-export function exitCodeFor(viewports) {
+export function exitCodeFor(viewports, verdict = {}) {
   const list = Object.values(viewports ?? {});
   if (list.length === 0) return 1;
   if (list.some((v) => (v.status ?? 0) >= 400 || (v.status ?? 0) === 0)) return 1;
   if (list.some((v) => (v.consoleErrors?.length ?? 0) > 0 || (v.pageErrors?.length ?? 0) > 0)) {
     return 2;
   }
+  if (list.some((v) => v.ready === false || !(v.bodyTextLen > 0 || v.hasCanvas) || v.horizontalOverflow)) return 3;
+  if (verdict.divergesFromBaseline || verdict.authWarnings?.length > 0 ||
+    verdict.brandWarnings?.some((warning) => warning.startsWith("BRAND WARNING:"))) return 4;
   return 0;
 }

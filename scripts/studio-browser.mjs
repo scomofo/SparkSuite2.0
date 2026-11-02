@@ -1,3 +1,4 @@
+import { evidenceDirectory } from "./evidence-paths.mjs";
 // CI regression checks for the user-facing studio and recovery flow.
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -5,7 +6,7 @@ import { chromium } from "playwright";
 
 const url = process.argv[2] ?? "http://127.0.0.1:8081";
 const label = process.argv[3] ?? "dev";
-const output = "/workspace/screenshots";
+const output = evidenceDirectory();
 mkdirSync(output, { recursive: true });
 
 // A server that has bound its port can still answer its first requests with

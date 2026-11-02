@@ -1,3 +1,4 @@
+import { evidenceDirectory } from "./evidence-paths.mjs";
 // Portable progress backup acceptance: import a profile, verify local restore, then export it again.
 import assert from "node:assert/strict";
 import { mkdirSync } from "node:fs";
@@ -5,7 +6,7 @@ import { chromium } from "playwright";
 
 const url = process.argv[2] ?? "http://127.0.0.1:8083";
 const label = process.argv[3] ?? "dev";
-const output = "/workspace/screenshots";
+const output = evidenceDirectory();
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const errors = [];

@@ -22,7 +22,7 @@
  * 1 diverged, 2 could not observe). Callers comparing the flag should use
  * `compareAuthInvariant()` rather than re-deriving it.
  */
-import { APP_ENV_ROUTE } from "./app-env-plugin.mjs";
+import { APP_ENV_ROUTE, BUILD_ENV_ROUTE } from "./app-env-plugin.mjs";
 import { isMainModule, mergeAppEnv, projectRoot, readAppEnv } from "./with-app-env.mjs";
 
 const DEFAULT_DEV_URL = "http://127.0.0.1:8083";
@@ -68,7 +68,7 @@ export function compareAuthInvariant({ devAuthEnabled, buildAuthEnabled }) {
 export async function probeDevAuthEnabled(devUrl, fetchImpl = fetch) {
   let env;
   try {
-    const response = await fetchImpl(new URL(APP_ENV_ROUTE, devUrl).href);
+    const response = await fetchImpl(new URL(APP_ENV_ROUTE, devUrl).href, { signal: AbortSignal.timeout(5000) });
     if (!response.ok) return null;
     env = JSON.parse(await response.text());
   } catch {
@@ -76,6 +76,16 @@ export async function probeDevAuthEnabled(devUrl, fetchImpl = fetch) {
   }
   if (env === null || typeof env !== "object") return null;
   return authEnabledFromEnvValue(env.VITE_AUTH_ENABLED);
+}
+
+/** Read the flag emitted with the built client, rather than assuming the current shell matches it. */
+export async function probeBuildAuthEnabled(url, fetchImpl = fetch) {
+  try {
+    const response = await fetchImpl(new URL(BUILD_ENV_ROUTE, url).href, { signal: AbortSignal.timeout(5000) });
+    if (!response.ok) return null;
+    const value = JSON.parse(await response.text());
+    return typeof value?.authEnabled === "boolean" ? value.authEnabled : null;
+  } catch { return null; }
 }
 
 /** The smoke-verdict warnings for a comparison: a real divergence only. */

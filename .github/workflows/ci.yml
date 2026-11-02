@@ -14,13 +14,17 @@ concurrency:
 
 jobs:
   verify:
-    name: Node ${{ matrix.node }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    name: ${{ matrix.os }} / Node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest]
         node: [22, 24]
+        include:
+          - os: windows-latest
+            node: 24
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -28,59 +32,23 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: npm
       - run: npm ci
+      - name: Check dependency advisories
+        if: matrix.node == 24 && matrix.os == 'ubuntu-latest'
+        run: npm audit --audit-level=high
       - run: npm test
       - run: npm run build
       - run: npm run typecheck
       - run: npm run lint
       - name: Install browser for UI checks
-        if: matrix.node == 24
+        if: matrix.node == 24 && matrix.os == 'ubuntu-latest'
         run: npx playwright install --with-deps chromium
       - name: Check development and production in the browser
-        if: matrix.node == 24
-        run: |
-          sudo mkdir -p /workspace/screenshots
-          sudo chown "$USER" /workspace/screenshots
-          sh startup.sh
-          for attempt in $(seq 1 30); do
-            if curl -fsS http://127.0.0.1:8083/ -o /dev/null; then break; fi
-            sleep 1
-          done
-          curl -fsS http://127.0.0.1:8083/ -o /dev/null
-          node scripts/mic-input-browser.mjs http://127.0.0.1:8083
-          node scripts/studio-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/microphone-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/learning-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/learning-ux-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/profile-sync-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/lesson-practice-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/personalized-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/coach-browser.mjs http://127.0.0.1:8083 dev
-          node scripts/adult-curriculum-browser.mjs spark http://127.0.0.1:8083 dev
-          node scripts/shared-phrase-audio-browser.mjs
-          node scripts/browser-smoke.mjs http://127.0.0.1:8083/ /workspace/screenshots/dev.png
-          echo "::group::SSR export bundle references"
-          grep -R -n -m 2 'ssr_exports' .vercel/output/functions/__server.func/_ssr 2>/dev/null | head -n 40 || true
-          echo "::endgroup::"
-          npm run preview:restart
-          node scripts/studio-browser.mjs http://127.0.0.1:8081 built || {
-            echo "::group::Production preview server log"
-            cat .grok/preview.log || true
-            echo "::endgroup::"
-            exit 1
-          }
-          node scripts/microphone-browser.mjs http://127.0.0.1:8081 built
-          node scripts/learning-browser.mjs http://127.0.0.1:8081 built
-          node scripts/learning-ux-browser.mjs http://127.0.0.1:8081 built
-          node scripts/profile-sync-browser.mjs http://127.0.0.1:8081 built
-          node scripts/lesson-practice-browser.mjs http://127.0.0.1:8081 built
-          node scripts/personalized-browser.mjs http://127.0.0.1:8081 built
-          node scripts/coach-browser.mjs http://127.0.0.1:8081 built
-          node scripts/adult-curriculum-browser.mjs spark http://127.0.0.1:8081 built
-          node scripts/browser-smoke.mjs http://127.0.0.1:8081/ /workspace/screenshots/built.png --baseline /workspace/screenshots/dev.json
+        if: matrix.node == 24 && matrix.os == 'ubuntu-latest'
+        run: node scripts/browser-verify.mjs
       - name: Upload browser evidence
-        if: always() && matrix.node == 24
+        if: always() && matrix.node == 24 && matrix.os == 'ubuntu-latest'
         uses: actions/upload-artifact@v4
         with:
-          name: browser-evidence
-          path: /workspace/screenshots
+          name: browser-evidence-${{ matrix.os }}
+          path: screenshots
           retention-days: 14

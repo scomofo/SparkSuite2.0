@@ -4,24 +4,26 @@
  *
  * `vite preview` is strictPort, so a preview left over from an earlier turn
  * both fails the next start and keeps serving the previous build's output.
- * Every restart therefore kills the current port owner first, whoever started
- * it. Owners come from /proc, so this runs only inside the Linux sandbox.
+ * Stop only a proven preview from this checkout; preserve unrelated listeners.
+ * Linux /proc and Windows process inventory both establish ownership.
  *
  *   node scripts/preview.mjs stop|restart
  */
-import { spawn } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
 import {
-  existsSync,
+  closeSync,
   mkdirSync,
   openSync,
   readFileSync,
   readdirSync,
   readlinkSync,
+  realpathSync,
   rmSync,
   writeFileSync,
 } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
+import { resolveLaunch } from "./command-launch.mjs";
 
 const PREVIEW_PORT = 8081;
 const PREVIEW_URL = `http://127.0.0.1:${PREVIEW_PORT}/`;
@@ -44,7 +46,9 @@ export function parsePreviewArgs(argv) {
 }
 
 export function parsePid(text) {
-  const pid = Number.parseInt(String(text ?? "").trim(), 10);
+  const raw = String(text ?? "").trim();
+  if (!/^\d+$/.test(raw)) return null;
+  const pid = Number(raw);
   // pid 1 is the sandbox init — never the preview, and dangerous to signal.
   return Number.isInteger(pid) && pid > 1 ? pid : null;
 }
@@ -95,12 +99,31 @@ export function looksLikePreviewProcess(cmdline) {
  * a claim left by an earlier run — pids are re-used across hibernate/revive, so
  * signal it only when its command line still looks like the preview.
  */
-export function previewOwners({ portPids, pidFilePid, cmdlineOf }) {
-  const owners = new Set(portPids);
+export function projectServerProcess(cmdline, cwd, root = ROOT, mode = "preview") {
+  const normalize = (value) => {
+    const normalized = String(value ?? "").replaceAll("\\", "/").replaceAll("\0", " ");
+    return process.platform === "win32" ? normalized.toLowerCase() : normalized;
+  };
+  const command = normalize(cmdline);
+  const project = normalize(root).replace(/\/$/, "");
+  const workingDirectory = normalize(cwd).replace(/\/$/, "");
+  const explicitRoot = command.match(/(?:--root(?:=|\s+))(["']?)([^\s"']+)\1/);
+  const positionalRoot = command.endsWith(`"${project}"`) || command.endsWith(`'${project}'`) || command.endsWith(` ${project}`);
+  const hasProjectPrefix = command.includes(`--prefix "${project}"`) || command.includes(`--prefix ${project} `);
+  const hasProjectRoot = Boolean(positionalRoot || (explicitRoot && normalize(explicitRoot[2]).replace(/\/$/, "") === project));
+  const hasForeignRoot = Boolean((positionalRoot || explicitRoot) && !hasProjectRoot);
+  const inProject = !hasForeignRoot && (workingDirectory === project || hasProjectPrefix || hasProjectRoot);
+  const script = mode === "preview" ? /\brun\s+preview(?:\s|$)|\bvite(?:\.js)?["']?\s+preview\b/ : /\brun\s+dev(?:\s|$)|\bvite(?:\.js)?["']?\s+dev\b/;
+  return inProject && script.test(command) && !/\bpreview[\w-]*\.mjs\b/.test(command);
+}
+
+export function previewOwners({ portPids, pidFilePid, cmdlineOf, cwdOf = () => "", root = ROOT }) {
+  const proven = (pid) => projectServerProcess(cmdlineOf(pid), cwdOf(pid), root);
+  const owners = new Set(portPids.filter(proven));
   if (
     pidFilePid !== null &&
     !owners.has(pidFilePid) &&
-    looksLikePreviewProcess(cmdlineOf(pidFilePid))
+    proven(pidFilePid)
   ) {
     owners.add(pidFilePid);
   }
@@ -176,6 +199,11 @@ function pgidOf(pid) {
 }
 
 function killPid(pid, signal) {
+  if (process.platform === "win32") {
+    try { execFileSync("taskkill.exe", ["/PID", String(pid), "/T", "/F"], { stdio: "ignore", windowsHide: true }); }
+    catch { /* Already exited. */ }
+    return;
+  }
   // restart() detaches the server into its own process group, so signal the
   // group to reach `vite` under the `npm` wrapper. Only for a leader: `-pid` on
   // a pid that leads no group still reaches any unrelated group numbered pid.
@@ -194,13 +222,32 @@ function killPid(pid, signal) {
   }
 }
 
-function cmdlineOf(pid) {
+export function cmdlineOf(pid) {
   try {
+    if (process.platform === "win32") {
+      if (!Number.isInteger(pid) || pid <= 1) return "";
+      return execFileSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", `(Get-CimInstance Win32_Process -Filter 'ProcessId = ${pid}').CommandLine`], { encoding: "utf8", windowsHide: true, timeout: 20000 }).trim();
+    }
     return readFileSync(`/proc/${pid}/cmdline`, "utf8");
   } catch {
     // Usually a dead pid — the stale pidfile this corroboration exists for.
     return "";
   }
+}
+
+export function cwdOf(pid) {
+  try { return realpathSync(`/proc/${pid}/cwd`); } catch { return ""; }
+}
+
+export function parseNetstatPids(text, port) {
+  const pids = new Set();
+  for (const line of text.split(/\r?\n/)) {
+    const columns = line.trim().split(/\s+/);
+    if (columns[0] !== "TCP" || columns[3] !== "LISTENING" || !columns[1].endsWith(`:${port}`)) continue;
+    const pid = parsePid(columns[4]);
+    if (pid !== null) pids.add(pid);
+  }
+  return [...pids];
 }
 
 function readPidFile() {
@@ -242,7 +289,11 @@ function pidsForSocketInodes(inodes) {
  * `{ pids, unattributed }` — `unattributed: true` when the port has a listener
  * whose owning pid could not be resolved (an fd dir we may not read).
  */
-function portOwners() {
+export function portOwners(port = PREVIEW_PORT) {
+  if (process.platform === "win32") {
+    const text = execFileSync("netstat.exe", ["-ano", "-p", "tcp"], { encoding: "utf8", windowsHide: true, timeout: 10000 });
+    return { pids: parseNetstatPids(text, port), unattributed: false };
+  }
   const inodes = new Set();
   for (const file of ["/proc/net/tcp", "/proc/net/tcp6"]) {
     let dump;
@@ -252,18 +303,24 @@ function portOwners() {
       // tcp6 is absent when the box has no IPv6.
       continue;
     }
-    for (const inode of parseListenerInodes(dump, PREVIEW_PORT)) inodes.add(inode);
+    for (const inode of parseListenerInodes(dump, port)) inodes.add(inode);
   }
   const pids = inodes.size > 0 ? pidsForSocketInodes(inodes) : [];
   return { pids, unattributed: inodes.size > 0 && pids.length === 0 };
 }
 
 async function stop(announce = true) {
+  const before = portOwners();
   const owners = previewOwners({
-    portPids: portOwners().pids,
+    portPids: before.pids,
     pidFilePid: readPidFile(),
     cmdlineOf,
+    cwdOf,
   });
+  if (before.unattributed || before.pids.some((pid) => !owners.includes(pid))) {
+    console.error(`[preview] port ${PREVIEW_PORT} belongs to an unrelated or unverified process; leaving it running.`);
+    return false;
+  }
   const { signalled, stubborn } = await terminatePids(owners, { kill: killPid, isAlive, sleep });
 
   const outcome = stopOutcome({ signalled, stubborn, after: portOwners() });
@@ -282,12 +339,11 @@ async function waitForReady(failure) {
   const deadline = Date.now() + READY_TIMEOUT_MS;
   while (Date.now() < deadline && failure() === null) {
     try {
-      // Any HTTP response means the server is bound; a 404 is still ready.
-      await fetch(PREVIEW_URL, { signal: AbortSignal.timeout(2000) });
-      return true;
-    } catch {
-      await sleep(250);
-    }
+      const response = await fetch(PREVIEW_URL, { signal: AbortSignal.timeout(2000) });
+      const body = await response.text();
+      if (response.ok && /<html\b/i.test(body) && /SparkSuite/i.test(body)) return true;
+    } catch { /* Wait for a successful app response. */ }
+    await sleep(250);
   }
   return false;
 }
@@ -297,16 +353,17 @@ async function restart() {
 
   mkdirSync(dirname(LOG_FILE), { recursive: true });
   const log = openSync(LOG_FILE, "a");
-  const child = spawn("npm", ["run", "preview"], {
+  const launch = resolveLaunch("npm", ["--prefix", ROOT, "run", "preview", "--", ROOT]);
+  const child = spawn(launch.command, launch.args, {
     cwd: ROOT,
     detached: true,
     stdio: ["ignore", log, log],
-    // Windows resolves .cmd shims (npm.cmd) only via a shell. Without this,
-    // the restart fails with `spawn npm ENOENT` despite a valid install.
-    shell: process.platform === "win32",
+    shell: false,
+    windowsHide: true,
   });
+  closeSync(log);
   child.unref();
-  writeFileSync(PID_FILE, `${child.pid}\n`);
+  if (child.pid) writeFileSync(PID_FILE, `${child.pid}\n`);
 
   let failure = null;
   child.on("error", (err) => {
@@ -336,10 +393,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) 
   const args = parsePreviewArgs(process.argv.slice(2));
   if (args.error) {
     console.error(`[preview] ${args.error}`);
-    process.exit(1);
-  }
-  if (!existsSync("/proc/self")) {
-    console.error("[preview] no /proc — this script only runs inside the sandbox");
     process.exit(1);
   }
   process.exitCode = args.action === "stop" ? ((await stop()) ? 0 : 1) : await restart();

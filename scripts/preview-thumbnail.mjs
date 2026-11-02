@@ -5,13 +5,16 @@
 // not download the file.
 import { chromium } from "playwright";
 import { checkedOutputPath, checkedUrl } from "./browser-guard.mjs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { projectRoot } from "./with-app-env.mjs";
 
 // The service always passes a loopback URL and a /tmp path; the checks keep that
 // true when the script is invoked by hand.
 const url = checkedUrl(process.argv[2] || "http://127.0.0.1:8083/");
-const outPng = checkedOutputPath(process.argv[3] || "/tmp/preview-thumbnail.png", [
-  "/tmp",
-  "/workspace",
+const outPng = checkedOutputPath(process.argv[3] || join(tmpdir(), "preview-thumbnail.png"), [
+  tmpdir(),
+  projectRoot(),
 ]);
 const timeoutMs = Number(process.env.PREVIEW_THUMBNAIL_TIMEOUT_MS || 45000);
 

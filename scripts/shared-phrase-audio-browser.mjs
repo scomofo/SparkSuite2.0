@@ -1,3 +1,4 @@
+import { evidenceDirectory } from "./evidence-paths.mjs";
 import assert from "node:assert/strict";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
@@ -150,9 +151,9 @@ try {
     "Other piano callers retain their default duration",
   );
   const verdict = { passed: true, nativeAudio: "OfflineAudioContext", results, defaultStops };
-  mkdirSync("/workspace/screenshots", { recursive: true });
+  mkdirSync(evidenceDirectory(), { recursive: true });
   writeFileSync(
-    "/workspace/screenshots/shared-phrase-audio.json",
+    `${evidenceDirectory()}/shared-phrase-audio.json`,
     JSON.stringify(verdict, null, 2),
   );
   console.log(JSON.stringify(verdict, null, 2));

@@ -94,11 +94,13 @@ The short stages, visible next action, and recoverable place apply [W3C cognitiv
 npm test
 npm run build
 npm run typecheck
+npm run lint
+node scripts/browser-verify.mjs
 ```
 
-CI runs these checks on pull requests and main. Node 24 also checks desktop, 390px mobile, and 320px layouts, keyboard interaction, exercise recovery through reloads and instrument switching, and single session finalization against development and production builds. Screenshots and verdicts are attached as the `browser-evidence` workflow artifact.
+CI runs these checks on pull requests and main on Linux Node 22/24 and Windows Node 24. The Linux Node 24 lane also checks desktop, 390px mobile, and 320px layouts, keyboard interaction, exercise recovery through reloads and instrument switching, and single session finalization against development and production builds. Screenshots and verdicts are attached as the `browser-evidence` workflow artifact. The Linux Node 24 lane rejects dependency advisories at high severity or above.
 
-The browser checks require Playwright Chromium. `scripts/browser-smoke.mjs`, `scripts/studio-browser.mjs`, `scripts/learning-browser.mjs`, `scripts/lesson-practice-browser.mjs`, `scripts/personalized-browser.mjs`, and `scripts/coach-browser.mjs` save their evidence under `/workspace/screenshots` as required by the project's QA workflow. The learning checks cover pacing, feedback, exact-step recovery, all ten instruments, advanced access, review scheduling, and failed saves on both development and production builds. Guided-practice checks also cover all 80 exercise links, bounded playback, tempo and reflection recovery, the return to the understanding check, and legacy/invalid technique links.
+The browser checks require Playwright Chromium and a successful build. `scripts/browser-verify.mjs` starts the development server, checks the app's development and built output, and stops its production QA preview afterward. Evidence saves in the checkout's `screenshots/` directory (`/workspace/screenshots` in the hosted sandbox). Smoke checks wait for usable content and reject empty/loading output, horizontal overflow, application errors, required branding/auth warnings, and production baseline divergence. Fixture pages exercise these failure gates before the app checks run. The learning checks cover pacing, feedback, exact-step recovery, all ten instruments, advanced access, review scheduling, and failed saves on both builds. The lesson UX suite preserves answer/reload recovery, inline-help audio cleanup, instrument isolation, and supported versus independent review spacing. Guided-practice checks also cover all 80 exercise links, bounded playback, tempo and reflection recovery, the return to the understanding check, and legacy/invalid technique links.
 
 Personalized-learning checks cover all four starting levels on all ten instruments, 2/5/10 minute scopes, existing-save compatibility, unfinished-work precedence, first-bar and reflection guards, independent saved versions, replay settings and notes, mobile layouts, and failed saves.
 

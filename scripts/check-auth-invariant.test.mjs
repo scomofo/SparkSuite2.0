@@ -11,7 +11,9 @@ import {
   buildAuthEnabled,
   compareAuthInvariant,
   probeDevAuthEnabled,
+  probeBuildAuthEnabled,
 } from "./check-auth-invariant.mjs";
+import { appEnvPlugin } from "./app-env-plugin.mjs";
 import { projectRoot } from "./with-app-env.mjs";
 
 /**
@@ -77,6 +79,24 @@ test("a server without the endpoint probes as null, not as agreement", async () 
   assert.equal(await probeDevAuthEnabled("http://127.0.0.1:8081", notFound), null);
   const html = async () => ({ ok: true, text: async () => "<!doctype html>" });
   assert.equal(await probeDevAuthEnabled("http://127.0.0.1:8081", html), null);
+});
+
+test("built auth is observed from its emitted client metadata, including explicit off", async () => {
+  assert.equal(await probeBuildAuthEnabled("http://127.0.0.1:8081", appEnvFetch({ authEnabled: false })), false);
+  assert.equal(await probeBuildAuthEnabled("http://127.0.0.1:8081", appEnvFetch({ authEnabled: true })), true);
+  assert.equal(await probeBuildAuthEnabled("http://127.0.0.1:8081", appEnvFetch({ VITE_AUTH_ENABLED: "true" })), null);
+  assert.equal(await probeBuildAuthEnabled("http://127.0.0.1:8081", async () => ({ ok: true, text: async () => "<html>fallback</html>" })), null);
+});
+
+test("build metadata captures the resolved flag and never serializes the environment", () => {
+  for (const flag of ["true", "false"]) {
+    const plugin = appEnvPlugin();
+    plugin.configResolved({ env: { VITE_AUTH_ENABLED: flag, UNRELATED: "not metadata" } });
+    const files = [];
+    plugin.generateBundle.call({ emitFile: (file) => files.push(file) });
+    assert.equal(files[0].fileName, "__app-build.json");
+    assert.deepEqual(JSON.parse(files[0].source), { authEnabled: flag === "true" });
+  }
 });
 
 test("only a divergence warns the smoke verdict", () => {
