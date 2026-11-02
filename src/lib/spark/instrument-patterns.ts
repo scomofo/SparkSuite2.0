@@ -1250,8 +1250,7 @@ const LAPSTEEL_OPEN_MIDIS: ReadonlySet<number> = new Set([48, 52, 55, 57, 60, 64
  * carry no expectedMidi — their accuracy is the tuning, not the bar — and
  * neither do multi-note cues (brushes, harmony pairs, slant grips): the
  * chord-spectrum path reports rounded pitch classes only
- * (analyzeChordSpectrum rounds every peak to an integer MIDI and
- * assessChordPitches matches within a semitone), so no cents verdict on a
+ * (analyzeChordSpectrum rounds every peak to an integer MIDI), so no cents verdict on a
  * brush would be truthful; brushes keep the chord-tone check they have.
  */
 export function judgeLapSteelBarCues(cues: PracticeCue[]): PracticeCue[] {

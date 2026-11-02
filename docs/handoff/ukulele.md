@@ -70,6 +70,17 @@ Lesson demos use the true ukulele voicing pitches in GCEA string order — a pla
 
 ## Known limitations
 
+### Microphone assessment
+
+- Chord checks compare distinct sounding pitches. Am, F, G, and D contain unison strings, which share a spectral peak; the mic cannot verify each string independently.
+- Ukulele strums use a quieter attack threshold and wait 160 ms for the rolled chord to fill the FFT. Rhythm is still scored at the original attack time, and cue expiry allows the evidence to arrive.
+- Chord pitches must match their rounded MIDI targets; an adjacent semitone is a different note. Missing or masked target pitches remain uncertain and count for timing only. Clearly unrelated detected pitches fail the chord check once per cue. Upper harmonics alone are not evidence of an extra fretted note.
+- Stroke direction is not scored for re-entrant tuning (including high-G ukulele and five-string banjo). The low-first/high-first heuristic assumes strings ascend in pitch.
+- These are rounded pitch checks, not a cents-level intonation assessment. Room noise, microphone placement, ringing previous notes, and speaker spill can still affect the result. Headphones help isolate the instrument.
+- `scripts/ukulele-assessment-audio-browser.mjs` exercises Chromium's native analyser with all six shapes at 44.1/48 kHz, quiet uneven strings, wrong chords/frets, masked notes, silence, metronome, and noise. This is synthetic-audio regression evidence, not certification against a recording of the user's playing.
+
+### Content
+
 - Chord vocabulary is six shapes (C, Am, F, G7, G, D). No seventh chords beyond G7, no minor chords beyond Am.
 - No barre chords anywhere.
 - No low-G content; a low-G ukulele will mismatch the demos and the tuner.

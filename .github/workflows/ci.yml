@@ -49,6 +49,7 @@ jobs:
           node scripts/mic-input-browser.mjs http://127.0.0.1:8083
           node scripts/studio-browser.mjs http://127.0.0.1:8083 dev
           node scripts/microphone-browser.mjs http://127.0.0.1:8083 dev
+          node scripts/ukulele-assessment-browser.mjs http://127.0.0.1:8083 dev
           node scripts/learning-browser.mjs http://127.0.0.1:8083 dev
           node scripts/learning-ux-browser.mjs http://127.0.0.1:8083 dev
           node scripts/profile-sync-browser.mjs http://127.0.0.1:8083 dev
@@ -57,6 +58,7 @@ jobs:
           node scripts/coach-browser.mjs http://127.0.0.1:8083 dev
           node scripts/adult-curriculum-browser.mjs spark http://127.0.0.1:8083 dev
           node scripts/shared-phrase-audio-browser.mjs
+          node scripts/ukulele-assessment-audio-browser.mjs
           node scripts/browser-smoke.mjs http://127.0.0.1:8083/ /workspace/screenshots/dev.png
           echo "::group::SSR export bundle references"
           grep -R -n -m 2 'ssr_exports' .vercel/output/functions/__server.func/_ssr 2>/dev/null | head -n 40 || true
@@ -69,6 +71,7 @@ jobs:
             exit 1
           }
           node scripts/microphone-browser.mjs http://127.0.0.1:8081 built
+          node scripts/ukulele-assessment-browser.mjs http://127.0.0.1:8081 built
           node scripts/learning-browser.mjs http://127.0.0.1:8081 built
           node scripts/learning-ux-browser.mjs http://127.0.0.1:8081 built
           node scripts/profile-sync-browser.mjs http://127.0.0.1:8081 built

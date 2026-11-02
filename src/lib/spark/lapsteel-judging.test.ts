@@ -207,16 +207,15 @@ describe("lap steel session gate simulations", () => {
     const brush = buildTimeline(itemFor("lapsteel", "lesson_lapsteel_cf_01")).find((n) => n.notes?.[0] === 53)!;
     assert.deepEqual(brush.notes, [53, 57, 60, 62, 65, 69]);
     assert.equal(brush.expectedMidi, undefined);
-    // …because the spectrum path can only report integer midis: even a bar
-    // a whole fret low (every string a semitone flat) still "matches" the
-    // fret-5 expectation inside its ±1-semitone matching. A uniform
-    // 40-cent error is not representable in the analysis at all.
+    // …because the spectrum path can only report integer midis. A whole
+    // fret low is a different note and must fail; a uniform 40-cent error
+    // is still not representable in the rounded analysis.
     const oneFretLow: ChordSpectrumAnalysis = {
       midiNotes: [52, 56, 59, 61, 64, 68],
       confidence: 1,
       strongestDb: -20,
     };
-    assert.equal(assessChordPitches(oneFretLow, [53, 57, 60, 62, 65, 69]).status, "match");
+    assert.equal(assessChordPitches(oneFretLow, [53, 57, 60, 62, 65, 69]).status, "mismatch");
   });
 });
 
