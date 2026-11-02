@@ -3,14 +3,13 @@ import assert from "node:assert/strict";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { chromium } from "playwright";
 import { checkedUrl, checkedOutputPath } from "./browser-guard.mjs";
+import { evidenceDirectory, evidencePath } from "./evidence-paths.mjs";
 
 const url = checkedUrl(process.argv[2] ?? "http://127.0.0.1:8083").replace(/\/$/, "");
 const label = process.argv[3] ?? "dev";
 assert.match(label, /^[a-zA-Z0-9_-]+$/);
-const output = checkedOutputPath(`/workspace/screenshots/learning-ux-${label}`, [
-  "/workspace/screenshots",
-]);
-mkdirSync("/workspace/screenshots", { recursive: true });
+const output = checkedOutputPath(evidencePath(`learning-ux-${label}`), [evidenceDirectory()]);
+mkdirSync(evidenceDirectory(), { recursive: true });
 const browser = await chromium.launch({
   headless: true,
   ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH

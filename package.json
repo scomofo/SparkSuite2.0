@@ -7,7 +7,7 @@
     "nf3": "0.3.17"
   },
   "scripts": {
-    "dev": "node --env-file-if-exists=.env.local scripts/with-app-env.mjs vite dev --host 0.0.0.0 --port ${PORT:-8083}",
+    "dev": "node --env-file-if-exists=.env.local scripts/with-app-env.mjs vite dev --host 0.0.0.0 --port 8083",
     "build": "node scripts/with-app-env.mjs vite build && npm run db:migrate",
     "db:migrate": "node scripts/migrate.mjs",
     "build:dev": "node scripts/with-app-env.mjs vite build --mode development",
@@ -16,10 +16,12 @@
     "preview:stop": "node scripts/preview.mjs stop",
     "typecheck": "tsc --noEmit",
     "check:auth": "node scripts/check-auth-invariant.mjs",
-    "test": "node --test 'scripts/**/*.test.mjs' && node --experimental-strip-types --test src/lib/app-data/app-data.test.ts src/lib/auth/gate-identity.test.ts src/lib/spark/spark.test.ts src/lib/spark/open-string-judging.test.ts src/lib/spark/ukulele-warmup.test.ts src/lib/spark/ukulele-assessment.test.ts src/lib/spark/item-advance-guard.test.ts src/lib/spark/session-lifecycle.test.ts src/lib/spark/mic-init-recovery.test.ts src/lib/spark/profile-snapshot.test.ts src/lib/spark/studio.test.ts src/lib/spark/learning.test.ts src/lib/spark/lesson-practice.test.ts src/lib/spark/personalized-learning.test.ts src/lib/spark/coach.test.ts src/lib/spark/coach-pedagogy.test.ts src/lib/server/coach.test.ts src/lib/spark/improvements.test.ts src/lib/spark/midi-drums.test.ts src/lib/spark/vocals-judging.test.ts src/lib/spark/violin-judging.test.ts src/lib/spark/lapsteel-judging.test.ts src/lib/spark/time-signature.test.ts src/lib/spark/stems.test.ts src/lib/spark/bass-riffs.test.ts src/lib/spark/drums-riffs.test.ts src/lib/spark/guitar-riffs.test.ts src/lib/spark/vocals-riffs.test.ts src/lib/spark/piano-riffs.test.ts src/lib/spark/ukulele-riffs.test.ts src/lib/spark/lapsteel-riffs.test.ts src/lib/spark/banjo-riffs.test.ts src/lib/spark/mandolin-riffs.test.ts src/lib/spark/violin-riffs.test.ts",
-
+    "test": "node scripts/run-tests.mjs",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "dev:start": "node scripts/dev-server.mjs",
+    "test:scripts": "node scripts/run-tests.mjs scripts",
+    "test:src": "node scripts/run-tests.mjs src"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.4",
@@ -48,10 +50,10 @@
     "@radix-ui/react-tooltip": "^1.2.8",
     "@tailwindcss/vite": "^4.3.0",
     "@tanstack/react-query": "^5.101.0",
-    "@tanstack/react-router": "^1.170.0",
-    "@tanstack/react-start": "^1.168.0",
-    "@tanstack/router-plugin": "^1.168.0",
-    "better-auth": "~1.6.30",
+    "@tanstack/react-router": "1.170.41",
+    "@tanstack/react-start": "1.168.60",
+    "@tanstack/router-plugin": "1.168.42",
+    "better-auth": "1.7.15",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jose": "^6.2.10",
@@ -64,7 +66,7 @@
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.3.0",
     "tw-animate-css": "^1.3.4",
-    "zod": "^4.4.0",
+    "zod": "4.6.6",
     "zustand": "^5.0.0"
   },
   "devDependencies": {

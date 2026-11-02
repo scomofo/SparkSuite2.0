@@ -3,12 +3,15 @@ import { mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from "
 import { dirname } from "node:path";
 import { chromium } from "playwright";
 import { checkedOutputPath, checkedUrl } from "./browser-guard.mjs";
+import { evidenceDirectory } from "./evidence-paths.mjs";
+import { projectRoot } from "./with-app-env.mjs";
 import { computeBrandWarnings } from "./brand-check.mjs";
 import {
   authInvariantWarnings,
   buildAuthEnabled,
   compareAuthInvariant,
   probeDevAuthEnabled,
+  probeBuildAuthEnabled,
 } from "./check-auth-invariant.mjs";
 import {
   baselineComparison,
@@ -27,10 +30,11 @@ if (args.error) {
 }
 
 const url = checkedUrl(args.url);
-const outPng = checkedOutputPath(args.outPng, ["/workspace"]);
+const outputDirs = [evidenceDirectory()];
+const outPng = checkedOutputPath(args.outPng, outputDirs);
 const derived = derivedPaths(outPng);
-const mobilePng = checkedOutputPath(derived.mobilePng, ["/workspace"]);
-const outJson = checkedOutputPath(derived.verdictJson, ["/workspace"], "verdict JSON");
+const mobilePng = checkedOutputPath(derived.mobilePng, outputDirs);
+const outJson = checkedOutputPath(derived.verdictJson, outputDirs, "verdict JSON");
 
 const MAX_BASELINE_BYTES = 1024 * 1024;
 const baselineRequested = Boolean(args.baseline);
@@ -38,7 +42,7 @@ let baselinePath = null;
 let baselineResolveError = null;
 if (baselineRequested) {
   try {
-    baselinePath = checkedOutputPath(realpathSync(args.baseline), ["/workspace"], "baseline");
+    baselinePath = checkedOutputPath(realpathSync(args.baseline), outputDirs, "baseline");
   } catch (err) {
     baselineResolveError = err?.code ?? "unresolvable path";
   }
@@ -93,23 +97,40 @@ try {
   browser = await chromium.launch({
     headless: true,
     args: ["--no-sandbox", "--disable-dev-shm-usage"],
+    ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH } : {}),
   });
 
   const viewports = {};
   for (const vp of VIEWPORTS) {
-    const errors = { consoleErrors: [], pageErrors: [] };
+    const errors = { consoleErrors: [], pageErrors: [], externalResourceErrors: [] };
     const page = await browser.newPage({
       viewport: { width: vp.width, height: vp.height },
     });
     page.on("console", (msg) => {
-      if (msg.type() === "error") errors.consoleErrors.push(msg.text());
+      if (msg.type() !== "error") return;
+      // Keep a blocked platform-branding download visible, while application
+      // errors and every other resource failure still fail the gate.
+      if (msg.location().url === "https://grok.com/grok-app-builder/extensions.js" && /^Failed to load resource:/.test(msg.text())) {
+        errors.externalResourceErrors.push(msg.text());
+      } else errors.consoleErrors.push(msg.text());
     });
     page.on("pageerror", (err) => errors.pageErrors.push(String(err?.message || err)));
     // `domcontentloaded`, not `networkidle`: Vite keeps an HMR websocket open, so
     // networkidle never settles and would burn the whole timeout.
     const resp = await page.goto(url, { waitUntil: "domcontentloaded", timeout: timeoutMs });
     const status = resp?.status() ?? 0;
-    await page.waitForTimeout(1000);
+    // Wait for rendered application content, not just the SSR opening shell.
+    const ready = await page.waitForFunction(() => {
+      const root = document.querySelector("main") ?? document.body;
+      const visible = (element) => element && element.getBoundingClientRect().width > 0 && element.getBoundingClientRect().height > 0 && getComputedStyle(element).visibility !== "hidden" && getComputedStyle(element).display !== "none";
+      if (root.querySelector('[aria-busy="true"]')) return false;
+      const heading = [...root.querySelectorAll("h1, h2")].some((element) => visible(element) && element.textContent.trim());
+      const controls = [...root.querySelectorAll("button, a[href], input, select, textarea")].some(visible);
+      const canvas = [...root.querySelectorAll("canvas")].some(visible);
+      const pending = [...root.querySelectorAll('[role="status"]')].some((element) => visible(element) && /opening|loading|starting/i.test(element.textContent));
+      return !pending && ((heading && controls) || canvas);
+    }, null, { timeout: timeoutMs }).then(() => true, () => false);
+    await page.evaluate(() => document.fonts.ready);
 
     const title = await page.title();
     const hasCanvas = (await page.locator("canvas").count()) > 0;
@@ -128,6 +149,7 @@ try {
       width: vp.width,
       height: vp.height,
       status,
+      ready,
       title,
       hasCanvas,
       bodyTextLen: normalizeBodyText(bodyText).length,
@@ -136,20 +158,22 @@ try {
       horizontalOverflow,
       consoleErrors: errors.consoleErrors,
       pageErrors: errors.pageErrors,
+      externalResourceErrors: errors.externalResourceErrors,
       screenshot: vp.screenshot,
     };
   }
 
-  const brandWarnings = computeBrandWarnings({ hasCanvas: viewports.desktop.hasCanvas, workspaceRoot: process.cwd() });
+  const brandWarnings = computeBrandWarnings({ hasCanvas: viewports.desktop.hasCanvas, workspaceRoot: projectRoot() });
   // Only a dev server answers /__app-env, so smoking the built output reads as
   // indeterminate — report a divergence, never the absence of an observation.
-  const authWarnings = authInvariantWarnings(
+  const authEnabled = await probeDevAuthEnabled(url) ?? await probeBuildAuthEnabled(url);
+  const authWarnings = authEnabled === null ? ["[auth-invariant] could not observe the running app's sign-in flag"] : authInvariantWarnings(
     compareAuthInvariant({
-      devAuthEnabled: await probeDevAuthEnabled(url),
+      devAuthEnabled: authEnabled,
       buildAuthEnabled: buildAuthEnabled(),
     }),
   );
-  const verdict = { url, viewports, brandWarnings, authWarnings, verdictFile: outJson };
+  const verdict = { url, authEnabled, viewports, brandWarnings, authWarnings, verdictFile: outJson };
   if (baselineRequested) {
     const { divergesFromBaseline, reasons } = compareAgainstBaseline(verdict);
     verdict.divergesFromBaseline = divergesFromBaseline;
@@ -162,7 +186,7 @@ try {
   // Set the code rather than aborting the process so the `finally` browser
   // teardown always runs (agents typically smoke twice per turn; leaking
   // Chromium accumulates across retries).
-  process.exitCode = exitCodeFor(viewports);
+  process.exitCode = exitCodeFor(viewports, verdict);
 } catch (err) {
   const failure = { ok: false, url, error: String(err?.message || err) };
   try {

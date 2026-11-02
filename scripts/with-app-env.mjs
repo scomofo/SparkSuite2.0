@@ -24,6 +24,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import { constants as osConstants } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { resolveLaunch } from "./command-launch.mjs";
 
 export const APP_ENV_REL_PATH = ".grok/app-env.json";
 
@@ -131,12 +132,12 @@ function main(argv) {
   const env = mergeAppEnv(readAppEnv(projectRoot()), process.env);
   // Expand ${PORT:-NNNN} ourselves: cmd.exe would pass it through literally.
   const spawnArgs = args.map((a) => expandPortDefault(a, env));
-  // Windows resolves .cmd shims (vite.cmd) only via a shell. Without this,
-  // `npm run build` fails with `spawn vite ENOENT` despite a valid install.
-  const child = spawn(command, spawnArgs, {
+  const launch = resolveLaunch(command, spawnArgs, { env });
+  const child = spawn(launch.command, launch.args, {
     stdio: "inherit",
     env,
-    shell: process.platform === "win32",
+    shell: false,
+    windowsHide: true,
   });
   // The dev server is long-running and is stopped by signalling this wrapper.
   for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {

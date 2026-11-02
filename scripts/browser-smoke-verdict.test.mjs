@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
+import { evidencePath } from "./evidence-paths.mjs";
 import {
   baselineComparison,
   bodyTextPrefix,
@@ -279,7 +280,7 @@ test("baselineComparison fails closed on malformed or wrong-shape baselines", ()
 test("parseSmokeArgs defaults", () => {
   assert.deepEqual(parseSmokeArgs([], {}), {
     url: "http://127.0.0.1:8083/",
-    outPng: "/workspace/screenshots/app-builder-preview.png",
+    outPng: evidencePath("app-builder-preview.png"),
     baseline: "",
   });
 });
@@ -377,15 +378,15 @@ test("browser-smoke wires the guard and verdict helpers", () => {
   assert.match(src, /from "\.\/browser-smoke-verdict\.mjs"/);
   assert.match(src, /const args = parseSmokeArgs\(process\.argv\.slice\(2\), process\.env\)/);
   assert.match(src, /const url = checkedUrl\(args\.url\)/);
-  assert.match(src, /const outPng = checkedOutputPath\(args\.outPng, \["\/workspace"\]\)/);
-  assert.match(src, /const mobilePng = checkedOutputPath\(derived\.mobilePng, \["\/workspace"\]\)/);
-  assert.match(src, /const outJson = checkedOutputPath\(derived\.verdictJson, \["\/workspace"\]/);
-  assert.match(src, /checkedOutputPath\(realpathSync\(args\.baseline\), \["\/workspace"\]/);
+  assert.match(src, /const outPng = checkedOutputPath\(args\.outPng, outputDirs\)/);
+  assert.match(src, /const mobilePng = checkedOutputPath\(derived\.mobilePng, outputDirs\)/);
+  assert.match(src, /const outJson = checkedOutputPath\(derived\.verdictJson, outputDirs/);
+  assert.match(src, /checkedOutputPath\(realpathSync\(args\.baseline\), outputDirs/);
   assert.match(src, /baselinePath === outJson/);
   assert.match(src, /normalizedBodyTextHash\(/);
   assert.match(src, /bodyTextPrefix\(/);
   assert.match(src, /baselineComparison\(/);
-  assert.match(src, /process\.exitCode = exitCodeFor\(viewports\)/);
+  assert.match(src, /process\.exitCode = exitCodeFor\(viewports, verdict\)/);
   assert.match(src, /waitUntil: "domcontentloaded"/);
   assert.doesNotMatch(
     src,
@@ -398,6 +399,28 @@ test("browser-smoke wires the guard and verdict helpers", () => {
     /process\.exit\(/,
     "process.exit after Chromium launch skips finally teardown",
   );
+});
+
+test("usable content, loading readiness, and layout are required even without a baseline", () => {
+  assert.equal(exitCodeFor(verdict({ bodyTextLen: 0 }).viewports), 3);
+  assert.equal(exitCodeFor(verdict({ ready: false }).viewports), 3);
+  assert.equal(exitCodeFor(verdict({}, { horizontalOverflow: true }).viewports), 3);
+  assert.equal(exitCodeFor(verdict({ bodyTextLen: 0, hasCanvas: true, ready: true }).viewports), 0);
+});
+
+test("baseline, auth, and required brand failures are authoritative", () => {
+  for (const gate of [
+    { divergesFromBaseline: true },
+    { authWarnings: ["mismatched flag"] },
+    { brandWarnings: ["BRAND WARNING: missing custom share card"] },
+  ]) assert.equal(exitCodeFor(verdict().viewports, gate), 4);
+  assert.equal(exitCodeFor(verdict().viewports, { brandWarnings: ["BRAND NOTE: optional utility card"] }), 0);
+});
+
+test("built auth must match the observed development baseline", () => {
+  const result = compareToBaseline({ ...verdict(), authEnabled: false }, { ...verdict(), authEnabled: true });
+  assert.equal(result.divergesFromBaseline, true);
+  assert.match(result.reasons.join(";"), /sign-in flag changed/);
 });
 
 test("browser-smoke file I/O only touches guarded paths", () => {

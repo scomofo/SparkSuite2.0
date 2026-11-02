@@ -1,3 +1,4 @@
+import { evidenceDirectory } from "./evidence-paths.mjs";
 // Real browser-to-WebAudio capture regression. Chrome's fake microphone
 // supplies an actual MediaStream to the AnalyserNode, not a mocked React state.
 import assert from "node:assert/strict";
@@ -6,7 +7,7 @@ import { chromium } from "playwright";
 
 const url = process.argv[2] ?? "http://127.0.0.1:8083";
 const label = process.argv[3] ?? "dev";
-const output = "/workspace/screenshots";
+const output = evidenceDirectory();
 mkdirSync(output, { recursive: true });
 
 const browser = await chromium.launch({

@@ -5,7 +5,8 @@
  * path from argv, so unchecked they will render `file:///root/.grok/auth.json`
  * into a PNG the agent can read, and write it anywhere.
  */
-import { resolve, sep } from "node:path";
+import { existsSync, realpathSync } from "node:fs";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 const LOOPBACK_HOSTNAMES = new Set(["127.0.0.1", "localhost", "::1", "[::1]"]);
 
@@ -30,11 +31,24 @@ export function checkedUrl(url) {
   return url;
 }
 
-/** Absolute `target` if it is strictly inside `allowedDirs`, else exit 1. */
+function contained(target, directory) {
+  const rel = relative(directory, target);
+  return rel !== "" && rel !== ".." && !rel.startsWith(`..${sep}`) && !isAbsolute(rel);
+}
+
+/** Resolve existing ancestors too, so a screenshot symlink cannot escape its allowed directory. */
+function canonicalPath(path) {
+  if (existsSync(path)) return realpathSync(path);
+  const parent = dirname(path);
+  if (parent === path) return path;
+  return resolve(canonicalPath(parent), relative(parent, path));
+}
+
+/** Absolute `target` if it is strictly inside `allowedDirs`, otherwise throw. */
 export function checkedOutputPath(target, allowedDirs, label = "screenshot") {
   // Resolve first so `..` cannot slip past the prefix check.
   const abs = resolve(target);
-  const allowed = allowedDirs.some((dir) => abs.startsWith(dir.endsWith(sep) ? dir : dir + sep));
+  const allowed = allowedDirs.some((dir) => contained(abs, resolve(dir)) && contained(canonicalPath(abs), canonicalPath(resolve(dir))));
   if (!allowed) {
     fail(`${label} path must be under ${allowedDirs.join(" or ")}, got ${abs}`);
   }
@@ -42,6 +56,5 @@ export function checkedOutputPath(target, allowedDirs, label = "screenshot") {
 }
 
 function fail(message) {
-  console.error(JSON.stringify({ ok: false, error: message }, null, 2));
-  process.exit(1);
+  throw new Error(message);
 }
