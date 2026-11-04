@@ -10,6 +10,7 @@ const output = evidenceDirectory();
 mkdirSync(output, { recursive: true });
 const browser = await chromium.launch({ headless: true });
 const errors = [];
+const externalResourceErrors = [];
 const page = await browser.newPage({
   viewport: { width: 1280, height: 900 },
   timezoneId: "America/Edmonton",
@@ -17,7 +18,15 @@ const page = await browser.newPage({
 });
 page.on("pageerror", (error) => errors.push(error.message));
 page.on("console", (message) => {
-  if (message.type() === "error") errors.push(`${message.text()} (${message.location().url})`);
+  if (message.type() !== "error") return;
+  const entry = { text: message.text(), url: message.location().url };
+  // Keep the known platform-branding network failure visible without treating it
+  // as an application error. Every other console error remains a test failure.
+  if (
+    entry.url === "https://grok.com/grok-app-builder/extensions.js" &&
+    /^Failed to load resource:/.test(entry.text)
+  ) externalResourceErrors.push(entry);
+  else errors.push(`${entry.text} (${entry.url})`);
 });
 await page.route("**/api/auth/get-session**", (route) =>
   route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
@@ -159,13 +168,14 @@ try {
     0,
     "Advanced projects cannot skip stages when storage is unavailable",
   );
-  assert.deepEqual(errors, [], "Clean browser console and runtime");
+  assert.deepEqual(errors, [], "No application console errors or uncaught runtime errors");
   writeFileSync(
     `${output}/learning-${label}-checks.json`,
     JSON.stringify(
       {
         ok: true,
         errors,
+        externalResourceErrors,
         checks: [
           "desktop/390px/320px",
           "keyboard and focus",
@@ -194,6 +204,7 @@ try {
       {
         error: String(error),
         errors,
+        externalResourceErrors,
         body: await page
           .locator("body")
           .innerText()
