@@ -14,9 +14,18 @@ const page = await browser.newPage({
   reducedMotion: "reduce",
 });
 const errors = [];
+const externalResourceErrors = [];
 page.on("pageerror", (error) => errors.push(error.message));
 page.on("console", (message) => {
-  if (message.type() === "error") errors.push(message.text());
+  if (message.type() !== "error") return;
+  const entry = { text: message.text(), url: message.location().url };
+  // Keep the known platform-branding network failure visible without treating it
+  // as an application error. Every other console error remains a test failure.
+  if (
+    entry.url === "https://grok.com/grok-app-builder/extensions.js" &&
+    /^Failed to load resource:/.test(entry.text)
+  ) externalResourceErrors.push(entry);
+  else errors.push(`${entry.text} (${entry.url})`);
 });
 await page.route("**/api/auth/get-session**", (route) =>
   route.fulfill({ status: 200, contentType: "application/json", body: "null" }),
@@ -325,13 +334,14 @@ try {
   await silentPage.getByRole("button", { name: "Stop guide", exact: true }).click();
   await silentPage.getByRole("button", { name: "Play one pass", exact: true }).waitFor();
   await silentPage.close();
-  assert.deepEqual(errors, [], "Clean browser console and runtime");
+  assert.deepEqual(errors, [], "No application console errors or uncaught runtime errors");
   writeFileSync(
     `${output}/lesson-practice-${label}-checks.json`,
     JSON.stringify(
       {
         ok: true,
         errors,
+        externalResourceErrors,
         checks: [
           "80 matching exercises",
           "resumable Build / Choose / Refine projects",
@@ -363,6 +373,7 @@ try {
       {
         error: String(error),
         errors,
+        externalResourceErrors,
         body: await page
           .locator("body")
           .innerText()
