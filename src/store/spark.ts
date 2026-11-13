@@ -25,6 +25,34 @@ import type { DailyPlan, DayCheckin, ProgressState, SessionResult } from "@/lib/
 
 const spark = createSpark(defaultProgress(), "guitar");
 
+// The results page is a per-tab view: survive a refresh there (a reflexive
+// F5 right after a level-up used to land on "No session yet."), but never
+// leak across tabs or sessions.
+const RESULT_KEY = "sparksuite.result.v1";
+
+function readLastResult(): SessionResult | null {
+  try {
+    const text = sessionStorage.getItem(RESULT_KEY);
+    if (!text) return null;
+    const raw: unknown = JSON.parse(text);
+    if (!raw || typeof raw !== "object") return null;
+    const candidate = raw as Partial<SessionResult>;
+    if (typeof candidate.date !== "string" || !Array.isArray(candidate.items)) return null;
+    return candidate as SessionResult;
+  } catch {
+    return null;
+  }
+}
+
+function writeLastResult(result: SessionResult | null) {
+  try {
+    if (result) sessionStorage.setItem(RESULT_KEY, JSON.stringify(result));
+    else sessionStorage.removeItem(RESULT_KEY);
+  } catch {
+    /* sessionStorage unavailable (private mode) */
+  }
+}
+
 function fromSuite(suite: SuiteState) {
   const totals = suiteTotals(suite);
   return {
@@ -81,6 +109,7 @@ export const useSpark = create<SparkStore>((set, get) => ({
       progress,
       plan: spark.getPlan(),
       session: loadCheckpoint(progress, suite.active),
+      lastResult: readLastResult(),
       hydrated: true,
       ...fromSuite(suite),
     });
@@ -94,7 +123,7 @@ export const useSpark = create<SparkStore>((set, get) => ({
       progress,
       plan: spark.getPlan(),
       session: loadCheckpoint(progress, suite.active),
-      lastResult: null,
+      lastResult: readLastResult(),
       hydrated: true,
       ...fromSuite(suite),
     });
@@ -118,6 +147,7 @@ export const useSpark = create<SparkStore>((set, get) => ({
     const { progress, instrument, session } = get();
     const plan = generateDailyPlan(progress, undefined, instrument);
     const next = resumeOrStartSession(progress, plan, session);
+    writeLastResult(null);
     set({
       session: next,
       plan: next.plan,
@@ -165,6 +195,7 @@ export const useSpark = create<SparkStore>((set, get) => ({
     const { progress: next, result } = closeSession(progress, session, instrument);
     const { plan, suite } = spark.setProgress(next);
     clearCheckpoint(instrument);
+    writeLastResult(result);
     set({
       progress: next,
       session: null,
@@ -190,4 +221,3 @@ export const useSpark = create<SparkStore>((set, get) => ({
     set({ progress: next, plan, ...fromSuite(suite) });
   },
 }));
-

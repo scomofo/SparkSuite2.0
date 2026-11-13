@@ -51,13 +51,18 @@ export function finalizeSession(
   // Skipping everything is not a day. Don't grant foundations, streak,
   // history, or dailyComplete for empty results — prevents streak farming.
   if (result.items.length === 0) return state;
+  // Replaying an already-completed day is practice, not a second session:
+  // keep item XP and mastery, but the day stays one entry in history.
+  const replay = Boolean(state.dailyComplete[result.date]);
   let next = grantFoundations(applyStreak(state, result.date), instrument);
   for (const item of result.items) next = applyItemMastery(next, item);
   const xp = next.xp + result.xp;
-  const history = [
-    ...next.history,
-    { date: result.date, accuracy: result.accuracy, xp: result.xp },
-  ].slice(-24);
+  const history = replay
+    ? next.history
+    : [
+        ...next.history,
+        { date: result.date, accuracy: result.accuracy, xp: result.xp },
+      ].slice(-24);
   const peakCombo = Math.max(next.bestCombo, result.peakCombo ?? 0);
   next = {
     ...next,
@@ -73,4 +78,3 @@ export function finalizeSession(
   saveProgress(next, instrument);
   return next;
 }
-

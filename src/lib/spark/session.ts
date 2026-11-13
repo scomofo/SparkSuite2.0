@@ -98,11 +98,16 @@ export function closeSession(
   const acc = s.results.length === 0 ? 0 : s.results.reduce((n, r) => n + r.accuracy, 0) / s.results.length;
   const prevLevel = progress.level;
   const prevMarks = progress.marks;
+  const date = localDayKey();
+  const fullLoop = s.results.length > 0 && s.results.length === s.plan.items.length;
+  // The loop-completion bonus is a once-per-day award. Replaying a finished
+  // day is free practice: item XP still counts, the bonus does not repeat.
+  const firstLoopOfDay = !progress.dailyComplete[date];
   const result: SessionResult = {
-    date: localDayKey(),
+    date,
     accuracy: acc,
     stars: Math.round(s.results.reduce((n, r) => n + r.stars, 0) / Math.max(1, s.results.length)),
-    xp: s.results.reduce((n, r) => n + r.xp, 0) + (s.results.length > 0 && s.results.length === s.plan.items.length ? 80 : 0),
+    xp: s.results.reduce((n, r) => n + r.xp, 0) + (fullLoop && firstLoopOfDay ? 80 : 0),
     items: s.results,
     peakCombo: s.peakCombo,
     prevLevel,

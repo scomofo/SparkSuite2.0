@@ -166,7 +166,12 @@ export function HydrateSpark() {
     }
 
     function onProfileChanged() {
-      if (pathname === "/session") {
+      // A live practice loop owns the client state until it is finished or
+      // left. Auto-sync mid-session can reload from storage (or apply cloud
+      // data) and swap the session out from under the player — defer it.
+      // Gate on the store's session, not the route path: the player mounts
+      // at /practice, and a path check silently misses it.
+      if (useSpark.getState().session !== null) {
         pendingAutoSync.current = true;
         return;
       }
@@ -192,7 +197,7 @@ export function HydrateSpark() {
     };
     window.addEventListener("storage", onStorage);
 
-    if (pathname !== "/session" && pendingAutoSync.current) {
+    if (useSpark.getState().session === null && pendingAutoSync.current) {
       pendingAutoSync.current = false;
       void sync();
     }
