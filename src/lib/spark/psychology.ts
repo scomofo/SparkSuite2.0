@@ -82,6 +82,22 @@ export function dayCue(plan: DailyPlan, done: boolean) {
   return `${plan.items.length} things. Then you're done.`;
 }
 
+/**
+ * Warm re-entry after a lapse. Missing days is expected and streak-reset is
+ * engineered to be no big deal (see nextStreak), but an adult with ADHD can
+ * read a silently-reset counter as failure and bounce off. Name the return
+ * explicitly: no catching up, no debt — today's loop is the whole ask.
+ *
+ * Null for brand-new learners (nothing to return to) and inside the grace
+ * window (the streak still holds, so no lapse happened).
+ */
+export function reentryCue(progress: ProgressState, today = localDayKey()): string | null {
+  if (!progress.lastPlayedDay || progress.history.length === 0) return null;
+  const gap = dayGap(progress.lastPlayedDay, today);
+  if (gap <= 1 + STREAK_GRACE_DAYS) return null;
+  return "Welcome back. Nothing to catch up on — just today's loop.";
+}
+
 export function closingCopy(result: SessionResult) {
   if (result.items.length === 0) return "You opened the instrument. That counts.";
   if (result.accuracy >= 0.75) return "That's the day. Same time tomorrow.";

@@ -12,7 +12,7 @@ import { unlockAudio } from "@/lib/spark/audio";
 import { rankFor, sparksFor, weekPulse, xpProgress } from "@/lib/spark/game";
 import { BANJO_CHORDS, instrumentById, LAPSTEEL_CHORDS, lessonsFor, MANDOLIN_CHORDS, PIANO_VOICINGS, tracksFor, UKE_CHORDS } from "@/lib/spark/instruments";
 import { labCardFor, labSearchFor, stemLabCard } from "@/lib/spark/labs";
-import { dayCue, streakTone } from "@/lib/spark/psychology";
+import { dayCue, reentryCue, streakTone } from "@/lib/spark/psychology";
 import { feelCue, newThingLine } from "@/lib/spark/udl";
 import { DEFAULT_THEORY_SEARCH } from "@/lib/spark/theory";
 import { useSpark } from "@/store/spark";
@@ -46,6 +46,7 @@ function TodayPage() {
   const sparks = sparksFor(progress);
   const newThing = !done ? newThingLine(plan) : null;
   const slower = !done ? feelCue(progress) : null;
+  const returning = !done ? reentryCue(progress, today) : null;
   const uke = instrument === "ukulele" && firstChord && UKE_CHORDS[firstChord]
     ? { id: firstChord, name: firstChord, ...UKE_CHORDS[firstChord] }
     : null;
@@ -74,6 +75,7 @@ function TodayPage() {
         </div>
         <p className="mt-3 max-w-sm text-pretty text-muted">{plan.promise}</p>
         <p className="mt-1 text-sm text-dim">{dayCue(plan, done)}</p>
+        {!done && returning ? <p className="mt-1 text-sm text-muted">{returning}</p> : null}
         {!done && newThing ? <p className="mt-1 text-sm text-muted">{newThing}</p> : null}
         {!done && slower ? <p className="mt-1 text-sm text-ember">{slower}</p> : null}
       </header>

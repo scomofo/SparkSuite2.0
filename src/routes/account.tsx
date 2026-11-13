@@ -27,6 +27,7 @@ function syncLabel(status: string) {
     case "syncing": return "Syncing progress";
     case "synced": return "Synced";
     case "conflict": return "Action needed";
+    case "changed": return "Updated here — sync again";
     case "offline": return "Cloud unavailable";
     case "error": return "Could not sync";
     default: return "Saved on this computer";

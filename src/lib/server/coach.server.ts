@@ -1,4 +1,4 @@
-import { timingSafeEqual } from "node:crypto";
+import { createHash, timingSafeEqual } from "node:crypto";
 import { buildCoachContext, parseCoachRequest } from "../spark/coach.ts";
 import type { CoachAdvice } from "../spark/coach-types.ts";
 import { coachPedagogy } from "../spark/coach-pedagogy.ts";
@@ -117,15 +117,62 @@ function responseAdvice(raw: unknown): CoachAdvice | null {
   }
 }
 
-/** Counters cap one warm instance across credential modes; they are not a global spending limit. */
+/**
+ * Per-caller rate-limit bucket. Previously one global in-flight flag + one
+ * hourly counter were shared by every visitor of a deployed instance: one
+ * person's request made everyone else wait ("Another coach request is still
+ * running"), and one heavy user exhausted the hourly cap for all. Buckets are
+ * keyed by an opaque hash of the caller's identity — the auth session cookie
+ * when present, else the credential (hosted access code or personal key) —
+ * so the limit tracks WHO is asking, not the process.
+ */
+type RateBucket = {
+  hour: number;
+  requests: number;
+  inFlight: boolean;
+  nextRequestAt: number;
+};
+
+const RATE_BUCKETS_MAX = 256;
+
+// Must match SESSION_TOKEN_COOKIE in "../auth/server" (kept as a literal to
+// avoid importing the whole auth stack — pg, Better Auth — into this module).
+const SESSION_TOKEN_COOKIE = "__Host-grok-auth.session_token";
+
+/** Anonymous per-caller key: session cookie when present, else the credential. */
+function callerKey(request: Request, apiKey: string): string {
+  const cookies = request.headers.get("cookie") ?? "";
+  for (const pair of cookies.split(";")) {
+    const [name, ...rest] = pair.trim().split("=");
+    if (name === SESSION_TOKEN_COOKIE && rest.length > 0) {
+      return `session:${rest.join("=")}`;
+    }
+  }
+  return `credential:${apiKey}`;
+}
+
 export function createCoachService(dependencies: Dependencies = {}) {
   const environment = dependencies.environment ?? (() => process.env);
   const send = dependencies.fetch ?? globalThis.fetch;
   const now = dependencies.now ?? Date.now;
-  let hour = -1;
-  let requests = 0;
-  let inFlight = false;
-  let nextRequestAt = 0;
+  // Per warm instance. Buckets keyed by an opaque hash of the caller identity
+  // (session cookie, else credential), so one visitor's pace never blocks
+  // another's; bounded so the map can't grow without limit.
+  const rateBuckets = new Map<string, RateBucket>();
+
+  function bucketFor(key: string): RateBucket {
+    const id = createHash("sha256").update(key).digest("base64url");
+    let bucket = rateBuckets.get(id);
+    if (!bucket) {
+      if (rateBuckets.size >= RATE_BUCKETS_MAX) {
+        const oldest = rateBuckets.keys().next().value;
+        if (oldest !== undefined) rateBuckets.delete(oldest);
+      }
+      bucket = { hour: -1, requests: 0, inFlight: false, nextRequestAt: 0 };
+      rateBuckets.set(id, bucket);
+    }
+    return bucket;
+  }
 
   return {
     availability: () => {
@@ -143,7 +190,13 @@ export function createCoachService(dependencies: Dependencies = {}) {
           { error: "The AI coach is not available yet. Your guided learning is still ready." },
           503,
         );
-      if (request.headers.get("origin") !== new URL(request.url).origin)
+      // CSRF defense-in-depth: every browser POST carries Origin. A missing
+      // header means a non-browser client, which must still present the access
+      // code or a personal key in a custom header (cross-site forms cannot set
+      // those), so allowing it opens no CSRF surface — but blocking it breaks
+      // curl/E2E tooling with a misleading 403.
+      const origin = request.headers.get("origin");
+      if (origin && origin !== new URL(request.url).origin)
         return json({ error: "Open the coach in SparkSuite to ask a question." }, 403);
       let apiKey: string;
       if (usingPersonalKey) {
@@ -186,22 +239,23 @@ export function createCoachService(dependencies: Dependencies = {}) {
         return json({ error: "Check your question and practice choices, then try again." }, 400);
       if (request.signal.aborted) return json({ error: "Request cancelled." }, 408);
       const time = now();
+      const bucket = bucketFor(callerKey(request, apiKey));
       const currentHour = Math.floor(time / 3_600_000);
-      if (currentHour !== hour) {
-        hour = currentHour;
-        requests = 0;
+      if (currentHour !== bucket.hour) {
+        bucket.hour = currentHour;
+        bucket.requests = 0;
       }
-      if (inFlight || time < nextRequestAt || requests >= 60) {
+      if (bucket.inFlight || time < bucket.nextRequestAt || bucket.requests >= 60) {
         const retryAfter =
-          requests >= 60
+          bucket.requests >= 60
             ? Math.ceil(((currentHour + 1) * 3_600_000 - time) / 1000)
-            : inFlight
+            : bucket.inFlight
               ? 10
-              : Math.ceil((nextRequestAt - time) / 1000);
+              : Math.ceil((bucket.nextRequestAt - time) / 1000);
         const error =
-          requests >= 60
+          bucket.requests >= 60
             ? "SparkSuite’s hourly coach limit has been reached. You can try again when the wait ends. Your guided lesson is still available."
-            : inFlight
+            : bucket.inFlight
               ? "Another coach request is still running. Give it a moment, then try again. Your guided lesson is still available."
               : "SparkSuite spaces coach requests 10 seconds apart. You can try again when the wait ends.";
         return json(
@@ -210,9 +264,9 @@ export function createCoachService(dependencies: Dependencies = {}) {
           { "Retry-After": String(retryAfter) },
         );
       }
-      inFlight = true;
-      requests += 1;
-      nextRequestAt = time + 10_000;
+      bucket.inFlight = true;
+      bucket.requests += 1;
+      bucket.nextRequestAt = time + 10_000;
       const context = buildCoachContext(input);
       const signal = AbortSignal.any([
         request.signal,
@@ -308,7 +362,7 @@ export function createCoachService(dependencies: Dependencies = {}) {
           signal.aborted ? 504 : 503,
         );
       } finally {
-        inFlight = false;
+        bucket.inFlight = false;
       }
     },
   };

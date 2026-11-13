@@ -82,6 +82,18 @@ const grokIssuer = env("GROK_AUTH_ISSUER") ?? GROK_ISSUER_DEFAULT;
 const grokClientId = env("GROK_AUTH_CLIENT_ID") ?? PREVIEW_CLIENT_ID;
 const grokClientSecret = env("GROK_AUTH_CLIENT_SECRET") ?? PREVIEW_CLIENT_SECRET;
 
+// The baked preview client is committed for sandbox previews only (see
+// ./preview). A production build still running on it means the deployer never
+// injected the per-app GROK_AUTH_* credentials — warn loudly so it shows up in
+// deploy logs; sessions still work, so this is a warning, not a refusal.
+if (!env("GROK_AUTH_CLIENT_SECRET") && process.env.NODE_ENV === "production") {
+  console.warn(
+    "[auth] production is using the baked PREVIEW OAuth client — inject per-app " +
+      "GROK_AUTH_CLIENT_ID/GROK_AUTH_CLIENT_SECRET and rotate the preview secret " +
+      "(it is committed in ./preview.ts).",
+  );
+}
+
 /** True when federated sign-in is active (real auth is enforced). */
 export const authConfigured =
   !authDisabled && Boolean(grokClientId && grokClientSecret);
