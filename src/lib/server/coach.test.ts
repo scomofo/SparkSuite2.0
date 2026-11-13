@@ -178,10 +178,9 @@ describe("private coach request boundary", () => {
     assert.equal(calls.length, 0);
   });
 
-  it("rejects missing, foreign, downgraded and different-port origins before upstream access", async () => {
+  it("rejects foreign, downgraded and different-port origins before upstream access", async () => {
     const { service, calls } = harness();
     for (const origin of [
-      "",
       "https://foreign.example",
       "http://sparksuite.example",
       "https://sparksuite.example:8443",
@@ -190,6 +189,20 @@ describe("private coach request boundary", () => {
       assert.equal((await service.respond(request(payload(), { Origin: origin }))).status, 403);
     }
     assert.equal(calls.length, 0);
+  });
+
+  it("accepts a request without an Origin header (non-browser clients)", async () => {
+    const { service, calls } = harness();
+    const bare = new Request(URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Spark-Coach-Code": CODE,
+      },
+      body: JSON.stringify(payload()),
+    });
+    assert.equal((await service.respond(bare)).status, 200);
+    assert.equal(calls.length, 1);
   });
 
   it("rejects missing, wrong and oversized pilot codes without charging a request", async () => {
@@ -326,7 +339,6 @@ describe("request-scoped personal coach keys", () => {
   it("requires a matching origin for personal keys without hosted configuration", async () => {
     const { service, calls } = harness({ environment: () => ({}) });
     for (const origin of [
-      "",
       "null",
       "https://foreign.example",
       "https://sparksuite.example:8443",
@@ -390,19 +402,20 @@ describe("request-scoped personal coach keys", () => {
     });
   });
 
-  it("isolates credentials across personal requests and the hosted mode", async () => {
+  it("gives each credential its own budget without letting one bypass its own cooldown", async () => {
     const secondKey = "sk-fixture_second_personal_key_never_valid_5678";
     const { service, calls, advance } = harness();
     assert.equal((await service.respond(personalRequest())).status, 200);
-    // Switching modes never bypasses the shared instance cooldown.
-    assert.equal((await service.respond(request())).status, 429);
-    advance(10_000);
+    // The same credential is still inside its own cooldown.
+    assert.equal((await service.respond(personalRequest())).status, 429);
+    // A different credential carries an independent budget.
+    assert.equal((await service.respond(request())).status, 200);
     assert.equal((await service.respond(personalRequest({ key: secondKey }))).status, 200);
     advance(10_000);
     assert.equal((await service.respond(request())).status, 200);
     assert.deepEqual(
       calls.map(({ init }) => new Headers(init.headers).get("Authorization")),
-      [`Bearer ${PERSONAL_KEY}`, `Bearer ${secondKey}`, `Bearer ${KEY}`],
+      [`Bearer ${PERSONAL_KEY}`, `Bearer ${KEY}`, `Bearer ${secondKey}`, `Bearer ${KEY}`],
     );
     assert.ok(calls.every(({ init }) => init.redirect === "error"));
     assert.ok(calls.every(({ body }) => !JSON.stringify(body).includes("sk-fixture")));
@@ -699,7 +712,51 @@ describe("coach request lifecycle", () => {
     assert.equal(calls.length, 2);
   });
 
-  it("caps one instance at 60 attempts per hour and resets on the next hour", async () => {
+  it("limits each caller independently by session cookie", async () => {
+    const { service, calls, advance } = harness();
+    const as = (token: string) =>
+      request(payload(), { Cookie: `__Host-grok-auth.session_token=${token}` });
+    assert.equal((await service.respond(as("caller-a"))).status, 200);
+    // Same caller: the 10s spacing applies.
+    assert.equal((await service.respond(as("caller-a"))).status, 429);
+    // A different caller is not blocked by caller A's cooldown.
+    assert.equal((await service.respond(as("caller-b"))).status, 200);
+    assert.equal(calls.length, 2);
+    advance(10_000);
+    assert.equal((await service.respond(as("caller-a"))).status, 200);
+    assert.equal(calls.length, 3);
+  });
+
+  it("blocks a second in-flight request only for the same caller", async () => {
+    const started = deferred<void>();
+    const finish = deferred<Response>();
+    let first = true;
+    const { service } = harness({
+      send: () => {
+        if (!first) return provider();
+        first = false;
+        started.resolve();
+        return finish.promise;
+      },
+    });
+    const pending = service.respond(
+      request(payload(), { Cookie: "__Host-grok-auth.session_token=caller-a" }),
+    );
+    await started.promise;
+    const busySame = await service.respond(
+      request(payload(), { Cookie: "__Host-grok-auth.session_token=caller-a" }),
+    );
+    assert.equal(busySame.status, 429);
+    assert.match((await busySame.json()).error, /Another coach request is still running/);
+    const other = await service.respond(
+      request(payload(), { Cookie: "__Host-grok-auth.session_token=caller-b" }),
+    );
+    assert.equal(other.status, 200);
+    finish.resolve(provider());
+    assert.equal((await pending).status, 200);
+  });
+
+  it("caps each credential at 60 attempts per hour and resets on the next hour", async () => {
     const { service, calls, advance } = harness();
     for (let count = 0; count < 60; count += 1) {
       assert.equal((await service.respond(request())).status, 200);
