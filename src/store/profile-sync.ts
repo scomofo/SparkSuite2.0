@@ -6,6 +6,7 @@ export type ProfileSyncStatus =
   | "syncing"
   | "synced"
   | "conflict"
+  | "changed"
   | "offline"
   | "error";
 
