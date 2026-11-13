@@ -24,7 +24,7 @@ import type { PlanItem } from "./types.ts";
 import { defaultProgress, loadSuite, saveProgress } from "./storage.ts";
 import { finalizeSession } from "./progress.ts";
 import { localDayKey } from "../utils.ts";
-import { closeSession, skipItem, startSession } from "./session.ts";
+import { closeSession, recordHit, skipItem, startSession } from "./session.ts";
 import { analyserSizeFor, nearestString, yinPitch, yinPitchFast } from "./tuner.ts";
 import { classifyStrumDirection, isTonalStrumSpectrum, isHarmonicStrumSpectrum, rmsLevel, StrumOnsetDetector } from "./strum-detection.ts";
 import { AcousticAttackDetector, acousticInputModeFor, analyzeChordSpectrum, assessChordPitches, classifyDrumSpectrum, frequencyToMidi, PercussionOnsetDetector, PitchOnsetDetector, PitchTracker } from "./acoustic-input.ts";
@@ -275,6 +275,54 @@ describe("empty sessions do not complete the day", () => {
   });
 });
 
+describe("same-day replays are practice, not a second session", () => {
+  const plan: DailyPlan = {
+    date: localDayKey(),
+    minutes: 10,
+    promise: "p",
+    items: [
+      {
+        id: "a",
+        type: "song",
+        title: "a",
+        subtitle: "",
+        durationSec: 10,
+        lessonId: "lesson_guitar_em_chord_01",
+        chords: ["Em"],
+        pattern: "D",
+        bars: 4,
+        bpm: 70,
+      },
+    ],
+  };
+
+  it("awards the loop-completion bonus once per day and keeps one history entry", () => {
+    const restore = withMemoryStorage();
+    try {
+      const today = localDayKey();
+      let s = startSession(defaultProgress(), plan);
+      s = recordHit(s);
+      const first = closeSession(defaultProgress(), s, "guitar");
+      const itemXp = first.result.xp;
+      assert.ok(itemXp > 80, "full first loop includes the completion bonus");
+
+      let replaySession = startSession(first.progress, plan);
+      replaySession = recordHit(replaySession);
+      const replay = closeSession(first.progress, replaySession, "guitar");
+      assert.equal(replay.result.xp, itemXp - 80, "replay earns item XP only");
+      assert.equal(replay.progress.xp, first.progress.xp + (itemXp - 80));
+      assert.equal(
+        replay.progress.history.filter((h) => h.date === today).length,
+        1,
+        "a replayed day stays a single history entry",
+      );
+      assert.equal(replay.progress.dailyComplete[today], true);
+    } finally {
+      restore();
+    }
+  });
+});
+
 describe("dailyComplete pruning", () => {
   it("finalizeSession drops dailyComplete entries older than 60 days", () => {
     const restore = withMemoryStorage();
@@ -342,8 +390,8 @@ describe("multi-instrument slot save (review P1)", () => {
         },
         "piano",
       );
-      assert.equal(next.xp, 50);
-      assert.equal(loadSuite().apps.piano?.xp, 50);
+      assert.equal(loadSuite().apps.piano?.xp, next.xp);
+      assert.equal(loadSuite().apps.guitar?.xp, 0);
     } finally {
       restore();
     }
