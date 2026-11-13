@@ -14,12 +14,28 @@ import {
 import type { ProfileSyncChoice } from "./profile-events";
 
 export type ProfileSyncResult = {
-  status: "synced" | "conflict" | "offline" | "error";
+  /**
+   * "changed" — local progress moved while the cloud round-trip was in flight.
+   * Not an error and not "offline": the newer local work was kept, and a plain
+   * re-sync will merge it. Surfacing it distinctly stops the UI from telling
+   * the learner the network is down when it isn't.
+   */
+  status: "synced" | "conflict" | "changed" | "offline" | "error";
   revision: number;
   updatedAt: string | null;
   applied: boolean;
   message: string;
 };
+
+/** Thrown when local progress changes mid-sync; caught as status "changed". */
+export class LocalProgressChangedError extends Error {
+  constructor() {
+    super(
+      "Local progress changed during cloud sync. Your latest work was preserved; sync again to combine it.",
+    );
+    this.name = "LocalProgressChangedError";
+  }
+}
 
 function cloudSnapshot(raw: unknown): ProfileSnapshot | null {
   return sanitizeProfileSnapshot(raw);
@@ -30,7 +46,7 @@ function applyIfChanged(next: ProfileSnapshot, current: ProfileSnapshot): boolea
   // never apply a snapshot based on the older local state over their new work.
   const latest = captureProfileSnapshot();
   if (!profileSnapshotEqual(latest, current)) {
-    throw new Error("Local progress changed during cloud sync. Your latest work was preserved; sync again to combine it.");
+    throw new LocalProgressChangedError();
   }
   const changed = !profileSnapshotEqual(next, latest);
   if (changed) applyProfileSnapshot(next);
@@ -395,6 +411,15 @@ export async function synchronizeProfile(
       message: "Your progress is up to date.",
     };
   } catch (error) {
+    if (error instanceof LocalProgressChangedError) {
+      return {
+        status: "changed",
+        revision: 0,
+        updatedAt: null,
+        applied: false,
+        message: error.message,
+      };
+    }
     return {
       status: "offline",
       revision: 0,
